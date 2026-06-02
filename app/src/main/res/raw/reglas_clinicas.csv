@@ -1,0 +1,81 @@
+estado_lecho,nivel_exudado,infeccion,desbridamiento,familia_buscada
+Necrosis,Nulo,false,false,Hidrogel
+Necrosis,Nulo,false,true,Hidrogel/Desbridante Enzimatico
+Necrosis,Nulo,true,false,Hidrogel/Plata/Carbon
+Necrosis,Nulo,true,true,Hidrogel/Desbridante Enzimatico/Plata/Carbon
+Necrosis,Bajo,false,false,Hidrogel
+Necrosis,Bajo,false,true,Hidrogel/Desbridante Enzimatico
+Necrosis,Bajo,true,false,Hidrogel/Plata/Carbon
+Necrosis,Bajo,true,true,Hidrogel/Desbridante Enzimatico/Plata/Carbon
+Necrosis,Moderado,false,false,Hidrogel/Espuma Poliuretano
+Necrosis,Moderado,false,true,Hidrogel/Desbridante Enzimatico/Espuma Poliuretano
+Necrosis,Moderado,true,false,Hidrogel/Plata/Carbon
+Necrosis,Moderado,true,true,Hidrogel/Desbridante Enzimatico/Plata/Carbon
+Necrosis,Alto,false,false,Alginato/Hidrofibra
+Necrosis,Alto,false,true,Alginato/Hidrofibra/Desbridante Enzimatico
+Necrosis,Alto,true,false,Alginato/Hidrofibra/Plata/Carbon
+Necrosis,Alto,true,true,Alginato/Hidrofibra/Plata/Carbon
+Esfacelo,Nulo,false,false,Hidrogel
+Esfacelo,Nulo,false,true,Hidrogel/Desbridante Enzimatico
+Esfacelo,Nulo,true,false,Hidrogel/Plata/Carbon
+Esfacelo,Nulo,true,true,Hidrogel/Desbridante Enzimatico/Plata/Carbon
+Esfacelo,Bajo,false,false,Hidrogel
+Esfacelo,Bajo,false,true,Hidrogel/Desbridante Enzimatico
+Esfacelo,Bajo,true,false,Hidrogel/Plata/Carbon
+Esfacelo,Bajo,true,true,Hidrogel/Desbridante Enzimatico/Plata/Carbon
+Esfacelo,Moderado,false,false,Espuma Poliuretano/Hidrofibra/Hidrogel
+Esfacelo,Moderado,false,true,Espuma Poliuretano/Hidrofibra/Hidrogel
+Esfacelo,Moderado,true,false,Espuma Poliuretano/Hidrofibra/Plata/Carbon
+Esfacelo,Moderado,true,true,Espuma Poliuretano/Hidrofibra/Plata/Carbon
+Esfacelo,Alto,false,false,Alginato/Hidrofibra/Espuma Poliuretano
+Esfacelo,Alto,false,true,Alginato/Hidrofibra/Espuma Poliuretano
+Esfacelo,Alto,true,false,Alginato/Hidrofibra/Plata/Carbon
+Esfacelo,Alto,true,true,Alginato/Hidrofibra/Plata/Carbon
+Granulación,Nulo,false,false,Hidrocoloide/Malla Silicona/Hidrogel
+Granulación,Nulo,false,true,Hidrocoloide/Malla Silicona/Hidrogel
+Granulación,Nulo,true,false,Hidrocoloide/Malla Silicona/Plata/Carbon
+Granulación,Nulo,true,true,Hidrocoloide/Malla Silicona/Plata/Carbon
+Granulación,Bajo,false,false,Hidrocoloide/Malla Silicona/Hidrogel
+Granulación,Bajo,false,true,Hidrocoloide/Malla Silicona/Hidrogel
+Granulación,Bajo,true,false,Hidrocoloide/Malla Silicona/Plata/Carbon
+Granulación,Bajo,true,true,Hidrocoloide/Malla Silicona/Plata/Carbon
+Granulación,Moderado,false,false,Espuma Poliuretano/Hidrocoloide/Malla Silicona
+Granulación,Moderado,false,true,Espuma Poliuretano/Hidrocoloide/Malla Silicona
+Granulación,Moderado,true,false,Espuma Poliuretano/Plata/Carbon
+Granulación,Moderado,true,true,Espuma Poliuretano/Plata/Carbon
+Granulación,Alto,false,false,Hidrofibra/Alginato/Espuma Poliuretano
+Granulación,Alto,false,true,Hidrofibra/Alginato/Espuma Poliuretano
+Granulación,Alto,true,false,Hidrofibra/Alginato/Plata/Carbon
+Granulación,Alto,true,true,Hidrofibra/Alginato/Plata/Carbon
+Epitelización,Nulo,false,false,Malla Silicona/Hidrocoloide
+Epitelización,Nulo,false,true,Malla Silicona/Hidrocoloide
+Epitelización,Nulo,true,false,Malla Silicona/Plata
+Epitelización,Nulo,true,true,Malla Silicona/Plata
+Epitelización,Bajo,false,false,Malla Silicona/Hidrocoloide
+Epitelización,Bajo,false,true,Malla Silicona/Hidrocoloide
+Epitelización,Bajo,true,false,Malla Silicona/Plata
+Epitelización,Bajo,true,true,Malla Silicona/Plata
+Epitelización,Moderado,false,false,Espuma Poliuretano/Malla Silicona
+Epitelización,Moderado,false,true,Espuma Poliuretano/Malla Silicona
+Epitelización,Moderado,true,false,Espuma Poliuretano/Plata
+Epitelización,Moderado,true,true,Espuma Poliuretano/Plata
+Epitelización,Alto,false,false,Espuma Poliuretano/Hidrofibra
+Epitelización,Alto,false,true,Espuma Poliuretano/Hidrofibra
+Epitelización,Alto,true,false,Espuma Poliuretano/Plata/Carbon
+Epitelización,Alto,true,true,Espuma Poliuretano/Plata/Carbon
+Piel Intacta (Prevención),Nulo,false,false,Acidos Grasos Hiperoxigenados/Protector Cutaneo
+Piel Intacta (Prevención),Nulo,false,true,Acidos Grasos Hiperoxigenados/Protector Cutaneo
+Piel Intacta (Prevención),Nulo,true,false,No Aplica
+Piel Intacta (Prevención),Nulo,true,true,No Aplica
+Piel Intacta (Prevención),Bajo,false,false,Acidos Grasos Hiperoxigenados/Protector Cutaneo
+Piel Intacta (Prevención),Bajo,false,true,Acidos Grasos Hiperoxigenados/Protector Cutaneo
+Piel Intacta (Prevención),Bajo,true,false,No Aplica
+Piel Intacta (Prevención),Bajo,true,true,No Aplica
+Piel Intacta (Prevención),Moderado,false,false,Espuma Poliuretano/Acidos Grasos Hiperoxigenados/Protector Cutaneo
+Piel Intacta (Prevención),Moderado,false,true,Espuma Poliuretano/Acidos Grasos Hiperoxigenados/Protector Cutaneo
+Piel Intacta (Prevención),Moderado,true,false,No Aplica
+Piel Intacta (Prevención),Moderado,true,true,No Aplica
+Piel Intacta (Prevención),Alto,false,false,Espuma Poliuretano/Acidos Grasos Hiperoxigenados/Protector Cutaneo
+Piel Intacta (Prevención),Alto,false,true,Espuma Poliuretano/Acidos Grasos Hiperoxigenados/Protector Cutaneo
+Piel Intacta (Prevención),Alto,true,false,No Aplica
+Piel Intacta (Prevención),Alto,true,true,No Aplica

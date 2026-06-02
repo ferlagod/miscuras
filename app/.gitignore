@@ -1,0 +1,71 @@
+# Built application files
+*.apk
+*.ap_
+*.aab
+
+# Files for the ART/Dalvik VM
+*.dex
+
+# Java class files
+*.class
+
+# Generated files
+bin/
+gen/
+out/
+
+# Gradle files
+.gradle/
+build/
+*/build/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Log Files
+*.log
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+*.iws
+
+# MacOS
+.DS_Store
+*.DS_Store
+
+# NDK
+obj/
+.cxx/
+.externalNativeBuild/
+
+# Keystore files
+*.jks
+*.keystore
+
+# Google Services (if applicable)
+google-services.json
+
+# --- Antigravity / AI assistant generated files ---
+download_images.py
+update_csv_images.py
+install_libs.py
+generate_csv.py
+process_images.py
+test.png
+.venv/
+.vscode/
+modify_csv.py
+test_avif.png
+test_webp.png
+
+# --- Proprietary & Non-free data/assets ---
+app/src/main/res/raw/productos_apositos.csv
+app/src/main/res/drawable/img_*
+app/src/main/res/drawable/cn_*
+Impulsado por Forgejo
+Versión:
+15.0.1
+Página:
+59ms
+Plantilla:
