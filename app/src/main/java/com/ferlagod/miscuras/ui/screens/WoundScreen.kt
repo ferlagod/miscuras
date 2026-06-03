@@ -25,7 +25,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.LocalHospital
-import androidx.compose.material.icons.filled.MedicalServices
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material.icons.filled.Warning
@@ -126,7 +125,6 @@ fun WoundScreen(viewModel: WoundViewModel) {
                     onLechoChanged = { viewModel.onLechoChanged(it) },
                     onExudadoChanged = { viewModel.onExudadoChanged(it) },
                     onInfeccionChanged = { viewModel.onInfeccionChanged(it) },
-                    onDesbridamientoChanged = { viewModel.onDesbridamientoChanged(it) },
                     onSearch = { viewModel.buscarAposito() },
                     onSettingsClick = { showSettings = true }
                 )
@@ -266,7 +264,6 @@ private fun SelectionContent(
     onLechoChanged: (String) -> Unit,
     onExudadoChanged: (String) -> Unit,
     onInfeccionChanged: (Boolean) -> Unit,
-    onDesbridamientoChanged: (Boolean) -> Unit,
     onSearch: () -> Unit,
     onSettingsClick: () -> Unit
 ) {
@@ -363,14 +360,6 @@ private fun SelectionContent(
                 )
             }
 
-            // — Switch: Desbridamiento —
-            item {
-                DesbridamientoCard(
-                    checked = uiState.selectedDesbridamiento,
-                    onCheckedChange = onDesbridamientoChanged,
-                    strings = strings
-                )
-            }
 
             // — Botón de búsqueda —
             item {
@@ -578,72 +567,6 @@ private fun InfectionCard(
     }
 }
 
-// ============================================================
-// COMPONENTE — Tarjeta de Desbridamiento (Switch)
-// ============================================================
-
-@Composable
-private fun DesbridamientoCard(
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    strings: AppStrings
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (checked) {
-                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
-            } else {
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-            }
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.MedicalServices,
-                contentDescription = null,
-                tint = if (checked) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-                modifier = Modifier.size(28.dp)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = strings.desbridamientoLabel,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = if (checked) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    }
-                )
-                Text(
-                    text = strings.desbridamientoDesc,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Switch(
-                checked = checked,
-                onCheckedChange = onCheckedChange,
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = MaterialTheme.colorScheme.primary,
-                    checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
-                )
-            )
-        }
-    }
-}
 
 // ============================================================
 // PANTALLA DE RESULTADOS

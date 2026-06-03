@@ -29,7 +29,6 @@ data class WoundUiState(
     val selectedLecho: String = "Piel Intacta (Prevención)",
     val selectedExudado: String = "Nulo",
     val selectedInfeccion: Boolean = false,
-    val selectedDesbridamiento: Boolean = false,
     val familiaRecomendada: String? = null,
     val productos: List<ApositoEntity> = emptyList(),
     val showResults: Boolean = false,
@@ -113,13 +112,6 @@ class WoundViewModel(
         _uiState.update { it.copy(selectedInfeccion = infeccion) }
     }
 
-    /**
-     * Actualiza si la herida requiere desbridamiento enzimático.
-     * @param desbridamiento Verdadero si se requiere desbridamiento, falso en caso contrario.
-     */
-    fun onDesbridamientoChanged(desbridamiento: Boolean) {
-        _uiState.update { it.copy(selectedDesbridamiento = desbridamiento) }
-    }
 
     /**
      * Ejecuta la búsqueda de apósitos basados en los parámetros clínicos
@@ -133,8 +125,7 @@ class WoundViewModel(
             val familia = repository.obtenerRecomendacion(
                 state.selectedLecho,
                 state.selectedExudado,
-                state.selectedInfeccion,
-                state.selectedDesbridamiento
+                state.selectedInfeccion
             )
 
             if (familia != null) {

@@ -23,7 +23,7 @@ import java.io.InputStreamReader
  */
 @Database(
     entities = [ReglaEntity::class, ApositoEntity::class],
-    version = 17,
+    version = 18,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -93,14 +93,13 @@ abstract class AppDatabase : RoomDatabase() {
                 // drop(1) ignora la primera línea porque son las cabeceras
                 lines.drop(1).forEach { line ->
                     val columnas = line.split(",")
-                    if (columnas.size == 5) {
+                    if (columnas.size == 4) {
                         reglas.add(
                             ReglaEntity(
                                 estadoLecho = columnas[0].trim(),
                                 nivelExudado = columnas[1].trim(),
                                 infeccion = columnas[2].trim().toBoolean(),
-                                desbridamiento = columnas[3].trim().toBoolean(),
-                                familiaBuscada = columnas[4].trim()
+                                familiaBuscada = columnas[3].trim()
                             )
                         )
                     }

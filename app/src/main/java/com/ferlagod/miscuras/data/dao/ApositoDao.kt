@@ -19,7 +19,6 @@ interface ApositoDao {
      * @param lecho Estado del lecho de la herida.
      * @param exudado Nivel de exudado.
      * @param infeccion Si existe infección.
-     * @param desbridamiento Si se requiere desbridamiento enzimático.
      * @return El nombre de la familia recomendada o null si no hay coincidencia.
      */
     @Query("""
@@ -27,11 +26,10 @@ interface ApositoDao {
         FROM ReglasClinicas 
         WHERE estado_lecho = :lecho 
           AND nivel_exudado = :exudado 
-          AND infeccion = :infeccion 
-          AND desbridamiento = :desbridamiento
+          AND infeccion = :infeccion
         LIMIT 1
     """)
-    fun obtenerFamiliaRecomendada(lecho: String, exudado: String, infeccion: Boolean, desbridamiento: Boolean): String?
+    fun obtenerFamiliaRecomendada(lecho: String, exudado: String, infeccion: Boolean): String?
 
     /**
      * Obtiene todos los productos que pertenecen a una lista de familias.

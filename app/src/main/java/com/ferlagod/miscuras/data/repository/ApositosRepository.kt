@@ -26,11 +26,10 @@ class ApositosRepository(private val apositoDao: ApositoDao) {
      * @param lecho Estado del lecho (ej. Necrosis).
      * @param exudado Nivel de exudado (ej. Moderado).
      * @param infeccion Indica si hay signos de infección.
-     * @param desbridamiento Indica si se requiere desbridamiento enzimático.
      * @return El nombre de la familia recomendada, o null si no se encuentra.
      */
-    fun obtenerRecomendacion(lecho: String, exudado: String, infeccion: Boolean, desbridamiento: Boolean): String? {
-        return apositoDao.obtenerFamiliaRecomendada(lecho, exudado, infeccion, desbridamiento)
+    fun obtenerRecomendacion(lecho: String, exudado: String, infeccion: Boolean): String? {
+        return apositoDao.obtenerFamiliaRecomendada(lecho, exudado, infeccion)
     }
 
     /**

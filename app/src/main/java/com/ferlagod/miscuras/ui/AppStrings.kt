@@ -26,8 +26,6 @@ sealed interface AppStrings {
     val exudateLevelLabel: String
     val exudateLevelDesc: String
     val infectionLabel: String
-    val desbridamientoLabel: String
-    val desbridamientoDesc: String
     
     // Lecho values
     val necrosis: String
@@ -202,8 +200,6 @@ object EsStrings : AppStrings {
     override val exudateLevelLabel = "Nivel de exudado"
     override val exudateLevelDesc = "Cantidad de fluido que produce la herida"
     override val infectionLabel = "¿Presenta signos de infección?"
-    override val desbridamientoLabel = "¿Requiere desbridamiento enzimático?"
-    override val desbridamientoDesc = "Uso de pomadas enzimáticas (ej. colagenasa)"
     
     override val necrosis = "Necrosis"
     override val esfacelo = "Esfacelo"
@@ -304,8 +300,6 @@ object EnStrings : AppStrings {
     override val exudateLevelLabel = "Exudate level"
     override val exudateLevelDesc = "Amount of fluid produced by the wound"
     override val infectionLabel = "Does it show signs of infection?"
-    override val desbridamientoLabel = "Requires enzymatic debridement?"
-    override val desbridamientoDesc = "Use of enzymatic ointments (e.g. collagenase)"
     
     override val necrosis = "Necrosis"
     override val esfacelo = "Slough"
@@ -406,8 +400,6 @@ object PtStrings : AppStrings {
     override val exudateLevelLabel = "Nível de exsudato"
     override val exudateLevelDesc = "Quantidade de fluido produzida pela ferida"
     override val infectionLabel = "Apresenta sinais de infecção?"
-    override val desbridamientoLabel = "Requer desbridamento enzimático?"
-    override val desbridamientoDesc = "Uso de pomadas enzimáticas (ex. colagenase)"
     
     override val necrosis = "Necrose"
     override val esfacelo = "Esfacelo"
