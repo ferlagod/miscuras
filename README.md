@@ -10,7 +10,7 @@ Las recomendaciones sugeridas por la aplicación se fundamentan estrictamente en
 
 ## 🌟 Características Principales
 
-- 🩺 **Selector Clínico Inteligente:** Evalúa el estado del lecho de la herida, el nivel de exudado y la presencia de signos de infección para obtener recomendaciones instantáneas.
+- 🩺 **Selector Clínico:** Evalúa el estado del lecho de la herida, el nivel de exudado y la presencia de signos de infección para obtener recomendaciones instantáneas.
 - 🔗 **Soporte de Múltiples Familias:** Capacidad única para recomendar múltiples familias de apósitos compatibles simultáneamente (ej. *Hidrogeles* combinados con *Desbridantes Enzimáticos*), unificando los resultados en una sola lista visual.
 - 📦 **Catálogo de Productos SAS:** Información exhaustiva de apósitos reales con su **código nacional (CN)**, fabricante, medidas comerciales exactas y mecanismo de acción detallado.
 - ⚠️ **Control de Interacciones:** Alerta al profesional sobre posibles incompatibilidades, interacciones y precauciones entre apósitos y otros productos antes de la aplicación.
@@ -58,4 +58,4 @@ Si esta herramienta te resulta útil en tu práctica diaria o quieres contribuir
 
 ---
 
-*Desarrollado con ❤️ y mucho café por [ferlagod](https://github.com/ferlagod).*
+*Desarrollado con ❤️ y mucho café por [ferlagod](https://forjalibre.eu/ferlagod).*
