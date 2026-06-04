@@ -1,36 +1,36 @@
 estado_lecho,nivel_exudado,infeccion,familia_buscada
-Necrosis,Nulo,false,Hidrogel/Desbridante Enzimatico
-Necrosis,Nulo,true,Hidrogel/Desbridante Enzimatico/Plata/Carbon
-Necrosis,Bajo,false,Hidrogel/Desbridante Enzimatico
-Necrosis,Bajo,true,Hidrogel/Desbridante Enzimatico/Plata/Carbon
-Necrosis,Moderado,false,Hidrogel/Desbridante Enzimatico/Espuma Poliuretano
-Necrosis,Moderado,true,Hidrogel/Desbridante Enzimatico/Plata/Carbon
-Necrosis,Alto,false,Alginato/Hidrofibra/Desbridante Enzimatico
-Necrosis,Alto,true,Alginato/Hidrofibra/Plata/Carbon
-Esfacelo,Nulo,false,Hidrogel/Desbridante Enzimatico
-Esfacelo,Nulo,true,Hidrogel/Desbridante Enzimatico/Plata/Carbon
-Esfacelo,Bajo,false,Hidrogel/Desbridante Enzimatico
-Esfacelo,Bajo,true,Hidrogel/Desbridante Enzimatico/Plata/Carbon
-Esfacelo,Moderado,false,Espuma Poliuretano/Hidrofibra/Hidrogel
-Esfacelo,Moderado,true,Espuma Poliuretano/Hidrofibra/Plata/Carbon
-Esfacelo,Alto,false,Alginato/Hidrofibra/Espuma Poliuretano
-Esfacelo,Alto,true,Alginato/Hidrofibra/Plata/Carbon
-Granulación,Nulo,false,Hidrocoloide/Malla Silicona/Hidrogel
-Granulación,Nulo,true,Hidrocoloide/Malla Silicona/Plata/Carbon
-Granulación,Bajo,false,Hidrocoloide/Malla Silicona/Hidrogel
-Granulación,Bajo,true,Hidrocoloide/Malla Silicona/Plata/Carbon
-Granulación,Moderado,false,Espuma Poliuretano/Hidrocoloide/Malla Silicona
-Granulación,Moderado,true,Espuma Poliuretano/Plata/Carbon
-Granulación,Alto,false,Hidrofibra/Alginato/Espuma Poliuretano
-Granulación,Alto,true,Hidrofibra/Alginato/Plata/Carbon
-Epitelización,Nulo,false,Malla Silicona/Hidrocoloide
-Epitelización,Nulo,true,Malla Silicona/Plata
-Epitelización,Bajo,false,Malla Silicona/Hidrocoloide
-Epitelización,Bajo,true,Malla Silicona/Plata
-Epitelización,Moderado,false,Espuma Poliuretano/Malla Silicona
-Epitelización,Moderado,true,Espuma Poliuretano/Plata
-Epitelización,Alto,false,Espuma Poliuretano/Hidrofibra
-Epitelización,Alto,true,Espuma Poliuretano/Plata/Carbon
+Necrosis,Nulo,false,Hidrogel/Desbridante Enzimatico/Limpieza de heridas
+Necrosis,Nulo,true,Hidrogel/Desbridante Enzimatico/Plata/Carbon/Limpieza de heridas
+Necrosis,Bajo,false,Hidrogel/Desbridante Enzimatico/Limpieza de heridas
+Necrosis,Bajo,true,Hidrogel/Desbridante Enzimatico/Plata/Carbon/Limpieza de heridas/Carbón y plata
+Necrosis,Moderado,false,Hidrogel/Desbridante Enzimatico/Espuma Poliuretano/Limpieza de heridas/Superabsorbente
+Necrosis,Moderado,true,Hidrogel/Desbridante Enzimatico/Plata/Carbon/Limpieza de heridas/Superabsorbente/Carbón y plata
+Necrosis,Alto,false,Alginato/Hidrofibra/Desbridante Enzimatico/Limpieza de heridas/Superabsorbente
+Necrosis,Alto,true,Alginato/Hidrofibra/Plata/Carbon/Limpieza de heridas/Superabsorbente/Carbón y plata
+Esfacelo,Nulo,false,Hidrogel/Desbridante Enzimatico/Limpieza de heridas
+Esfacelo,Nulo,true,Hidrogel/Desbridante Enzimatico/Plata/Carbon/Limpieza de heridas
+Esfacelo,Bajo,false,Hidrogel/Desbridante Enzimatico/Limpieza de heridas
+Esfacelo,Bajo,true,Hidrogel/Desbridante Enzimatico/Plata/Carbon/Limpieza de heridas/Carbón y plata
+Esfacelo,Moderado,false,Espuma Poliuretano/Hidrofibra/Hidrogel/Limpieza de heridas/Superabsorbente
+Esfacelo,Moderado,true,Espuma Poliuretano/Hidrofibra/Plata/Carbon/Limpieza de heridas/Superabsorbente/Carbón y plata
+Esfacelo,Alto,false,Alginato/Hidrofibra/Espuma Poliuretano/Limpieza de heridas/Superabsorbente
+Esfacelo,Alto,true,Alginato/Hidrofibra/Plata/Carbon/Limpieza de heridas/Superabsorbente/Carbón y plata
+Granulación,Nulo,false,Hidrocoloide/Malla Silicona/Hidrogel/Limpieza de heridas/Colágeno
+Granulación,Nulo,true,Hidrocoloide/Malla Silicona/Plata/Carbon/Limpieza de heridas
+Granulación,Bajo,false,Hidrocoloide/Malla Silicona/Hidrogel/Limpieza de heridas/Colágeno
+Granulación,Bajo,true,Hidrocoloide/Malla Silicona/Plata/Carbon/Limpieza de heridas/Carbón y plata
+Granulación,Moderado,false,Espuma Poliuretano/Hidrocoloide/Malla Silicona/Limpieza de heridas/Superabsorbente
+Granulación,Moderado,true,Espuma Poliuretano/Plata/Carbon/Limpieza de heridas/Superabsorbente/Carbón y plata
+Granulación,Alto,false,Hidrofibra/Alginato/Espuma Poliuretano/Limpieza de heridas/Superabsorbente
+Granulación,Alto,true,Hidrofibra/Alginato/Plata/Carbon/Limpieza de heridas/Superabsorbente/Carbón y plata
+Epitelización,Nulo,false,Malla Silicona/Hidrocoloide/Limpieza de heridas
+Epitelización,Nulo,true,Malla Silicona/Plata/Limpieza de heridas
+Epitelización,Bajo,false,Malla Silicona/Hidrocoloide/Limpieza de heridas
+Epitelización,Bajo,true,Malla Silicona/Plata/Limpieza de heridas/Carbón y plata
+Epitelización,Moderado,false,Espuma Poliuretano/Malla Silicona/Limpieza de heridas/Superabsorbente
+Epitelización,Moderado,true,Espuma Poliuretano/Plata/Limpieza de heridas/Superabsorbente/Carbón y plata
+Epitelización,Alto,false,Espuma Poliuretano/Hidrofibra/Limpieza de heridas/Superabsorbente
+Epitelización,Alto,true,Espuma Poliuretano/Plata/Carbon/Limpieza de heridas/Superabsorbente/Carbón y plata
 Piel Intacta (Prevención),Nulo,false,Acidos Grasos Hiperoxigenados/Protector Cutaneo
 Piel Intacta (Prevención),Nulo,true,No Aplica
 Piel Intacta (Prevención),Bajo,false,Acidos Grasos Hiperoxigenados/Protector Cutaneo
