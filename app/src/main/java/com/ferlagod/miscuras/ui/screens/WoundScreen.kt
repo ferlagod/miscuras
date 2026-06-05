@@ -869,18 +869,40 @@ private fun ProductCard(producto: ApositoEntity, onClick: () -> Unit) {
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-            }
-            // Badge con dimensiones
-            Surface(
-                shape = RoundedCornerShape(8.dp),
-                color = MaterialTheme.colorScheme.tertiaryContainer
-            ) {
-                Text(
-                    text = producto.dimensiones,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer,
-                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
-                )
+                // Dimensiones debajo del nombre para evitar comprimir el texto
+                Spacer(modifier = Modifier.height(6.dp))
+                val dimensionesList = producto.dimensiones.split("/").map { it.trim() }
+                if (dimensionesList.size > 1) {
+                    // Múltiples medidas: mostrar cada una en su propia línea
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        dimensionesList.forEach { dim ->
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = MaterialTheme.colorScheme.tertiaryContainer
+                            ) {
+                                Text(
+                                    text = dim,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    // Una sola medida: badge inline
+                    Surface(
+                        shape = RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.tertiaryContainer
+                    ) {
+                        Text(
+                            text = producto.dimensiones,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+                        )
+                    }
+                }
             }
         }
     }

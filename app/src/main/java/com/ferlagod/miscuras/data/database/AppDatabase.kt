@@ -23,7 +23,7 @@ import java.io.InputStreamReader
  */
 @Database(
     entities = [ReglaEntity::class, ApositoEntity::class],
-    version = 19,
+    version = 20,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
