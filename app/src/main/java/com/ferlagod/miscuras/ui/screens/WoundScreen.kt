@@ -21,6 +21,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
@@ -125,6 +127,9 @@ fun WoundScreen(viewModel: WoundViewModel) {
                     onLechoChanged = { viewModel.onLechoChanged(it) },
                     onExudadoChanged = { viewModel.onExudadoChanged(it) },
                     onInfeccionChanged = { viewModel.onInfeccionChanged(it) },
+                    onWoundLengthChanged = { viewModel.onWoundLengthChanged(it) },
+                    onWoundWidthChanged = { viewModel.onWoundWidthChanged(it) },
+                    onSpecialLocationChanged = { viewModel.onSpecialLocationChanged(it) },
                     onSearch = { viewModel.buscarAposito() },
                     onSettingsClick = { showSettings = true }
                 )
@@ -264,6 +269,9 @@ private fun SelectionContent(
     onLechoChanged: (String) -> Unit,
     onExudadoChanged: (String) -> Unit,
     onInfeccionChanged: (Boolean) -> Unit,
+    onWoundLengthChanged: (String) -> Unit,
+    onWoundWidthChanged: (String) -> Unit,
+    onSpecialLocationChanged: (String) -> Unit,
     onSearch: () -> Unit,
     onSettingsClick: () -> Unit
 ) {
@@ -338,6 +346,41 @@ private fun SelectionContent(
                 )
             }
 
+            val isPielIntacta = uiState.selectedLecho == "Piel Intacta (Prevención)"
+
+            if (!isPielIntacta) {
+                item {
+                    val locationOptionsTrans = listOf(
+                        strings.locationNone, 
+                        strings.locationHeel, 
+                        strings.locationSacrum
+                    )
+                    val currentLocationTrans = when (uiState.specialLocation) {
+                        "Talón" -> strings.locationHeel
+                        "Sacro" -> strings.locationSacrum
+                        else -> strings.locationNone
+                    }
+                    
+                    SizeInputCard(
+                        lengthValue = uiState.woundLength,
+                        widthValue = uiState.woundWidth,
+                        onLengthChange = onWoundLengthChanged,
+                        onWidthChange = onWoundWidthChanged,
+                        locationSelected = currentLocationTrans,
+                        locationOptions = locationOptionsTrans,
+                        onLocationChange = { transLoc ->
+                            val dbLoc = when(transLoc) {
+                                strings.locationHeel -> "Talón"
+                                strings.locationSacrum -> "Sacro"
+                                else -> "Ninguno"
+                            }
+                            onSpecialLocationChanged(dbLoc)
+                        },
+                        strings = strings
+                    )
+                }
+            }
+
             // — Selector: Nivel de exudado —
             item {
                 val currentExudadoTrans = AppStrings.translateClinicalTerm(uiState.selectedExudado, uiState.currentLanguage)
@@ -347,7 +390,8 @@ private fun SelectionContent(
                     description = strings.exudateLevelDesc,
                     selectedOption = currentExudadoTrans,
                     options = optionsExudadoTrans,
-                    onOptionSelected = { onExudadoChanged(AppStrings.mapToDbTerm(it)) }
+                    onOptionSelected = { onExudadoChanged(AppStrings.mapToDbTerm(it)) },
+                    enabled = !isPielIntacta
                 )
             }
 
@@ -356,7 +400,8 @@ private fun SelectionContent(
                 InfectionCard(
                     checked = uiState.selectedInfeccion,
                     onCheckedChange = onInfeccionChanged,
-                    strings = strings
+                    strings = strings,
+                    enabled = !isPielIntacta
                 )
             }
 
@@ -420,7 +465,8 @@ private fun SelectorCard(
     description: String,
     selectedOption: String,
     options: List<String>,
-    onOptionSelected: (String) -> Unit
+    onOptionSelected: (String) -> Unit,
+    enabled: Boolean = true
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -428,7 +474,7 @@ private fun SelectorCard(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = if (enabled) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
@@ -436,23 +482,24 @@ private fun SelectorCard(
             Text(
                 text = label,
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
             )
             Text(
                 text = description,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             )
             Spacer(modifier = Modifier.height(10.dp))
 
             ExposedDropdownMenuBox(
                 expanded = expanded,
-                onExpandedChange = { expanded = it }
+                onExpandedChange = { if (enabled) expanded = it }
             ) {
                 OutlinedTextField(
                     value = selectedOption,
                     onValueChange = {},
                     readOnly = true,
+                    enabled = enabled,
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -508,13 +555,16 @@ private fun SelectorCard(
 private fun InfectionCard(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
-    strings: AppStrings
+    strings: AppStrings,
+    enabled: Boolean = true
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (checked) {
+            containerColor = if (!enabled) {
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+            } else if (checked) {
                 MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
             } else {
                 MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
@@ -531,7 +581,9 @@ private fun InfectionCard(
             Icon(
                 imageVector = Icons.Default.Warning,
                 contentDescription = null,
-                tint = if (checked) {
+                tint = if (!enabled) {
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                } else if (checked) {
                     MaterialTheme.colorScheme.error
                 } else {
                     MaterialTheme.colorScheme.onSurfaceVariant
@@ -543,7 +595,9 @@ private fun InfectionCard(
                 Text(
                     text = strings.infectionLabel,
                     style = MaterialTheme.typography.titleMedium,
-                    color = if (checked) {
+                    color = if (!enabled) {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    } else if (checked) {
                         MaterialTheme.colorScheme.error
                     } else {
                         MaterialTheme.colorScheme.onSurface
@@ -552,12 +606,17 @@ private fun InfectionCard(
                 Text(
                     text = if (checked) strings.infectionDetected else strings.noInfection,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (!enabled) {
+                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
                 )
             }
             Switch(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
+                enabled = enabled,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = MaterialTheme.colorScheme.error,
                     checkedTrackColor = MaterialTheme.colorScheme.errorContainer
@@ -1524,6 +1583,150 @@ private fun SuggestProductDialog(
                         } else {
                             Text(strings.sendButton)
                         }
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ============================================================
+// COMPONENTE — Tarjeta de Tamaño y Ubicación
+// ============================================================
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SizeInputCard(
+    lengthValue: String,
+    widthValue: String,
+    onLengthChange: (String) -> Unit,
+    onWidthChange: (String) -> Unit,
+    locationSelected: String,
+    locationOptions: List<String>,
+    onLocationChange: (String) -> Unit,
+    strings: AppStrings
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = strings.woundSizeLabel,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = strings.woundSizeDesc,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            
+            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                OutlinedTextField(
+                    value = lengthValue,
+                    onValueChange = { 
+                        if (it.isEmpty() || it.matches(Regex("^\\d*[,.]?\\d*\$"))) onLengthChange(it) 
+                    },
+                    label = { Text(strings.woundLengthLabel) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true
+                )
+                OutlinedTextField(
+                    value = widthValue,
+                    onValueChange = { 
+                        if (it.isEmpty() || it.matches(Regex("^\\d*[,.]?\\d*\$"))) onWidthChange(it) 
+                    },
+                    label = { Text(strings.woundWidthLabel) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Text(
+                text = strings.specialLocationLabel,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Text(
+                text = strings.specialLocationDesc,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            
+            var expanded by remember { mutableStateOf(false) }
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = it }
+            ) {
+                OutlinedTextField(
+                    value = locationSelected,
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    locationOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = option,
+                                    fontWeight = if (option == locationSelected) FontWeight.SemiBold else FontWeight.Normal
+                                )
+                            },
+                            onClick = {
+                                onLocationChange(option)
+                                expanded = false
+                            },
+                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                            trailingIcon = {
+                                if (option == locationSelected) {
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        )
                     }
                 }
             }

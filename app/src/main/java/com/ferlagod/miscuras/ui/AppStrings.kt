@@ -26,6 +26,15 @@ sealed interface AppStrings {
     val exudateLevelLabel: String
     val exudateLevelDesc: String
     val infectionLabel: String
+    val woundSizeLabel: String
+    val woundSizeDesc: String
+    val woundLengthLabel: String
+    val woundWidthLabel: String
+    val specialLocationLabel: String
+    val specialLocationDesc: String
+    val locationNone: String
+    val locationHeel: String
+    val locationSacrum: String
     
     // Lecho values
     val necrosis: String
@@ -147,6 +156,9 @@ sealed interface AppStrings {
                 "Bajo" -> s.bajo
                 "Moderado" -> s.moderado
                 "Alto" -> s.alto
+                "Ninguno" -> s.locationNone
+                "Talón" -> s.locationHeel
+                "Sacro" -> s.locationSacrum
                 else -> term // Fallback for specific names
             }
         }
@@ -175,6 +187,10 @@ sealed interface AppStrings {
                 sEs.bajo, sEn.bajo, sPt.bajo -> "Bajo"
                 sEs.moderado, sEn.moderado, sPt.moderado -> "Moderado"
                 sEs.alto, sEn.alto, sPt.alto -> "Alto"
+                
+                sEs.locationNone, sEn.locationNone, sPt.locationNone -> "Ninguno"
+                sEs.locationHeel, sEn.locationHeel, sPt.locationHeel -> "Talón"
+                sEs.locationSacrum, sEn.locationSacrum, sPt.locationSacrum -> "Sacro"
                 else -> translatedTerm
             }
         }
@@ -200,6 +216,15 @@ object EsStrings : AppStrings {
     override val exudateLevelLabel = "Nivel de exudado"
     override val exudateLevelDesc = "Cantidad de fluido que produce la herida"
     override val infectionLabel = "¿Presenta signos de infección?"
+    override val woundSizeLabel = "Tamaño de la herida (Opcional)"
+    override val woundSizeDesc = "Introduce las medidas para filtrar los apósitos"
+    override val woundLengthLabel = "Largo (cm)"
+    override val woundWidthLabel = "Ancho (cm)"
+    override val specialLocationLabel = "Ubicación especial"
+    override val specialLocationDesc = "¿Se encuentra en una zona anatómica específica?"
+    override val locationNone = "Ninguna"
+    override val locationHeel = "Talón"
+    override val locationSacrum = "Sacro"
     
     override val necrosis = "Necrosis"
     override val esfacelo = "Esfacelo"
@@ -300,6 +325,15 @@ object EnStrings : AppStrings {
     override val exudateLevelLabel = "Exudate level"
     override val exudateLevelDesc = "Amount of fluid produced by the wound"
     override val infectionLabel = "Does it show signs of infection?"
+    override val woundSizeLabel = "Wound size (Optional)"
+    override val woundSizeDesc = "Enter dimensions to filter dressings"
+    override val woundLengthLabel = "Length (cm)"
+    override val woundWidthLabel = "Width (cm)"
+    override val specialLocationLabel = "Special location"
+    override val specialLocationDesc = "Is it located in a specific anatomical area?"
+    override val locationNone = "None"
+    override val locationHeel = "Heel"
+    override val locationSacrum = "Sacrum"
     
     override val necrosis = "Necrosis"
     override val esfacelo = "Slough"
@@ -400,6 +434,15 @@ object PtStrings : AppStrings {
     override val exudateLevelLabel = "Nível de exsudato"
     override val exudateLevelDesc = "Quantidade de fluido produzida pela ferida"
     override val infectionLabel = "Apresenta sinais de infecção?"
+    override val woundSizeLabel = "Tamanho da ferida (Opcional)"
+    override val woundSizeDesc = "Insira as dimensões para filtrar os curativos"
+    override val woundLengthLabel = "Comprimento (cm)"
+    override val woundWidthLabel = "Largura (cm)"
+    override val specialLocationLabel = "Localização especial"
+    override val specialLocationDesc = "Está localizada em uma área anatômica específica?"
+    override val locationNone = "Nenhuma"
+    override val locationHeel = "Calcanhar"
+    override val locationSacrum = "Sacro"
     
     override val necrosis = "Necrose"
     override val esfacelo = "Esfacelo"

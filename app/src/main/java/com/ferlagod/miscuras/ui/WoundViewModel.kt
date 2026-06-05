@@ -29,6 +29,9 @@ data class WoundUiState(
     val selectedLecho: String = "Piel Intacta (Prevención)",
     val selectedExudado: String = "Nulo",
     val selectedInfeccion: Boolean = false,
+    val woundLength: String = "",
+    val woundWidth: String = "",
+    val specialLocation: String = "Ninguno",
     val familiaRecomendada: String? = null,
     val productos: List<ApositoEntity> = emptyList(),
     val showResults: Boolean = false,
@@ -93,7 +96,13 @@ class WoundViewModel(
      * @param lecho El nuevo estado del lecho.
      */
     fun onLechoChanged(lecho: String) {
-        _uiState.update { it.copy(selectedLecho = lecho) }
+        _uiState.update { 
+            if (lecho == "Piel Intacta (Prevención)") {
+                it.copy(selectedLecho = lecho, selectedExudado = "Nulo", selectedInfeccion = false)
+            } else {
+                it.copy(selectedLecho = lecho)
+            }
+        }
     }
 
     /**
@@ -110,6 +119,18 @@ class WoundViewModel(
      */
     fun onInfeccionChanged(infeccion: Boolean) {
         _uiState.update { it.copy(selectedInfeccion = infeccion) }
+    }
+
+    fun onWoundLengthChanged(length: String) {
+        _uiState.update { it.copy(woundLength = length) }
+    }
+
+    fun onWoundWidthChanged(width: String) {
+        _uiState.update { it.copy(woundWidth = width) }
+    }
+
+    fun onSpecialLocationChanged(location: String) {
+        _uiState.update { it.copy(specialLocation = location) }
     }
 
 
@@ -129,7 +150,64 @@ class WoundViewModel(
             )
 
             if (familia != null) {
-                val productos = repository.obtenerProductosPorFamilias(familia)
+                val productosBrutos = repository.obtenerProductosPorFamilias(familia)
+                
+                val wLength = state.woundLength.replace(",", ".").toFloatOrNull()
+                val wWidth = state.woundWidth.replace(",", ".").toFloatOrNull()
+                val hasSizeInfo = wLength != null && wWidth != null
+                val hasLocationInfo = state.specialLocation != "Ninguno"
+                val margin = 4.0f // 4 cm de margen total (2cm por lado)
+
+                val productos = productosBrutos.filter { producto ->
+                    val dimStr = producto.dimensiones.lowercase()
+                    val nomStr = producto.nombreComercial.lowercase()
+                    
+                    val isGeneric = dimStr.contains("pomada") || dimStr.contains("crema") || 
+                        dimStr.contains("gel") || dimStr.contains("ml") || 
+                        dimStr.contains("spray") || Regex("\\d+g").containsMatchIn(dimStr) ||
+                        nomStr.contains("cinta") || nomStr.contains("paching")
+
+                    if (isGeneric) return@filter true
+                    if (!hasSizeInfo && !hasLocationInfo) return@filter true
+
+                    var validByLocation = false
+                    if (hasLocationInfo) {
+                        val locStr = state.specialLocation.lowercase()
+                        if ((locStr == "talón" && dimStr.contains("talón")) || 
+                            (locStr == "sacro" && dimStr.contains("sacro"))) {
+                            validByLocation = true
+                        }
+                    }
+
+                    var validBySize = false
+                    if (hasSizeInfo) {
+                        val regex = Regex("([0-9]+(?:\\.[0-9]+)?(?:,[0-9]+)?)[xX]([0-9]+(?:\\.[0-9]+)?(?:,[0-9]+)?)")
+                        val matches = regex.findAll(dimStr)
+                        for (match in matches) {
+                            val dim1 = match.groupValues[1].replace(",", ".").toFloatOrNull() ?: continue
+                            val dim2 = match.groupValues[2].replace(",", ".").toFloatOrNull() ?: continue
+                            
+                            val fitsNormal = dim1 >= (wWidth!! + margin) && dim2 >= (wLength!! + margin)
+                            val fitsRotated = dim1 >= (wLength!! + margin) && dim2 >= (wWidth!! + margin)
+                            
+                            if (fitsNormal || fitsRotated) {
+                                validBySize = true
+                                break
+                            }
+                        }
+                    }
+
+                    if (hasLocationInfo && hasSizeInfo) {
+                        validByLocation || validBySize
+                    } else if (hasLocationInfo) {
+                        validByLocation
+                    } else if (hasSizeInfo) {
+                        validBySize
+                    } else {
+                        true
+                    }
+                }
+
                 val familiaFormateada = familia.split("/").joinToString(" y ") { it.trim() }
                 _uiState.update {
                     it.copy(
@@ -137,7 +215,7 @@ class WoundViewModel(
                         productos = productos,
                         showResults = true,
                         isLoading = false,
-                        noMatchFound = false
+                        noMatchFound = productos.isEmpty()
                     )
                 }
             } else {
