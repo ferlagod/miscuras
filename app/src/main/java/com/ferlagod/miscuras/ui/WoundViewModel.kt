@@ -32,6 +32,7 @@ data class WoundUiState(
     val woundLength: String = "",
     val woundWidth: String = "",
     val specialLocation: String = "Ninguno",
+    val infectionGerm: String = "Desconocido",
     val familiaRecomendada: String? = null,
     val productos: List<ApositoEntity> = emptyList(),
     val showResults: Boolean = false,
@@ -133,6 +134,10 @@ class WoundViewModel(
         _uiState.update { it.copy(specialLocation = location) }
     }
 
+    fun onInfectionGermChanged(germ: String) {
+        _uiState.update { it.copy(infectionGerm = germ) }
+    }
+
 
     /**
      * Ejecuta la búsqueda de apósitos basados en los parámetros clínicos
@@ -150,9 +155,55 @@ class WoundViewModel(
             )
 
             if (familia != null) {
-                val productosBrutos = repository.obtenerProductosPorFamilias(familia)
-                
-                val wLength = state.woundLength.replace(",", ".").toFloatOrNull()
+                // --- NUEVA LÓGICA DE MICROORGANISMOS ---
+                var familiaModificada = familia
+                    if (state.selectedInfeccion && state.infectionGerm != "Desconocido") {
+                        val germ = state.infectionGerm
+                        // Dependiendo del germen, forzamos la búsqueda de familias específicas además o en lugar de la genérica
+                        val nuevasFamilias = mutableSetOf<String>()
+                        
+                        // Añadir la familia base que corresponde al nivel de exudado (para conservar la textura/absorción correcta)
+                        // Por ejemplo, si es "Plata / Alginato", queremos conservar que es un Alginato si el exudado es alto.
+                        nuevasFamilias.addAll(familia.split("/").map { it.trim() })
+                        
+                        when (germ) {
+                            "Pseudomonas aeruginosa" -> {
+                                nuevasFamilias.add("Plata")
+                                nuevasFamilias.add("Cadexómero Yodado")
+                                nuevasFamilias.add("Limpieza de heridas") // Prontosan (PHMB)
+                                nuevasFamilias.add("Alginogel") // Flaminal
+                            }
+                            "MRSA" -> {
+                                nuevasFamilias.add("Plata")
+                                nuevasFamilias.add("Limpieza de heridas") // Prontosan (PHMB)
+                                nuevasFamilias.add("Alginogel") // Flaminal
+                                nuevasFamilias.add("Malla DACC") // Cutimed Sorbact
+                            }
+                            "Candida albicans" -> {
+                                nuevasFamilias.add("Plata")
+                                nuevasFamilias.add("Limpieza de heridas")
+                                nuevasFamilias.add("Malla DACC") // Cutimed Sorbact (muy eficaz contra hongos)
+                            }
+                            "Acinetobacter" -> {
+                                nuevasFamilias.add("Plata")
+                                nuevasFamilias.add("Limpieza de heridas") // PHMB
+                                nuevasFamilias.add("Malla DACC") // Cutimed Sorbact
+                            }
+                            "Biofilm complejo" -> {
+                                nuevasFamilias.add("Cadexómero Yodado")
+                                nuevasFamilias.add("Limpieza de heridas")
+                                nuevasFamilias.add("Plata")
+                                nuevasFamilias.add("Alginogel")
+                            }
+                        }
+                        
+                        // Reescribimos 'familiaModificada'
+                        familiaModificada = nuevasFamilias.joinToString(" / ")
+                    }
+
+                    val productosBrutos = repository.obtenerProductosPorFamilias(familiaModificada)
+                    
+                    val wLength = state.woundLength.replace(",", ".").toFloatOrNull()
                 val wWidth = state.woundWidth.replace(",", ".").toFloatOrNull()
                 val hasSizeInfo = wLength != null && wWidth != null
                 val hasLocationInfo = state.specialLocation != "Ninguno"
@@ -208,7 +259,7 @@ class WoundViewModel(
                     }
                 }
 
-                val familiaFormateada = familia.split("/").joinToString(" y ") { it.trim() }
+                val familiaFormateada = familiaModificada.split("/").joinToString(" y ") { it.trim() }
                 _uiState.update {
                     it.copy(
                         familiaRecomendada = familiaFormateada,

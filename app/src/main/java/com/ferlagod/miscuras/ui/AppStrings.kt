@@ -36,6 +36,16 @@ sealed interface AppStrings {
     val locationHeel: String
     val locationSacrum: String
     
+    val germLabel: String
+    val germDesc: String
+    val germNone: String
+    val germPseudomonas: String
+    val germMRSA: String
+    val germCandida: String
+    val germAcinetobacter: String
+    val germBiofilm: String
+    val infectionDisclaimer: String
+    
     // Lecho values
     val necrosis: String
     val esfacelo: String
@@ -159,6 +169,12 @@ sealed interface AppStrings {
                 "Ninguno" -> s.locationNone
                 "Talón" -> s.locationHeel
                 "Sacro" -> s.locationSacrum
+                "Desconocido" -> s.germNone
+                "Pseudomonas aeruginosa" -> s.germPseudomonas
+                "MRSA" -> s.germMRSA
+                "Candida albicans" -> s.germCandida
+                "Acinetobacter" -> s.germAcinetobacter
+                "Biofilm complejo" -> s.germBiofilm
                 else -> term // Fallback for specific names
             }
         }
@@ -191,6 +207,13 @@ sealed interface AppStrings {
                 sEs.locationNone, sEn.locationNone, sPt.locationNone -> "Ninguno"
                 sEs.locationHeel, sEn.locationHeel, sPt.locationHeel -> "Talón"
                 sEs.locationSacrum, sEn.locationSacrum, sPt.locationSacrum -> "Sacro"
+                
+                sEs.germNone, sEn.germNone, sPt.germNone -> "Desconocido"
+                sEs.germPseudomonas, sEn.germPseudomonas, sPt.germPseudomonas -> "Pseudomonas aeruginosa"
+                sEs.germMRSA, sEn.germMRSA, sPt.germMRSA -> "MRSA"
+                sEs.germCandida, sEn.germCandida, sPt.germCandida -> "Candida albicans"
+                sEs.germAcinetobacter, sEn.germAcinetobacter, sPt.germAcinetobacter -> "Acinetobacter"
+                sEs.germBiofilm, sEn.germBiofilm, sPt.germBiofilm -> "Biofilm complejo"
                 else -> translatedTerm
             }
         }
@@ -225,6 +248,16 @@ object EsStrings : AppStrings {
     override val locationNone = "Ninguna"
     override val locationHeel = "Talón"
     override val locationSacrum = "Sacro"
+    
+    override val germLabel = "Microorganismo"
+    override val germDesc = "¿Se conoce el germen causante?"
+    override val germNone = "Desconocido / General"
+    override val germPseudomonas = "Pseudomonas aeruginosa"
+    override val germMRSA = "Staphylococcus aureus (MRSA)"
+    override val germCandida = "Candida albicans"
+    override val germAcinetobacter = "Acinetobacter"
+    override val germBiofilm = "Biofilm complejo"
+    override val infectionDisclaimer = "Nota: Ningún apósito sustituye al desbridamiento cortante o mecánico, que es el paso principal en el control del biofilm y la infección. Los apósitos son coadyuvantes en esta fase de limpieza."
     
     override val necrosis = "Necrosis"
     override val esfacelo = "Esfacelo"
@@ -335,6 +368,16 @@ object EnStrings : AppStrings {
     override val locationHeel = "Heel"
     override val locationSacrum = "Sacrum"
     
+    override val germLabel = "Microorganism"
+    override val germDesc = "Is the causative germ known?"
+    override val germNone = "Unknown / General"
+    override val germPseudomonas = "Pseudomonas aeruginosa"
+    override val germMRSA = "Staphylococcus aureus (MRSA)"
+    override val germCandida = "Candida albicans"
+    override val germAcinetobacter = "Acinetobacter"
+    override val germBiofilm = "Complex biofilm"
+    override val infectionDisclaimer = "Note: No dressing replaces sharp or mechanical debridement, which is the main step in controlling biofilm and infection. Dressings are adjunctive in this cleaning phase."
+    
     override val necrosis = "Necrosis"
     override val esfacelo = "Slough"
     override val granulacion = "Granulation"
@@ -443,6 +486,16 @@ object PtStrings : AppStrings {
     override val locationNone = "Nenhuma"
     override val locationHeel = "Calcanhar"
     override val locationSacrum = "Sacro"
+    
+    override val germLabel = "Micro-organismo"
+    override val germDesc = "O germe causador é conhecido?"
+    override val germNone = "Desconhecido / Geral"
+    override val germPseudomonas = "Pseudomonas aeruginosa"
+    override val germMRSA = "Staphylococcus aureus (MRSA)"
+    override val germCandida = "Candida albicans"
+    override val germAcinetobacter = "Acinetobacter"
+    override val germBiofilm = "Biofilme complexo"
+    override val infectionDisclaimer = "Nota: Nenhum curativo substitui o desbridamento cortante ou mecânico, que é a principal etapa no controle do biofilme e da infecção. Os curativos são coadjuvantes nesta fase de limpeza."
     
     override val necrosis = "Necrose"
     override val esfacelo = "Esfacelo"

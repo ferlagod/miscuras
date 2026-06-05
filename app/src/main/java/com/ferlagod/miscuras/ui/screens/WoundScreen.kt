@@ -30,6 +30,9 @@ import androidx.compose.material.icons.filled.LocalHospital
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material.icons.filled.Warning
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowDropUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -127,6 +130,7 @@ fun WoundScreen(viewModel: WoundViewModel) {
                     onLechoChanged = { viewModel.onLechoChanged(it) },
                     onExudadoChanged = { viewModel.onExudadoChanged(it) },
                     onInfeccionChanged = { viewModel.onInfeccionChanged(it) },
+                    onInfectionGermChanged = { viewModel.onInfectionGermChanged(it) },
                     onWoundLengthChanged = { viewModel.onWoundLengthChanged(it) },
                     onWoundWidthChanged = { viewModel.onWoundWidthChanged(it) },
                     onSpecialLocationChanged = { viewModel.onSpecialLocationChanged(it) },
@@ -269,6 +273,7 @@ private fun SelectionContent(
     onLechoChanged: (String) -> Unit,
     onExudadoChanged: (String) -> Unit,
     onInfeccionChanged: (Boolean) -> Unit,
+    onInfectionGermChanged: (String) -> Unit,
     onWoundLengthChanged: (String) -> Unit,
     onWoundWidthChanged: (String) -> Unit,
     onSpecialLocationChanged: (String) -> Unit,
@@ -403,6 +408,53 @@ private fun SelectionContent(
                     strings = strings,
                     enabled = !isPielIntacta
                 )
+            }
+            
+            if (uiState.selectedInfeccion && !isPielIntacta) {
+                item {
+                    Text(
+                        text = strings.infectionDisclaimer,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    
+                    val germOptionsTrans = listOf(
+                        strings.germNone,
+                        strings.germPseudomonas,
+                        strings.germMRSA,
+                        strings.germCandida,
+                        strings.germAcinetobacter,
+                        strings.germBiofilm
+                    )
+                    
+                    val currentGermTrans = when(uiState.infectionGerm) {
+                        "Pseudomonas aeruginosa" -> strings.germPseudomonas
+                        "MRSA" -> strings.germMRSA
+                        "Candida albicans" -> strings.germCandida
+                        "Acinetobacter" -> strings.germAcinetobacter
+                        "Biofilm complejo" -> strings.germBiofilm
+                        else -> strings.germNone
+                    }
+                    
+                    GermSelectorCard(
+                        germSelected = currentGermTrans,
+                        germOptions = germOptionsTrans,
+                        onGermChange = { transGerm ->
+                            val dbGerm = when(transGerm) {
+                                strings.germPseudomonas -> "Pseudomonas aeruginosa"
+                                strings.germMRSA -> "MRSA"
+                                strings.germCandida -> "Candida albicans"
+                                strings.germAcinetobacter -> "Acinetobacter"
+                                strings.germBiofilm -> "Biofilm complejo"
+                                else -> "Desconocido"
+                            }
+                            onInfectionGermChanged(dbGerm)
+                        },
+                        strings = strings
+                    )
+                }
             }
 
 
@@ -650,6 +702,32 @@ private fun ResultsContent(
 ) {
     var selectedProduct by remember { mutableStateOf<ApositoEntity?>(null) }
 
+    // Lista de productos agrupados
+    val productosAgrupados = remember(uiState.productos) { uiState.productos.groupBy { it.familiaGenerica } }
+    
+    // Definir un orden lógico (Limpiadores primero, luego antimicrobianos, luego resto)
+    val ordenPrioridad = listOf(
+        "Limpieza de heridas", "Plata", "Malla DACC", "Cadexómero Yodado", "Alginogel", 
+        "Desbridante Enzimatico", "Alginato", "Hidrofibra", "Espuma Poliuretano", 
+        "Malla Silicona", "Hidrocoloide", "Hidrogel", "Colágeno", "Superabsorbente", 
+        "Carbon", "Carbón y plata", "Acidos Grasos Hiperoxigenados", "Protector Cutaneo", "Pomada"
+    )
+    
+    val familiasOrdenadas = remember(productosAgrupados) {
+        productosAgrupados.keys.sortedWith(compareBy<String>(
+            { familia -> 
+                val idx = ordenPrioridad.indexOf(familia)
+                if (idx != -1) idx else 999 
+            },
+            { it } // Si ambos son 999, orden alfabético
+        ))
+    }
+
+    // Estado para llevar la cuenta de qué familias están expandidas.
+    // Por defecto, abrimos solo la primera.
+    var expandedFamilies by remember(familiasOrdenadas) { mutableStateOf(setOf(familiasOrdenadas.firstOrNull() ?: "")) }
+
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -723,12 +801,54 @@ private fun ResultsContent(
                     )
                 }
 
-                // Lista de productos
-                items(uiState.productos) { producto ->
-                    ProductCard(
-                        producto = producto,
-                        onClick = { selectedProduct = producto }
-                    )
+                familiasOrdenadas.forEach { familia ->
+                    val isExpanded = expandedFamilies.contains(familia)
+                    val productosDeFamilia = productosAgrupados[familia] ?: emptyList()
+
+                    item {
+                        androidx.compose.material3.Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                                .clickable {
+                                    expandedFamilies = if (isExpanded) {
+                                        expandedFamilies - familia
+                                    } else {
+                                        expandedFamilies + familia
+                                    }
+                                },
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "$familia (${productosDeFamilia.size})",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                androidx.compose.material3.Icon(
+                                    imageVector = if (isExpanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
+                                    contentDescription = "Expandir/Contraer",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                    
+                    if (isExpanded) {
+                        items(productosDeFamilia) { producto ->
+                            ProductCard(
+                                producto = producto,
+                                onClick = { selectedProduct = producto }
+                            )
+                        }
+                    }
                 }
 
                 // Botón para sugerir producto
@@ -1722,6 +1842,95 @@ private fun SizeInputCard(
                                         imageVector = Icons.Default.CheckCircle,
                                         contentDescription = null,
                                         tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            }
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+// ============================================================
+// COMPONENTE — Tarjeta de Selección de Germen
+// ============================================================
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun GermSelectorCard(
+    germSelected: String,
+    germOptions: List<String>,
+    onGermChange: (String) -> Unit,
+    strings: AppStrings
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = strings.germLabel,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onErrorContainer
+            )
+            Text(
+                text = strings.germDesc,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
+            )
+            Spacer(modifier = Modifier.height(10.dp))
+            
+            var expanded by remember { mutableStateOf(false) }
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = it }
+            ) {
+                OutlinedTextField(
+                    value = germSelected,
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.error,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.error.copy(alpha = 0.5f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .menuAnchor()
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    germOptions.forEach { option ->
+                        DropdownMenuItem(
+                            text = {
+                                Text(
+                                    text = option,
+                                    fontWeight = if (option == germSelected) FontWeight.SemiBold else FontWeight.Normal
+                                )
+                            },
+                            onClick = {
+                                onGermChange(option)
+                                expanded = false
+                            },
+                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+                            trailingIcon = {
+                                if (option == germSelected) {
+                                    Icon(
+                                        imageVector = Icons.Default.CheckCircle,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.error,
                                         modifier = Modifier.size(18.dp)
                                     )
                                 }
