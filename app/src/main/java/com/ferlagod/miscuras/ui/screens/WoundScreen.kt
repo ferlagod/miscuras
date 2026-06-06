@@ -772,6 +772,43 @@ private fun ResultsContent(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(top = 8.dp, bottom = 32.dp)
             ) {
+                // Imagen del lecho
+                item {
+                    val lechoImageResId = when(uiState.selectedLecho) {
+                        "Necrosis" -> R.drawable.img_necrosis
+                        "Esfacelo" -> R.drawable.img_esfacelo
+                        "Granulación" -> R.drawable.img_granulacion
+                        "Epitelización" -> R.drawable.img_epitelial
+                        else -> null
+                    }
+                    if (lechoImageResId != null) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = lechoImageResId),
+                                contentDescription = uiState.selectedLecho,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(16.dp)),
+                                contentScale = ContentScale.FillWidth
+                            )
+                        }
+                    }
+                }
+
+                // AI Response
+                item {
+                    AiResponseCard(
+                        isLoading = uiState.isAiLoading,
+                        response = uiState.aiResponse,
+                        strings = strings
+                    )
+                }
+
                 // Resumen de la evaluación
                 item {
                     EvaluationSummaryCard(
@@ -1938,6 +1975,62 @@ private fun GermSelectorCard(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+// ============================================================
+// COMPONENTE — AI Response Card
+// ============================================================
+
+@Composable
+private fun AiResponseCard(isLoading: Boolean, response: String?, strings: AppStrings) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.LocalHospital,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = strings.aiAssistantTitle,
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            if (isLoading) {
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    modifier = Modifier.padding(16.dp)
+                )
+            } else {
+                Text(
+                    text = response ?: strings.aiResponseError,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                    textAlign = TextAlign.Start,
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }

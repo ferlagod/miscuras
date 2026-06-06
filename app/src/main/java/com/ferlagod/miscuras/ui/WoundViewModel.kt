@@ -39,6 +39,8 @@ data class WoundUiState(
     val isLoading: Boolean = false,
     val noMatchFound: Boolean = false,
     val showSplash: Boolean = true,
+    val aiResponse: String? = null,
+    val isAiLoading: Boolean = false,
     val currentLanguage: String = "es",
     val currentTheme: String = "dark", // system, light, dark
     // Estado del formulario de sugerencia
@@ -119,7 +121,12 @@ class WoundViewModel(
      * @param infeccion Verdadero si hay signos de infección, falso en caso contrario.
      */
     fun onInfeccionChanged(infeccion: Boolean) {
-        _uiState.update { it.copy(selectedInfeccion = infeccion) }
+        _uiState.update { 
+            it.copy(
+                selectedInfeccion = infeccion,
+                infectionGerm = if (infeccion) "Desconocido" else it.infectionGerm
+            )
+        }
     }
 
     fun onWoundLengthChanged(length: String) {
@@ -266,8 +273,23 @@ class WoundViewModel(
                         productos = productos,
                         showResults = true,
                         isLoading = false,
-                        noMatchFound = productos.isEmpty()
+                        noMatchFound = productos.isEmpty(),
+                        aiResponse = null,
+                        isAiLoading = true
                     )
+                }
+
+                viewModelScope.launch(Dispatchers.IO) {
+                    val respuesta = com.ferlagod.miscuras.network.AsistenteIA().obtenerExplicacionEducativa(
+                        lecho = state.selectedLecho,
+                        exudado = state.selectedExudado,
+                        infeccion = state.selectedInfeccion,
+                        germen = state.infectionGerm,
+                        tamanoLargo = state.woundLength,
+                        tamanoAncho = state.woundWidth,
+                        recomendacionBD = familiaFormateada
+                    )
+                    _uiState.update { it.copy(aiResponse = respuesta, isAiLoading = false) }
                 }
             } else {
                 _uiState.update {

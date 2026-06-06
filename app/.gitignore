@@ -21,6 +21,7 @@ build/
 
 # Local configuration file (sdk path, etc)
 local.properties
+secrets.properties
 
 # Log Files
 *.log
@@ -60,12 +61,12 @@ test_avif.png
 test_webp.png
 
 # --- Proprietary & Non-free data/assets ---
-app/src/main/res/raw/productos_apositos.csv
-app/src/main/res/drawable/img_*
-app/src/main/res/drawable/cn_*
-Impulsado por Forgejo
-Versión:
-15.0.1
-Página:
-59ms
-Plantilla:
+src/main/assets/*.db
+src/main/assets/*.sqlite
+src/main/res/raw/productos_apositos.csv
+src/main/res/raw/reglas_clinicas.csv
+src/main/res/drawable/img_necrosis.*
+src/main/res/drawable/img_esfacelo.*
+src/main/res/drawable/img_granulacion.*
+src/main/res/drawable/img_epitelial.*
+src/main/res/drawable/cn_*

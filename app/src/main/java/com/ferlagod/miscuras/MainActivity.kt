@@ -10,10 +10,19 @@
 package com.ferlagod.miscuras
 
 import android.os.Bundle
+import android.app.AlertDialog
+import android.view.View
+import android.widget.LinearLayout
+import android.widget.ProgressBar
+import android.widget.TextView
+import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
+import com.ferlagod.miscuras.network.AsistenteIA
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
@@ -36,10 +45,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 
 /**
- * Actividad principal de la aplicación.
- * Actúa como punto de entrada y configura el contenedor principal,
- * inicializando la base de datos, el repositorio y el ViewModel.
- * También gestiona el diálogo de salida de la aplicación.
+ * Actividad principal y punto de entrada de la aplicación.
+ * Configura la base de datos de Room en su primera ejecución y establece 
+ * la raíz de navegación de Jetpack Compose invocando a [WoundScreen].
  */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

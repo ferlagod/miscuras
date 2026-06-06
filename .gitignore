@@ -21,6 +21,7 @@ build/
 
 # Local configuration file (sdk path, etc)
 local.properties
+secrets.properties
 
 # Log Files
 *.log
@@ -56,6 +57,12 @@ test.png
 .venv/
 
 # --- Proprietary & Non-free data/assets ---
+app/src/main/assets/*.db
+app/src/main/assets/*.sqlite
 app/src/main/res/raw/productos_apositos.csv
-app/src/main/res/drawable/img_*
+app/src/main/res/raw/reglas_clinicas.csv
+app/src/main/res/drawable/img_necrosis.*
+app/src/main/res/drawable/img_esfacelo.*
+app/src/main/res/drawable/img_granulacion.*
+app/src/main/res/drawable/img_epitelial.*
 app/src/main/res/drawable/cn_*

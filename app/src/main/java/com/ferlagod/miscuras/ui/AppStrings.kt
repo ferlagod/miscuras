@@ -118,7 +118,6 @@ sealed interface AppStrings {
     
     // Suggest product form
     val suggestProductButton: String
-    val suggestProductDialogTitle: String
     val nameFieldLabel: String
     val isHealthProLabel: String
     val isLabLabel: String
@@ -126,6 +125,12 @@ sealed interface AppStrings {
     val productBedLabel: String
     val productExudateLabel: String
     val otherSuggestionsLabel: String
+    val suggestProductDialogTitle: String
+    val suggestProductTitle: String
+    val submitSuggestionButton: String
+    val cancelSuggestionButton: String
+    val aiAssistantTitle: String
+    val aiResponseError: String
     val cancelButton: String
     val sendButton: String
     val formSuccessMsg: String
@@ -324,7 +329,6 @@ object EsStrings : AppStrings {
     override val exitDialogDismiss = "No"
     
     override val suggestProductButton = "¿No encuentras un apósito? Sugiérelo"
-    override val suggestProductDialogTitle = "Sugerir nuevo producto"
     override val nameFieldLabel = "Tu nombre"
     override val isHealthProLabel = "¿Eres profesional sanitario?"
     override val isLabLabel = "¿Perteneces a un laboratorio?"
@@ -332,6 +336,12 @@ object EsStrings : AppStrings {
     override val productBedLabel = "Lecho indicado"
     override val productExudateLabel = "Exudado indicado"
     override val otherSuggestionsLabel = "Otras sugerencias"
+    override val suggestProductDialogTitle = "Sugerir nuevo producto"
+    override val suggestProductTitle = "Sugerir nuevo producto"
+    override val submitSuggestionButton = "Enviar sugerencia"
+    override val cancelSuggestionButton = "Cancelar"
+    override val aiAssistantTitle = "Asistente Educativo"
+    override val aiResponseError = "No se pudo obtener la respuesta."
     override val cancelButton = "Cancelar"
     override val sendButton = "Enviar"
     override val formSuccessMsg = "Sugerencia enviada correctamente. ¡Gracias!"
@@ -443,7 +453,6 @@ object EnStrings : AppStrings {
     override val exitDialogDismiss = "No"
     
     override val suggestProductButton = "Can't find a dressing? Suggest it"
-    override val suggestProductDialogTitle = "Suggest new product"
     override val nameFieldLabel = "Your name"
     override val isHealthProLabel = "Are you a healthcare professional?"
     override val isLabLabel = "Do you belong to a laboratory?"
@@ -451,6 +460,12 @@ object EnStrings : AppStrings {
     override val productBedLabel = "Indicated wound bed"
     override val productExudateLabel = "Indicated exudate"
     override val otherSuggestionsLabel = "Other suggestions"
+    override val suggestProductDialogTitle = "Suggest new product"
+    override val suggestProductTitle = "Suggest new product"
+    override val submitSuggestionButton = "Submit suggestion"
+    override val cancelSuggestionButton = "Cancel"
+    override val aiAssistantTitle = "Educational Assistant"
+    override val aiResponseError = "Could not retrieve the response."
     override val cancelButton = "Cancel"
     override val sendButton = "Send"
     override val formSuccessMsg = "Suggestion sent successfully. Thank you!"
@@ -562,7 +577,6 @@ object PtStrings : AppStrings {
     override val exitDialogDismiss = "Não"
     
     override val suggestProductButton = "Não encontra um curativo? Sugira-o"
-    override val suggestProductDialogTitle = "Sugerir novo produto"
     override val nameFieldLabel = "Seu nome"
     override val isHealthProLabel = "Você é profissional de saúde?"
     override val isLabLabel = "Você pertence a um laboratório?"
@@ -570,6 +584,12 @@ object PtStrings : AppStrings {
     override val productBedLabel = "Leito indicado"
     override val productExudateLabel = "Exsudato indicado"
     override val otherSuggestionsLabel = "Outras sugestões"
+    override val suggestProductDialogTitle = "Sugerir novo produto"
+    override val suggestProductTitle = "Sugerir novo produto"
+    override val submitSuggestionButton = "Enviar sugestão"
+    override val cancelSuggestionButton = "Cancelar"
+    override val aiAssistantTitle = "Assistente Educativo"
+    override val aiResponseError = "Não foi possível obter a resposta."
     override val cancelButton = "Cancelar"
     override val sendButton = "Enviar"
     override val formSuccessMsg = "Sugestão enviada com sucesso. Obrigado!"
