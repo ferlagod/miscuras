@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun BradenScreen(
     onBackClick: () -> Unit,
+    onScoreCalculated: (Int) -> Unit,
     strings: AppStrings
 ) {
     var percepcion by remember { mutableStateOf(4) }
@@ -35,6 +36,10 @@ fun BradenScreen(
     var roce by remember { mutableStateOf(3) }
 
     val totalScore = percepcion + humedad + actividad + movilidad + nutricion + roce
+
+    LaunchedEffect(totalScore) {
+        onScoreCalculated(totalScore)
+    }
 
     val riskLevel = when {
         totalScore >= 15 -> "Riesgo Bajo / Sin Riesgo"

@@ -59,6 +59,24 @@ sealed interface AppStrings {
     val moderado: String
     val alto: String
     
+    // Tipo Exudado
+    val exudateTypeLabel: String
+    val exudateTypeDesc: String
+    val exuSeroso: String
+    val exuTurbio: String
+    val exuPurulento: String
+    val exuHemorragico: String
+    val exuSerohemorragico: String
+    
+    // Piel Perilesional
+    val perilesionalLabel: String
+    val perilesionalDesc: String
+    val periSana: String
+    val periMacerada: String
+    val periDescamativa: String
+    val periEccematosa: String
+    val periEritematosa: String
+    
     // Infeccion
     val yes: String
     val no: String
@@ -136,7 +154,20 @@ sealed interface AppStrings {
     val formSuccessMsg: String
     val formErrorMsg: String
     val formSendingMsg: String
-    
+    val primaryDressingCategory: String
+    val secondaryDressingCategory: String
+    val arRulerTitle: String
+    val arCancelButton: String
+    val arInstructionStartLength: String
+    val arInstructionEndLength: String
+    val arInstructionStartWidth: String
+    val arInstructionEndWidth: String
+    val arInstructionConfirm: String
+    val arRestartButton: String
+    val bradenProactiveSuggest: String
+    val bradenEvaluateButton: String
+    val bradenPreventiveAlert: String
+
     companion object {
         /**
          * Retorna el objeto contenedor de strings para el idioma especificado.
@@ -171,6 +202,16 @@ sealed interface AppStrings {
                 "Bajo" -> s.bajo
                 "Moderado" -> s.moderado
                 "Alto" -> s.alto
+                "Seroso" -> s.exuSeroso
+                "Turbio" -> s.exuTurbio
+                "Purulento" -> s.exuPurulento
+                "Hemorrágico" -> s.exuHemorragico
+                "Serohemorrágico" -> s.exuSerohemorragico
+                "Sana" -> s.periSana
+                "Macerada" -> s.periMacerada
+                "Descamativa" -> s.periDescamativa
+                "Eccematosa" -> s.periEccematosa
+                "Eritematosa" -> s.periEritematosa
                 "Ninguno" -> s.locationNone
                 "Talón" -> s.locationHeel
                 "Sacro" -> s.locationSacrum
@@ -209,6 +250,18 @@ sealed interface AppStrings {
                 sEs.moderado, sEn.moderado, sPt.moderado -> "Moderado"
                 sEs.alto, sEn.alto, sPt.alto -> "Alto"
                 
+                sEs.exuSeroso, sEn.exuSeroso, sPt.exuSeroso -> "Seroso"
+                sEs.exuTurbio, sEn.exuTurbio, sPt.exuTurbio -> "Turbio"
+                sEs.exuPurulento, sEn.exuPurulento, sPt.exuPurulento -> "Purulento"
+                sEs.exuHemorragico, sEn.exuHemorragico, sPt.exuHemorragico -> "Hemorrágico"
+                sEs.exuSerohemorragico, sEn.exuSerohemorragico, sPt.exuSerohemorragico -> "Serohemorrágico"
+
+                sEs.periSana, sEn.periSana, sPt.periSana -> "Sana"
+                sEs.periMacerada, sEn.periMacerada, sPt.periMacerada -> "Macerada"
+                sEs.periDescamativa, sEn.periDescamativa, sPt.periDescamativa -> "Descamativa"
+                sEs.periEccematosa, sEn.periEccematosa, sPt.periEccematosa -> "Eccematosa"
+                sEs.periEritematosa, sEn.periEritematosa, sPt.periEritematosa -> "Eritematosa"
+                
                 sEs.locationNone, sEn.locationNone, sPt.locationNone -> "Ninguno"
                 sEs.locationHeel, sEn.locationHeel, sPt.locationHeel -> "Talón"
                 sEs.locationSacrum, sEn.locationSacrum, sPt.locationSacrum -> "Sacro"
@@ -229,13 +282,7 @@ sealed interface AppStrings {
 object EsStrings : AppStrings {
     override val appName = "Mis Curas"
     override val disclaimerTitle = "Descargo de Responsabilidad"
-    override val disclaimerText = """
-        La aplicación "Mis Curas" es una herramienta de apoyo a la toma de decisiones dirigida exclusivamente a profesionales de enfermería. Las recomendaciones sugeridas se fundamentan en las directrices y documentos de consenso de la GNEAUPP (Grupo Nacional para el Estudio y Asesoramiento en Úlceras por Presión y Heridas Crónicas) y en el catálogo habitual de productos del Servicio Andaluz de Salud (SAS).
-        
-        Esta aplicación no sustituye el juicio clínico, la valoración directa de la herida ni la evaluación integral del paciente. La selección final del apósito o tratamiento es responsabilidad exclusiva del profesional sanitario a cargo, quien debe considerar las características individuales de cada caso.
-        
-        El desarrollador no asume ninguna responsabilidad por decisiones clínicas tomadas con base en la información proporcionada en esta aplicación, ni por la evolución, complicaciones o resultados derivados de la aplicación de los tratamientos aquí sugeridos.
-    """.trimIndent()
+    override val disclaimerText = "Esta aplicación es una herramienta de apoyo a la toma de decisiones clínicas y no reemplaza el juicio clínico independiente de un profesional sanitario cualificado. La Inteligencia Artificial proporciona sugerencias orientativas basadas en la información proporcionada; el diagnóstico y tratamiento definitivo son responsabilidad exclusiva del profesional."
     override val acceptButton = "Entendido y Aceptar"
     override val splashSubtitle = "Guía de apósitos para enfermeras"
     
@@ -274,6 +321,22 @@ object EsStrings : AppStrings {
     override val bajo = "Bajo"
     override val moderado = "Moderado"
     override val alto = "Alto"
+    
+    override val exudateTypeLabel = "Tipo de exudado"
+    override val exudateTypeDesc = "Aspecto clínico del fluido de la herida"
+    override val exuSeroso = "Seroso"
+    override val exuTurbio = "Turbio"
+    override val exuPurulento = "Purulento"
+    override val exuHemorragico = "Hemorrágico"
+    override val exuSerohemorragico = "Serohemorrágico"
+    
+    override val perilesionalLabel = "Piel perilesional"
+    override val perilesionalDesc = "Estado de la piel que rodea a la herida"
+    override val periSana = "Sana"
+    override val periMacerada = "Macerada"
+    override val periDescamativa = "Descamativa"
+    override val periEccematosa = "Eccematosa"
+    override val periEritematosa = "Eritematosa"
     
     override val yes = "Sí"
     override val no = "No"
@@ -347,19 +410,26 @@ object EsStrings : AppStrings {
     override val formSuccessMsg = "Sugerencia enviada correctamente. ¡Gracias!"
     override val formErrorMsg = "Error al enviar. Comprueba tu conexión."
     override val formSendingMsg = "Enviando..."
+    override val primaryDressingCategory = "Apósito Primario (Contacto con lecho)"
+    override val secondaryDressingCategory = "Apósito Secundario (Cobertura/Fijación)"
+    override val arRulerTitle = "Regla AR"
+    override val arCancelButton = "Cancelar"
+    override val arInstructionStartLength = "Mueve el móvil para detectar la superficie.\nArrastra el dedo para fijar el inicio del LARGO."
+    override val arInstructionEndLength = "Arrastra el dedo para fijar el fin del LARGO."
+    override val arInstructionStartWidth = "Largo: %s cm.\nArrastra el dedo para fijar el inicio del ANCHO."
+    override val arInstructionEndWidth = "Arrastra el dedo para fijar el fin del ANCHO."
+    override val arInstructionConfirm = "Largo: %s cm | Ancho: %s cm.\nPulsa Confirmar."
+    override val arRestartButton = "Reiniciar"
+    override val bradenProactiveSuggest = "¿Deseas realizar la valoración de riesgo de Braden para este paciente?"
+    override val bradenEvaluateButton = "Evaluar Escala Braden"
+    override val bradenPreventiveAlert = "Alerta Preventiva Braden (%s)"
 }
 
 /** Implementación de [AppStrings] para Inglés. */
 object EnStrings : AppStrings {
     override val appName = "My Cures"
     override val disclaimerTitle = "Disclaimer"
-    override val disclaimerText = """
-        The "Mis Curas" application is a decision support tool aimed exclusively at nursing professionals. The suggested recommendations are based on the guidelines and consensus documents of the GNEAUPP (National Group for the Study and Advisory of Pressure Ulcers and Chronic Wounds) and the usual product catalog of the Andalusian Health Service (SAS).
-        
-        This application is not a substitute for clinical judgment, direct wound assessment, or comprehensive patient evaluation. The final selection of the dressing or treatment is the sole responsibility of the healthcare professional in charge, who must consider the individual characteristics of each case.
-        
-        The developer assumes no responsibility for clinical decisions made based on the information provided in this application, nor for the evolution, complications, or results derived from the application of the treatments suggested here.
-    """.trimIndent()
+    override val disclaimerText = "This application is a clinical decision support tool and does not replace the independent clinical judgment of a qualified healthcare professional. Artificial Intelligence provides orientative suggestions based on the information provided; definitive diagnosis and treatment are the exclusive responsibility of the professional."
     override val acceptButton = "Understood & Accept"
     override val splashSubtitle = "Dressing guide for nurses"
     
@@ -398,6 +468,22 @@ object EnStrings : AppStrings {
     override val bajo = "Low"
     override val moderado = "Moderate"
     override val alto = "High"
+    
+    override val exudateTypeLabel = "Exudate type"
+    override val exudateTypeDesc = "Clinical appearance of wound fluid"
+    override val exuSeroso = "Serous"
+    override val exuTurbio = "Cloudy"
+    override val exuPurulento = "Purulent"
+    override val exuHemorragico = "Hemorrhagic"
+    override val exuSerohemorragico = "Serosanguineous"
+    
+    override val perilesionalLabel = "Periwound skin"
+    override val perilesionalDesc = "Condition of the skin surrounding the wound"
+    override val periSana = "Healthy"
+    override val periMacerada = "Macerated"
+    override val periDescamativa = "Desquamating"
+    override val periEccematosa = "Eczematous"
+    override val periEritematosa = "Erythematous"
     
     override val yes = "Yes"
     override val no = "No"
@@ -471,19 +557,26 @@ object EnStrings : AppStrings {
     override val formSuccessMsg = "Suggestion sent successfully. Thank you!"
     override val formErrorMsg = "Error sending. Check your connection."
     override val formSendingMsg = "Sending..."
+    override val primaryDressingCategory = "Primary Dressing (Wound contact)"
+    override val secondaryDressingCategory = "Secondary Dressing (Cover/Fixation)"
+    override val arRulerTitle = "AR Ruler"
+    override val arCancelButton = "Cancel"
+    override val arInstructionStartLength = "Move device to detect surface.\nDrag to set the start of the LENGTH."
+    override val arInstructionEndLength = "Drag to set the end of the LENGTH."
+    override val arInstructionStartWidth = "Length: %s cm.\nDrag to set the start of the WIDTH."
+    override val arInstructionEndWidth = "Drag to set the end of the WIDTH."
+    override val arInstructionConfirm = "Length: %s cm | Width: %s cm.\nPress Confirm."
+    override val arRestartButton = "Restart"
+    override val bradenProactiveSuggest = "Do you want to perform a Braden risk assessment for this patient?"
+    override val bradenEvaluateButton = "Evaluate Braden Scale"
+    override val bradenPreventiveAlert = "Braden Preventive Alert (%s)"
 }
 
 /** Implementación de [AppStrings] para Portugués. */
 object PtStrings : AppStrings {
     override val appName = "Minhas Curas"
     override val disclaimerTitle = "Aviso de Responsabilidade"
-    override val disclaimerText = """
-        O aplicativo "Mis Curas" é uma ferramenta de apoio à tomada de decisão dirigida exclusivamente a profissionais de enfermagem. As recomendações sugeridas fundamentam-se nas diretrizes e documentos de consenso da GNEAUPP (Grupo Nacional para o Estudo e Assessoramento em Úlceras por Pressão e Feridas Crônicas) e no catálogo habitual de produtos do Serviço Andaluz de Saúde (SAS).
-        
-        Este aplicativo não substitui o julgamento clínico, a avaliação direta da ferida ou a avaliação abrangente do paciente. A seleção final do curativo ou tratamento é de responsabilidade exclusiva do profissional de saúde responsável, que deve considerar as características individuais de cada caso.
-        
-        O desenvolvedor não assume qualquer responsabilidade por decisões clínicas tomadas com base nas informações fornecidas neste aplicativo, nem pela evolução, complicações ou resultados derivados da aplicação dos tratamentos aqui sugeridos.
-    """.trimIndent()
+    override val disclaimerText = "Este aplicativo é uma ferramenta de apoio à decisão clínica e não substitui o julgamento clínico independente de um profissional de saúde qualificado. A Inteligência Artificial fornece sugestões orientativas baseadas nas informações fornecidas; o diagnóstico e tratamento definitivos são de responsabilidade exclusiva do profissional."
     override val acceptButton = "Entendido e Aceito"
     override val splashSubtitle = "Guia de curativos para enfermeiras"
     
@@ -522,6 +615,22 @@ object PtStrings : AppStrings {
     override val bajo = "Baixo"
     override val moderado = "Moderado"
     override val alto = "Alto"
+    
+    override val exudateTypeLabel = "Tipo de exsudato"
+    override val exudateTypeDesc = "Aparência clínica do fluido da ferida"
+    override val exuSeroso = "Seroso"
+    override val exuTurbio = "Turvo"
+    override val exuPurulento = "Purulento"
+    override val exuHemorragico = "Hemorrágico"
+    override val exuSerohemorragico = "Sero-hemorrágico"
+    
+    override val perilesionalLabel = "Pele perilesional"
+    override val perilesionalDesc = "Condição da pele que circunda a ferida"
+    override val periSana = "Saudável"
+    override val periMacerada = "Macerada"
+    override val periDescamativa = "Descamativa"
+    override val periEccematosa = "Eczematosa"
+    override val periEritematosa = "Eritematosa"
     
     override val yes = "Sim"
     override val no = "Não"
@@ -595,4 +704,17 @@ object PtStrings : AppStrings {
     override val formSuccessMsg = "Sugestão enviada com sucesso. Obrigado!"
     override val formErrorMsg = "Erro ao enviar. Verifique sua conexão."
     override val formSendingMsg = "Enviando..."
+    override val primaryDressingCategory = "Curativo Primário (Contato com o leito)"
+    override val secondaryDressingCategory = "Curativo Secundário (Cobertura/Fixação)"
+    override val arRulerTitle = "Régua AR"
+    override val arCancelButton = "Cancelar"
+    override val arInstructionStartLength = "Mova o dispositivo para detectar a superfície.\nArraste para fixar o início do COMPRIMENTO."
+    override val arInstructionEndLength = "Arraste para fixar o fim do COMPRIMENTO."
+    override val arInstructionStartWidth = "Comprimento: %s cm.\nArraste para fixar o início da LARGURA."
+    override val arInstructionEndWidth = "Arraste para fixar o fim da LARGURA."
+    override val arInstructionConfirm = "Comprimento: %s cm | Largura: %s cm.\nPressione Confirmar."
+    override val arRestartButton = "Reiniciar"
+    override val bradenProactiveSuggest = "Deseja realizar a avaliação de risco de Braden para este paciente?"
+    override val bradenEvaluateButton = "Avaliar Escala de Braden"
+    override val bradenPreventiveAlert = "Alerta Preventivo Braden (%s)"
 }

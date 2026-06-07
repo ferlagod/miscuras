@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.withStyle
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
@@ -65,6 +66,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.ui.graphics.graphicsLayer
 import coil.compose.AsyncImage
 import androidx.compose.ui.platform.LocalContext
@@ -142,7 +144,9 @@ fun WoundScreen(viewModel: WoundViewModel) {
                     strings = strings,
                     onLechoChanged = { viewModel.onLechoChanged(it) },
                     onExudadoChanged = { viewModel.onExudadoChanged(it) },
+                    onExudateTypeChanged = { viewModel.onExudateTypeChanged(it) },
                     onBordesChanged = { viewModel.onBordesChanged(it) },
+                    onPerilesionalChanged = { viewModel.onPerilesionalChanged(it) },
                     onInfeccionChanged = { viewModel.onInfeccionChanged(it) },
                     onInfectionGermChanged = { viewModel.onInfectionGermChanged(it) },
                     onPainLevelChanged = { viewModel.onPainLevelChanged(it) },
@@ -171,18 +175,21 @@ fun WoundScreen(viewModel: WoundViewModel) {
                     currentLanguage = uiState.currentLanguage
                 )
             }
+            ScreenState.Braden -> {
+                com.ferlagod.miscuras.ui.screens.BradenScreen(
+                    onBackClick = { viewModel.hideBraden() },
+                    onScoreCalculated = { score -> viewModel.onBradenScoreUpdated(score) },
+                    strings = strings
+                )
+            }
             ScreenState.ArMeasure -> {
                 com.ferlagod.miscuras.ui.screens.ARMeasureScreen(
+                    strings = strings,
                     onBackClick = { viewModel.hideArMeasure() },
                     onMeasured = { length, width -> viewModel.onArMeasured(length, width) }
                 )
             }
-            ScreenState.Braden -> {
-                BradenScreen(
-                    onBackClick = { viewModel.hideBraden() },
-                    strings = strings
-                )
-            }
+
         }
     }
 
@@ -310,7 +317,9 @@ private fun SelectionContent(
     strings: AppStrings,
     onLechoChanged: (String) -> Unit,
     onExudadoChanged: (String) -> Unit,
+    onExudateTypeChanged: (String) -> Unit,
     onBordesChanged: (String) -> Unit,
+    onPerilesionalChanged: (String) -> Unit,
     onInfeccionChanged: (Boolean) -> Unit,
     onInfectionGermChanged: (String) -> Unit,
     onPainLevelChanged: (Float) -> Unit,
@@ -476,16 +485,48 @@ private fun SelectionContent(
                 )
             }
 
+            // — Selector: Tipo de Exudado —
+            if (uiState.selectedExudado != "Nulo" && !isPielIntacta) {
+                item {
+                    val currentExuTypeTrans = AppStrings.translateClinicalTerm(uiState.selectedExudateType, uiState.currentLanguage)
+                    val optionsExuTypeTrans = WoundViewModel.opcionesTipoExudado.map { AppStrings.translateClinicalTerm(it, uiState.currentLanguage) }
+                    ChipGroupCard(
+                        label = strings.exudateTypeLabel,
+                        description = strings.exudateTypeDesc,
+                        selectedOption = currentExuTypeTrans,
+                        options = optionsExuTypeTrans,
+                        onOptionSelected = { onExudateTypeChanged(AppStrings.mapToDbTerm(it)) },
+                        enabled = true,
+                        chipType = "exudate"
+                    )
+                }
+            }
+
             // — Selector: Bordes —
             item {
                 val currentBordes = uiState.selectedBordes
                 val optionsBordes = WoundViewModel.opcionesBordes
                 ChipGroupCard(
-                    label = "Bordes de la herida (E)",
-                    description = "Estado de los bordes perilesionales",
+                    label = "Bordes de la herida",
+                    description = "Estado de los márgenes de la lesión",
                     selectedOption = currentBordes,
                     options = optionsBordes,
                     onOptionSelected = onBordesChanged,
+                    enabled = !isPielIntacta,
+                    chipType = "edge"
+                )
+            }
+
+            // — Selector: Piel Perilesional —
+            item {
+                val currentPeriTrans = AppStrings.translateClinicalTerm(uiState.selectedPerilesional, uiState.currentLanguage)
+                val optionsPeriTrans = WoundViewModel.opcionesPerilesional.map { AppStrings.translateClinicalTerm(it, uiState.currentLanguage) }
+                ChipGroupCard(
+                    label = strings.perilesionalLabel,
+                    description = strings.perilesionalDesc,
+                    selectedOption = currentPeriTrans,
+                    options = optionsPeriTrans,
+                    onOptionSelected = { onPerilesionalChanged(AppStrings.mapToDbTerm(it)) },
                     enabled = !isPielIntacta,
                     chipType = "edge"
                 )
@@ -555,6 +596,42 @@ private fun SelectionContent(
                     onPainChange = onPainLevelChanged,
                     enabled = !isPielIntacta
                 )
+            }
+
+            // — Sugerencia Proactiva de Braden —
+            if (uiState.bradenScore == null && (uiState.selectedLecho == "Piel Intacta (Prevención)" || uiState.specialLocation == "Sacro" || uiState.specialLocation == "Talón")) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                                modifier = Modifier.size(32.dp)
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = strings.bradenProactiveSuggest,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                textAlign = TextAlign.Center
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Button(
+                                onClick = onBradenClick,
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                            ) {
+                                Text(strings.bradenEvaluateButton)
+                            }
+                        }
+                    }
+                }
             }
 
             // — Botón de búsqueda —
@@ -702,7 +779,8 @@ private fun ChipGroupCard(
                         ),
                         border = null,
                         shape = RoundedCornerShape(12.dp),
-                        enabled = enabled
+                        enabled = enabled,
+                        modifier = Modifier.defaultMinSize(minHeight = 48.dp)
                     )
                 }
             }
@@ -889,8 +967,15 @@ private fun ResultsContent(
 ) {
     var selectedProduct by remember { mutableStateOf<ApositoEntity?>(null) }
 
-    // Lista de productos agrupados
-    val productosAgrupados = remember(uiState.productos) { uiState.productos.groupBy { it.familiaGenerica } }
+    // Listas de productos agrupados por uso
+    val productosPrimariosAgrupados = remember(uiState.productos) { 
+        uiState.productos.filter { it.usoPrimarioSecundario.contains("Primari", ignoreCase = true) || it.usoPrimarioSecundario.contains("Ambos", ignoreCase = true) }
+        .groupBy { it.familiaGenerica } 
+    }
+    val productosSecundariosAgrupados = remember(uiState.productos) { 
+        uiState.productos.filter { it.usoPrimarioSecundario.contains("Secundari", ignoreCase = true) || it.usoPrimarioSecundario.contains("Ambos", ignoreCase = true) }
+        .groupBy { it.familiaGenerica } 
+    }
     
     // Definir un orden lógico (Limpiadores primero, luego antimicrobianos, luego resto)
     val ordenPrioridad = listOf(
@@ -900,19 +985,21 @@ private fun ResultsContent(
         "Carbon", "Carbón y plata", "Acidos Grasos Hiperoxigenados", "Protector Cutaneo", "Pomada"
     )
     
-    val familiasOrdenadas = remember(productosAgrupados) {
-        productosAgrupados.keys.sortedWith(compareBy<String>(
-            { familia -> 
-                val idx = ordenPrioridad.indexOf(familia)
-                if (idx != -1) idx else 999 
-            },
-            { it } // Si ambos son 999, orden alfabético
+    val familiasPrimariasOrdenadas = remember(productosPrimariosAgrupados) {
+        productosPrimariosAgrupados.keys.sortedWith(compareBy<String>(
+            { familia -> val idx = ordenPrioridad.indexOf(familia); if (idx != -1) idx else 999 },
+            { it }
+        ))
+    }
+    val familiasSecundariasOrdenadas = remember(productosSecundariosAgrupados) {
+        productosSecundariosAgrupados.keys.sortedWith(compareBy<String>(
+            { familia -> val idx = ordenPrioridad.indexOf(familia); if (idx != -1) idx else 999 },
+            { it }
         ))
     }
 
-    // Estado para llevar la cuenta de qué familias están expandidas.
-    // Por defecto, abrimos solo la primera.
-    var expandedFamilies by remember(familiasOrdenadas) { mutableStateOf(setOf(familiasOrdenadas.firstOrNull() ?: "")) }
+    var expandedFamiliesPrimary by remember(familiasPrimariasOrdenadas) { mutableStateOf(setOf(familiasPrimariasOrdenadas.firstOrNull() ?: "")) }
+    var expandedFamiliesSecondary by remember(familiasSecundariasOrdenadas) { mutableStateOf(setOf(familiasSecundariasOrdenadas.firstOrNull() ?: "")) }
 
     val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -997,6 +1084,42 @@ private fun ResultsContent(
                     }
                 }
 
+                // Alerta Preventiva Braden
+                if (uiState.bradenScore != null && uiState.bradenScore!! < 12) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(
+                                        imageVector = Icons.Default.Warning,
+                                        contentDescription = "Alerta",
+                                        tint = MaterialTheme.colorScheme.error,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = String.format(java.util.Locale.US, strings.bradenPreventiveAlert, uiState.bradenScore.toString()),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onErrorContainer
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text(
+                                    text = "Paciente con Riesgo Alto/Muy Alto. Recomendar proactivamente Ácidos Grasos Hiperoxigenados (AGHO), espumas de poliuretano sacras/talonares de cinco capas, y colchón de aire alternante (SEMP).",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            }
+                        }
+                    }
+                }
+
                 // AI Response
                 item {
                     AiResponseCard(
@@ -1027,17 +1150,18 @@ private fun ResultsContent(
 
                 // Título de la sección de productos
                 item {
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "${strings.availableProducts} (${uiState.productos.size})",
+                        text = strings.primaryDressingCategory,
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.primary
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
                 }
 
-                familiasOrdenadas.forEach { familia ->
-                    val isExpanded = expandedFamilies.contains(familia)
-                    val productosDeFamilia = productosAgrupados[familia] ?: emptyList()
+                familiasPrimariasOrdenadas.forEach { familia ->
+                    val isExpanded = expandedFamiliesPrimary.contains(familia)
+                    val productosDeFamilia = productosPrimariosAgrupados[familia] ?: emptyList()
 
                     item {
                         androidx.compose.material3.Surface(
@@ -1045,10 +1169,77 @@ private fun ResultsContent(
                                 .fillMaxWidth()
                                 .padding(vertical = 4.dp)
                                 .clickable {
-                                    expandedFamilies = if (isExpanded) {
-                                        expandedFamilies - familia
+                                    expandedFamiliesPrimary = if (isExpanded) {
+                                        expandedFamiliesPrimary - familia
                                     } else {
-                                        expandedFamilies + familia
+                                        expandedFamiliesPrimary + familia
+                                    }
+                                },
+                            shape = RoundedCornerShape(12.dp),
+                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "$familia (${productosDeFamilia.size})",
+                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                androidx.compose.material3.Icon(
+                                    imageVector = if (isExpanded) Icons.Default.ArrowDropUp else Icons.Default.ArrowDropDown,
+                                    contentDescription = "Expandir/Contraer",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                    
+                    if (isExpanded) {
+                        items(productosDeFamilia) { producto ->
+                            ProductCard(
+                                producto = producto,
+                                onClick = {
+                                    selectedProduct = producto
+                                },
+                                onCopyClick = {
+                                    val resumen = onCopyProductSummary(producto.nombreComercial)
+                                    clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(resumen))
+                                    android.widget.Toast.makeText(context, "Resumen evolutivo copiado", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            )
+                        }
+                    }
+                }
+
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = strings.secondaryDressingCategory,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+
+                familiasSecundariasOrdenadas.forEach { familia ->
+                    val isExpanded = expandedFamiliesSecondary.contains(familia)
+                    val productosDeFamilia = productosSecundariosAgrupados[familia] ?: emptyList()
+
+                    item {
+                        androidx.compose.material3.Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp)
+                                .clickable {
+                                    expandedFamiliesSecondary = if (isExpanded) {
+                                        expandedFamiliesSecondary - familia
+                                    } else {
+                                        expandedFamiliesSecondary + familia
                                     }
                                 },
                             shape = RoundedCornerShape(12.dp),
@@ -1686,15 +1877,11 @@ private fun SettingsDialog(
     val uriHandler = LocalUriHandler.current
     var showDeveloperInfo by remember { mutableStateOf(false) }
 
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 16.dp),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-        ) {
+    androidx.compose.material3.ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = MaterialTheme.colorScheme.surface,
+        dragHandle = { androidx.compose.material3.BottomSheetDefaults.DragHandle() }
+    ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1842,7 +2029,6 @@ private fun SettingsDialog(
                 }
             }
         }
-    }
 }
 
 // ============================================================
@@ -1865,14 +2051,11 @@ private fun SuggestProductDialog(
     var exudateLevel by remember { mutableStateOf("") }
     var otherSuggestions by remember { mutableStateOf("") }
 
-    Dialog(onDismissRequest = { if (!isSubmitting) onDismiss() }) {
-        Card(
-            shape = RoundedCornerShape(20.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
-            ),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-        ) {
+    androidx.compose.material3.ModalBottomSheet(
+        onDismissRequest = { if (!isSubmitting) onDismiss() },
+        containerColor = MaterialTheme.colorScheme.surface,
+        dragHandle = { androidx.compose.material3.BottomSheetDefaults.DragHandle() }
+    ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -1974,8 +2157,8 @@ private fun SuggestProductDialog(
                     }
                 }
             }
+            Spacer(modifier = Modifier.height(32.dp))
         }
-    }
 }
 
 // ============================================================
@@ -1996,9 +2179,6 @@ private fun SizeInputCard(
     onArMeasureClick: () -> Unit
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val isArSupported = remember {
-        context.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_CAMERA_AR)
-    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -2026,22 +2206,14 @@ private fun SizeInputCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                if (isArSupported) {
-                    IconButton(
-                        onClick = onArMeasureClick,
-                        modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer, androidx.compose.foundation.shape.CircleShape)
-                    ) {
-                        Icon(
-                            imageVector = androidx.compose.material.icons.Icons.Default.Search,
-                            contentDescription = "Medir con Cámara AR",
-                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    }
-                }
             }
             Spacer(modifier = Modifier.height(10.dp))
             
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 OutlinedTextField(
                     value = lengthValue,
                     onValueChange = { 
@@ -2076,6 +2248,19 @@ private fun SizeInputCard(
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true
                 )
+                IconButton(
+                    onClick = onArMeasureClick,
+                    modifier = Modifier
+                        .size(56.dp)
+                        .background(MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(12.dp))
+                ) {
+                    Icon(
+                        imageVector = androidx.compose.material.icons.Icons.Default.CameraAlt,
+                        contentDescription = "Measure with AR",
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -2325,16 +2510,49 @@ private fun AiResponseCard(isLoading: Boolean, response: String?, strings: AppSt
                     modifier = Modifier.padding(16.dp)
                 )
             } else {
-                Text(
-                    text = response ?: strings.aiResponseError,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onTertiaryContainer,
-                    textAlign = TextAlign.Start,
+                Surface(
+                    color = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()
-                )
+                ) {
+                    Text(
+                        text = parseSimpleMarkdown(response ?: strings.aiResponseError),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier.padding(16.dp).fillMaxWidth()
+                    )
+                }
             }
         }
     }
+}
+
+private fun parseSimpleMarkdown(text: String): androidx.compose.ui.text.AnnotatedString {
+    val builder = androidx.compose.ui.text.AnnotatedString.Builder()
+    val regex = Regex("\\*\\*(.*?)\\*\\*|\\*(.*?)\\*")
+    var lastIndex = 0
+    regex.findAll(text).forEach { matchResult ->
+        builder.append(text.substring(lastIndex, matchResult.range.first))
+        if (matchResult.groups[1] != null) {
+            builder.withStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Bold)) {
+                append(matchResult.groups[1]!!.value)
+            }
+        } else if (matchResult.groups[2] != null) {
+            // Check if it's not a bullet point at the start of a line
+            val inner = matchResult.groups[2]!!.value
+            if (inner.trim().isEmpty() || inner.contains("\n")) {
+                builder.append(matchResult.value)
+            } else {
+                builder.withStyle(androidx.compose.ui.text.SpanStyle(fontStyle = androidx.compose.ui.text.font.FontStyle.Italic)) {
+                    append(inner)
+                }
+            }
+        }
+        lastIndex = matchResult.range.last + 1
+    }
+    builder.append(text.substring(lastIndex, text.length))
+    return builder.toAnnotatedString()
 }
 
 @Composable

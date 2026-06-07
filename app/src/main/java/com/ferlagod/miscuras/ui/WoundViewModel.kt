@@ -28,12 +28,15 @@ import kotlinx.coroutines.launch
 data class WoundUiState(
     val selectedLecho: String = "Piel Intacta (Prevención)",
     val selectedExudado: String = "Nulo",
+    val selectedExudateType: String = "Seroso",
     val selectedInfeccion: Boolean = false,
     val woundLength: String = "",
     val woundWidth: String = "",
     val specialLocation: String = "Ninguno",
     val infectionGerm: String = "Desconocido",
     val selectedBordes: String = "Sanos/Íntegros",
+    val selectedPerilesional: String = "Sana",
+    val bradenScore: Int? = null,
     val familiaRecomendada: String? = null,
     val productos: List<ApositoEntity> = emptyList(),
     val showResults: Boolean = false,
@@ -98,7 +101,9 @@ class WoundViewModel(
     companion object {
         val opcionesLecho = listOf("Necrosis", "Esfacelo", "Granulación", "Epitelización", "Piel Intacta (Prevención)")
         val opcionesExudado = listOf("Nulo", "Bajo", "Moderado", "Alto")
+        val opcionesTipoExudado = listOf("Seroso", "Turbio", "Purulento", "Hemorrágico", "Serohemorrágico")
         val opcionesBordes = listOf("Sanos/Íntegros", "Macerados", "Descamativos", "Hiperqueratósicos", "Socavados", "Epibólicos (enrollados)")
+        val opcionesPerilesional = listOf("Sana", "Macerada", "Descamativa", "Eccematosa", "Eritematosa")
     }
 
     /**
@@ -108,7 +113,7 @@ class WoundViewModel(
     fun onLechoChanged(lecho: String) {
         _uiState.update { 
             if (lecho == "Piel Intacta (Prevención)") {
-                it.copy(selectedLecho = lecho, selectedExudado = "Nulo", selectedInfeccion = false)
+                it.copy(selectedLecho = lecho, selectedExudado = "Nulo", selectedExudateType = "Seroso", selectedInfeccion = false)
             } else {
                 it.copy(selectedLecho = lecho)
             }
@@ -121,6 +126,10 @@ class WoundViewModel(
      */
     fun onExudadoChanged(exudado: String) {
         _uiState.update { it.copy(selectedExudado = exudado) }
+    }
+
+    fun onExudateTypeChanged(type: String) {
+        _uiState.update { it.copy(selectedExudateType = type) }
     }
 
     /**
@@ -200,6 +209,14 @@ class WoundViewModel(
         _uiState.update { it.copy(selectedBordes = bordes) }
     }
 
+    fun onPerilesionalChanged(peri: String) {
+        _uiState.update { it.copy(selectedPerilesional = peri) }
+    }
+
+    fun onBradenScoreUpdated(score: Int) {
+        _uiState.update { it.copy(bradenScore = score) }
+    }
+
     /**
      * Genera un resumen clínico estructurado basado en los criterios TIME
      */
@@ -214,18 +231,32 @@ class WoundViewModel(
         
         val aiPlan = state.aiResponse ?: "Pendiente de análisis clínico."
 
+        val bradenText = if (state.bradenScore != null) {
+            val riskText = when {
+                state.bradenScore >= 15 -> "Riesgo Bajo / Sin Riesgo"
+                state.bradenScore in 13..14 -> "Riesgo Moderado"
+                state.bradenScore in 10..12 -> "Riesgo Alto"
+                else -> "Riesgo Muy Alto"
+            }
+            "\n            [ESCALA BRADEN]\n            - Puntuación: ${state.bradenScore}/23 ($riskText)\n"
+        } else ""
+
+        val bradenPrevencion = if (state.bradenScore != null && state.bradenScore < 12) {
+            "\n            [PREVENCIÓN ALTO RIESGO LPP]\n            - Ácidos Grasos Hiperoxigenados (AGHO).\n            - Espumas de poliuretano sacras/talonares de 5 capas.\n            - Superficies Especiales de Manejo de la Presión (SEMP) / Colchón de aire alternante.\n"
+        } else ""
+
         return """
-            [VALORACIÓN DE HERIDA - CRITERIOS TIME(RS)]
+            [VALORACIÓN DE HERIDA - CRITERIOS TIMERS]
             - Tejido (T): ${state.selectedLecho}
             - Infección/Inflamación (I): $infText
-            - Exudado/Humedad (M): ${state.selectedExudado}
-            - Bordes (E): ${state.selectedBordes}
+            - Exudado/Humedad (M): ${state.selectedExudado} (${state.selectedExudateType})
+            - Bordes y Perilesional (E): Bordes ${state.selectedBordes} / Piel ${state.selectedPerilesional}
             - Sensibilidad/Dolor (S): ${state.painLevel.toInt()}/10
             - Tamaño: $tamaño
-            - Localización: ${state.specialLocation}
+            - Localización: ${state.specialLocation}$bradenText
 
             [PLAN TERAPÉUTICO PROPUESTO (GNEAUPP)]
-            $aiPlan
+            $aiPlan$bradenPrevencion
 
             [PRODUCTO LOCAL SELECCIONADO]
             - $productoSeleccionado
@@ -380,18 +411,30 @@ class WoundViewModel(
                 }
 
                 viewModelScope.launch(Dispatchers.IO) {
-                    val respuesta = com.ferlagod.miscuras.network.AsistenteIA(sharedPrefs).obtenerExplicacionEducativa(
-                        lecho = state.selectedLecho,
-                        exudado = state.selectedExudado,
-                        infeccion = state.selectedInfeccion,
-                        germen = state.infectionGerm,
-                        tamanoLargo = state.woundLength,
-                        tamanoAncho = state.woundWidth,
-                        bordes = state.selectedBordes,
-                        recomendacionBD = familiaFormateada,
-                        dolor = state.painLevel.toInt()
-                    )
-                    _uiState.update { it.copy(aiResponse = respuesta, isAiLoading = false) }
+                    val cacheKey = "${state.selectedLecho}|${state.selectedExudado}|${state.selectedExudateType}|${state.selectedInfeccion}|${state.infectionGerm}|${state.woundLength}|${state.woundWidth}|${state.selectedBordes}|${state.selectedPerilesional}|${familiaFormateada}|${state.painLevel.toInt()}"
+                    val cachedResponse = repository.getCachedAiResponse(cacheKey)
+
+                    if (cachedResponse != null) {
+                        _uiState.update { it.copy(aiResponse = cachedResponse, isAiLoading = false) }
+                    } else {
+                        val respuesta = com.ferlagod.miscuras.network.AsistenteIA(sharedPrefs).obtenerExplicacionEducativa(
+                            lecho = state.selectedLecho,
+                            exudado = state.selectedExudado,
+                            tipoExudado = state.selectedExudateType,
+                            infeccion = state.selectedInfeccion,
+                            germen = state.infectionGerm,
+                            tamanoLargo = state.woundLength,
+                            tamanoAncho = state.woundWidth,
+                            bordes = state.selectedBordes,
+                            pielPerilesional = state.selectedPerilesional,
+                            recomendacionBD = familiaFormateada,
+                            dolor = state.painLevel.toInt()
+                        )
+                        if (respuesta != null) {
+                            repository.saveCachedAiResponse(cacheKey, respuesta)
+                        }
+                        _uiState.update { it.copy(aiResponse = respuesta, isAiLoading = false) }
+                    }
                 }
             } else {
                 _uiState.update {

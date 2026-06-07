@@ -17,16 +17,22 @@
  */
 package com.ferlagod.miscuras.data.repository
 
+import com.ferlagod.miscuras.data.dao.AiCacheDao
 import com.ferlagod.miscuras.data.dao.ApositoDao
+import com.ferlagod.miscuras.data.entities.AiCacheEntity
 import com.ferlagod.miscuras.data.entities.ApositoEntity
 
 /**
  * Repositorio que gestiona el acceso a los datos de apósitos y reglas clínicas.
  * Actúa como intermediario entre el ViewModel y el DAO ([ApositoDao]).
  *
- * @property apositoDao Objeto de acceso a datos de Room.
+ * @property apositoDao Objeto de acceso a datos de Room para apósitos y reglas.
+ * @property aiCacheDao Objeto de acceso a datos para la caché de IA.
  */
-class ApositosRepository(private val apositoDao: ApositoDao) {
+class ApositosRepository(
+    private val apositoDao: ApositoDao,
+    private val aiCacheDao: AiCacheDao
+) {
 
     /**
      * Fuerza la creación e inicialización de la base de datos de manera temprana.
@@ -59,5 +65,24 @@ class ApositosRepository(private val apositoDao: ApositoDao) {
     fun obtenerProductosPorFamilias(familiasRecomendadas: String): List<ApositoEntity> {
         val listaFamilias = familiasRecomendadas.split("/").map { it.trim() }
         return apositoDao.obtenerProductosPorFamilias(listaFamilias)
+    }
+
+    /**
+     * Recupera una respuesta de la caché de IA si existe.
+     */
+    fun getCachedAiResponse(hash: String): String? {
+        return aiCacheDao.getCachedResponse(hash)?.response
+    }
+
+    /**
+     * Guarda una nueva respuesta de la IA en la caché.
+     */
+    fun saveCachedAiResponse(hash: String, response: String) {
+        val entity = AiCacheEntity(
+            promptHash = hash,
+            response = response,
+            timestamp = System.currentTimeMillis()
+        )
+        aiCacheDao.insertCache(entity)
     }
 }

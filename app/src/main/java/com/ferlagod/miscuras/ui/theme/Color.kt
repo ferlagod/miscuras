@@ -2,54 +2,58 @@ package com.ferlagod.miscuras.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// === Paleta Sanitaria Premium ===
+// === Paleta Sanitaria Premium (WCAG AAA) ===
 
-// Primary — Azul índigo profundo (Acción principal, profesionalidad)
-val IndigoPrimary = Color(0xFF3F51B5)
-val IndigoDark = Color(0xFF283593)
-val IndigoLight = Color(0xFFC5CAE9)
+// Primary — Teal oscuro (Acción principal, profesionalidad, salud)
+val TealPrimary = Color(0xFF00695C) // Material Teal 800
+val TealDark = Color(0xFF004D40) // Material Teal 900
+val TealLight = Color(0xFF80CBC4) // Material Teal 200
+val TealContainer = Color(0xFFE0F2F1) // Para fondos suaves
+val OnTealContainer = Color(0xFF00251A)
 
-// Textos y Neutrales
-val SlateDark = Color(0xFF263238) // Gris pizarra para textos principales
-val SlateLight = Color(0xFFB0BEC5)
+// Textos y Neutrales (Blue Grey)
+val SlateDark = Color(0xFF263238) // Textos principales
+val SlateMedium = Color(0xFF455A64) // Textos secundarios
+val SlateLight = Color(0xFFCFD8DC) // Bordes
 
 // Surfaces (Modo claro)
-val SurfaceLight = Color(0xFFF8F9FA) // Gris blanquecino limpio
+val SurfaceLight = Color(0xFFFAFAFA) // Blanco casi puro
 val SurfaceVariantLight = Color(0xFFECEFF1)
-val OutlineLight = Color(0xFF90A4AE)
+val OutlineLight = Color(0xFF78909C)
 
 // Surfaces (Modo oscuro)
-val SurfaceDark = Color(0xFF1E2A36) // Gris pizarra profundo para fondo oscuro
-val SurfaceVariantDark = Color(0xFF263238)
+val SurfaceDark = Color(0xFF121212) // Fondo oscuro estándar
+val SurfaceVariantDark = Color(0xFF1E2A36) // Gris pizarra oscuro
 val OutlineDark = Color(0xFF546E7A)
 
-// --- Chips Semánticos (Tonos Pastel Premium) ---
+// --- Chips Semánticos ---
+// Ajustados para alto contraste
 
-// Tejido (Verde pastel suave)
+// Tejido (Verde)
 val ChipTissue = Color(0xFFE8F5E9)
-val ChipTissueSelected = Color(0xFF81C784)
+val ChipTissueSelected = Color(0xFF2E7D32)
 val ChipTissueDark = Color(0xFF1B5E20)
-val ChipTissueSelectedDark = Color(0xFF4CAF50)
+val ChipTissueSelectedDark = Color(0xFF81C784)
 
-// Exudado (Azul pastel suave)
+// Exudado (Azul)
 val ChipExudate = Color(0xFFE3F2FD)
-val ChipExudateSelected = Color(0xFF64B5F6)
+val ChipExudateSelected = Color(0xFF1565C0)
 val ChipExudateDark = Color(0xFF0D47A1)
-val ChipExudateSelectedDark = Color(0xFF2196F3)
+val ChipExudateSelectedDark = Color(0xFF64B5F6)
 
-// Infección (Coral pastel suave)
+// Infección / Alertas (Rojo)
 val ChipInfection = Color(0xFFFFEBEE)
-val ChipInfectionSelected = Color(0xFFE57373)
+val ChipInfectionSelected = Color(0xFFC62828)
 val ChipInfectionDark = Color(0xFFB71C1C)
-val ChipInfectionSelectedDark = Color(0xFFEF5350)
+val ChipInfectionSelectedDark = Color(0xFFEF9A9A)
 
-// Bordes (Ámbar pastel suave)
+// Bordes (Ámbar oscuro)
 val ChipEdge = Color(0xFFFFF8E1)
-val ChipEdgeSelected = Color(0xFFFFD54F)
+val ChipEdgeSelected = Color(0xFFF57F17)
 val ChipEdgeDark = Color(0xFFFF6F00)
-val ChipEdgeSelectedDark = Color(0xFFFFCA28)
+val ChipEdgeSelectedDark = Color(0xFFFFD54F)
 
 // Colores especiales heredados
 val CardBackground = Color(0xFFFFFFFF)
-val CardBackgroundDark = Color(0xFF2A3A4A)
-val InfectionBadge = Color(0xFFD32F2F)
+val CardBackgroundDark = Color(0xFF1E1E1E)
+val InfectionBadge = Color(0xFFB71C1C)

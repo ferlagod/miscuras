@@ -8,43 +8,51 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val LightColorScheme = lightColorScheme(
-    primary = IndigoPrimary,
+    primary = TealPrimary,
     onPrimary = Color.White,
-    primaryContainer = IndigoLight,
-    onPrimaryContainer = IndigoDark,
+    primaryContainer = TealContainer,
+    onPrimaryContainer = OnTealContainer,
+    secondary = Color(0xFF0277BD),
+    onSecondary = Color.White,
+    secondaryContainer = Color(0xFFE1F5FE),
+    onSecondaryContainer = Color(0xFF01579B),
 
     background = SurfaceLight,
     onBackground = SlateDark,
-    surface = SurfaceLight,
+    surface = CardBackground,
     onSurface = SlateDark,
     surfaceVariant = SurfaceVariantLight,
-    onSurfaceVariant = SlateDark,
+    onSurfaceVariant = SlateMedium,
     outline = OutlineLight,
 
     error = ChipInfectionSelected,
     onError = Color.White,
     errorContainer = ChipInfection,
-    onErrorContainer = ChipInfectionDark
+    onErrorContainer = ChipInfectionSelected
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = IndigoLight,
-    onPrimary = IndigoDark,
-    primaryContainer = IndigoPrimary,
-    onPrimaryContainer = Color.White,
+    primary = TealLight,
+    onPrimary = TealDark,
+    primaryContainer = TealDark,
+    onPrimaryContainer = TealLight,
+    secondary = Color(0xFF29B6F6),
+    onSecondary = Color(0xFF01579B),
+    secondaryContainer = Color(0xFF01579B),
+    onSecondaryContainer = Color(0xFFE1F5FE),
 
     background = SurfaceDark,
     onBackground = Color(0xFFECEFF1),
-    surface = SurfaceDark,
+    surface = CardBackgroundDark,
     onSurface = Color(0xFFECEFF1),
     surfaceVariant = SurfaceVariantDark,
     onSurfaceVariant = Color(0xFFCFD8DC),
     outline = OutlineDark,
 
     error = ChipInfectionSelectedDark,
-    onError = Color.Black,
+    onError = Color(0xFF4A0000),
     errorContainer = ChipInfectionDark,
-    onErrorContainer = ChipInfection
+    onErrorContainer = ChipInfectionSelectedDark
 )
 
 @Composable

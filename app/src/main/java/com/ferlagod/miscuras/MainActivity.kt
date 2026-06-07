@@ -57,10 +57,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         // 1. Instanciar la base de datos (La despensa)
-        val database = AppDatabase.getDatabase(applicationContext)
-
-        // 2. Instanciar el Repositorio (El ayudante)
-        val repository = ApositosRepository(database.apositoDao())
+        val database = AppDatabase.getDatabase(this)
+        val repository = ApositosRepository(
+            apositoDao = database.apositoDao(),
+            aiCacheDao = database.aiCacheDao()
+        )
 
         // 3. Crear un "Factory" para el ViewModel
         val sharedPrefs = getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)

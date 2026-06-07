@@ -19,10 +19,19 @@ import com.google.ar.core.Pose
 import io.github.sceneview.ar.ARScene
 import io.github.sceneview.ar.node.ArNode
 import kotlin.math.sqrt
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.foundation.magnifier
+import androidx.compose.ui.geometry.isSpecified
+import com.ferlagod.miscuras.ui.AppStrings
+import io.github.sceneview.ar.ArSceneView
+import kotlin.math.sqrt
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ARMeasureScreen(
+    strings: AppStrings,
     onBackClick: () -> Unit,
     onMeasured: (Float, Float) -> Unit
 ) {
@@ -33,22 +42,26 @@ fun ARMeasureScreen(
     var widthCm by remember { mutableStateOf(0f) }
     
     var engine by remember { mutableStateOf<com.google.android.filament.Engine?>(null) }
+    var arView by remember { mutableStateOf<ArSceneView?>(null) }
+    
+    var magnifierCenter by remember { mutableStateOf(Offset.Unspecified) }
+    var showMagnifier by remember { mutableStateOf(false) }
 
     val instructionText = when (points.size) {
-        0 -> "Mueve el móvil para detectar la superficie.\nToca para fijar el inicio del LARGO."
-        1 -> "Toca para fijar el fin del LARGO."
-        2 -> "Largo: ${String.format(java.util.Locale.US, "%.1f", lengthCm)} cm.\nToca para fijar el inicio del ANCHO."
-        3 -> "Toca para fijar el fin del ANCHO."
-        else -> "Largo: ${String.format(java.util.Locale.US, "%.1f", lengthCm)} cm | Ancho: ${String.format(java.util.Locale.US, "%.1f", widthCm)} cm.\nPulsa Confirmar."
+        0 -> strings.arInstructionStartLength
+        1 -> strings.arInstructionEndLength
+        2 -> String.format(java.util.Locale.US, strings.arInstructionStartWidth, String.format(java.util.Locale.US, "%.1f", lengthCm))
+        3 -> strings.arInstructionEndWidth
+        else -> String.format(java.util.Locale.US, strings.arInstructionConfirm, String.format(java.util.Locale.US, "%.1f", lengthCm), String.format(java.util.Locale.US, "%.1f", widthCm))
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Regla AR") },
+                title = { Text(strings.arRulerTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Cancelar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.arCancelButton)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -74,6 +87,52 @@ fun ARMeasureScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .pointerInput(Unit) {
+                    detectDragGestures(
+                        onDragStart = { offset ->
+                            magnifierCenter = offset
+                            showMagnifier = true
+                        },
+                        onDrag = { change, dragAmount ->
+                            change.consume()
+                            magnifierCenter += dragAmount
+                        },
+                        onDragEnd = {
+                            showMagnifier = false
+                            if (points.size < 4 && engine != null && magnifierCenter.isSpecified) {
+                                val hitResult = arView?.currentFrame?.hitTest(magnifierCenter.x, magnifierCenter.y)
+                                if (hitResult != null) {
+                                    val anchor = hitResult.createAnchor()
+                                    points.add(anchor.pose)
+                                    val node = ArNode(engine!!, anchor)
+                                    nodes.add(node)
+            
+                                    if (points.size == 2) {
+                                        lengthCm = calculateDistanceCm(points[0], points[1])
+                                    } else if (points.size == 4) {
+                                        widthCm = calculateDistanceCm(points[2], points[3])
+                                    }
+                                }
+                            }
+                            magnifierCenter = Offset.Unspecified
+                        },
+                        onDragCancel = {
+                            showMagnifier = false
+                            magnifierCenter = Offset.Unspecified
+                        }
+                    )
+                }
+                .then(
+                    if (showMagnifier && android.os.Build.VERSION.SDK_INT >= 28 && magnifierCenter.isSpecified) {
+                        Modifier.magnifier(
+                            sourceCenter = { magnifierCenter },
+                            magnifierCenter = { magnifierCenter - Offset(0f, 200f) },
+                            zoom = 2f
+                        )
+                    } else {
+                        Modifier
+                    }
+                )
         ) {
             ARScene(
                 modifier = Modifier.fillMaxSize(),
@@ -81,21 +140,8 @@ fun ARMeasureScreen(
                 planeRenderer = true,
                 onCreate = { arSceneView ->
                     engine = arSceneView.engine
+                    arView = arSceneView
                     arSceneView.lightEstimationMode = com.google.ar.core.Config.LightEstimationMode.DISABLED
-                },
-                onTap = { hitResult ->
-                    if (points.size < 4 && engine != null) {
-                        val anchor = hitResult.createAnchor()
-                        points.add(anchor.pose)
-                        val node = ArNode(engine!!, anchor)
-                        nodes.add(node)
-
-                        if (points.size == 2) {
-                            lengthCm = calculateDistanceCm(points[0], points[1])
-                        } else if (points.size == 4) {
-                            widthCm = calculateDistanceCm(points[2], points[3])
-                        }
-                    }
                 }
             )
 
@@ -134,7 +180,7 @@ fun ARMeasureScreen(
                         .padding(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Reiniciar")
+                    Text(strings.arRestartButton)
                 }
             }
         }

@@ -23,7 +23,9 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.ferlagod.miscuras.R
+import com.ferlagod.miscuras.data.dao.AiCacheDao
 import com.ferlagod.miscuras.data.dao.ApositoDao
+import com.ferlagod.miscuras.data.entities.AiCacheEntity
 import com.ferlagod.miscuras.data.entities.ApositoEntity
 import com.ferlagod.miscuras.data.entities.ReglaEntity
 import kotlinx.coroutines.CoroutineScope
@@ -39,14 +41,17 @@ import java.io.InputStreamReader
  * a partir de archivos CSV ubicados en `res/raw`.
  */
 @Database(
-    entities = [ReglaEntity::class, ApositoEntity::class],
-    version = 21,
+    entities = [ReglaEntity::class, ApositoEntity::class, AiCacheEntity::class],
+    version = 23,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
 
     /** Provee acceso al DAO de apósitos y reglas clínicas. */
     abstract fun apositoDao(): ApositoDao
+
+    /** Provee acceso al DAO de la caché de respuestas de la IA. */
+    abstract fun aiCacheDao(): AiCacheDao
 
     companion object {
         @Volatile

@@ -49,14 +49,14 @@ class AsistenteIA(private val sharedPrefs: SharedPreferences) {
         },
         systemInstruction = content {
             text(
-                "Actúas estrictamente como un asistente de redacción educativa para enfermería basado en las guías TIME y GNEAUPP. " +
+                "Actúas estrictamente como un asistente de redacción educativa para enfermería basado en las guías TIMERS y GNEAUPP. " +
                 "Tu función es explicar la lógica teórica del tratamiento basándote en los datos locales provistos. " +
                 "Puedes y debes mencionar las familias genéricas de apósitos que la literatura científica aconseja para ese tipo de lecho y exudado. " +
                 "DEBES DEVOLVER EXCLUSIVAMENTE UN JSON PLANO CON ESTOS 3 CAMPOS OBLIGATORIOS: " +
                 "\"objetivo_time\", \"justificacion_aposito\", \"consejo_clinico\".\n" +
                 "Ejemplo de respuesta PROHIBIDA (escueta): {\"objetivo_time\": \"Controlar\", \"justificacion_aposito\": \"Absorbe\", \"consejo_clinico\": \"Lavar\"}\n" +
-                "Ejemplo de respuesta CORRECTA (educativa y basada en TIME): {\n" +
-                "  \"objetivo_time\": \"El objetivo principal según el esquema TIME es el control del exudado (M) y la carga bacteriana (I) para favorecer la preparación del lecho.\",\n" +
+                "Ejemplo de respuesta CORRECTA (educativa y basada en TIMERS): {\n" +
+                "  \"objetivo_time\": \"El objetivo principal según el esquema TIMERS es el control del exudado (M) y la carga bacteriana (I) para favorecer la preparación del lecho.\",\n" +
                 "  \"justificacion_aposito\": \"Se recomienda el uso de un apósito de alginato con plata porque su capacidad de gelificación gestiona el exceso de humedad, mientras que la plata actúa disminuyendo la carga bacteriana del lecho frente a signos de infección local.\",\n" +
                 "  \"consejo_clinico\": \"Vigilar signos de maceración en los bordes y proteger la piel perilesional con película barrera no irritante.\"\n" +
                 "}\n" +
@@ -72,16 +72,18 @@ class AsistenteIA(private val sharedPrefs: SharedPreferences) {
     suspend fun obtenerExplicacionEducativa(
         lecho: String,
         exudado: String,
+        tipoExudado: String,
         infeccion: Boolean,
         germen: String,
         tamanoLargo: String,
         tamanoAncho: String,
         bordes: String,
+        pielPerilesional: String,
         recomendacionBD: String,
         dolor: Int
     ): String {
         // 4. Caché Local (Ahorro de API):
-        val claveCache = "ia_cache_${lecho}_${exudado}_${bordes}_${infeccion}_${germen}_${dolor}_${recomendacionBD}"
+        val claveCache = "ia_cache_${lecho}_${exudado}_${tipoExudado}_${bordes}_${pielPerilesional}_${infeccion}_${germen}_${dolor}_${recomendacionBD}"
         val respuestaGuardada = sharedPrefs.getString(claveCache, null)
         
         if (respuestaGuardada != null) {
@@ -95,16 +97,16 @@ class AsistenteIA(private val sharedPrefs: SharedPreferences) {
         val promptUsuario = """
             Datos clínicos de la evaluación:
             - Lecho de la herida: $lecho
-            - Exudado: $exudado
-            - Bordes: $bordes
+            - Exudado: Nivel $exudado, Tipo $tipoExudado
+            - Bordes y Piel: Bordes $bordes, Piel perilesional $pielPerilesional
             - Infección: $infText
             - Sensibilidad/Dolor (S): $dolor/10
             - Tamaño (Largo x Ancho): $tamText
             - Tratamiento recomendado por el sistema: $recomendacionBD
             
             Instrucciones:
-            Basándote en estos valores y el acrónimo TIME(RS), justifica brevemente por qué el tratamiento ($recomendacionBD) es adecuado.
-            Asegúrate de justificar el tratamiento en base a TODO el cuadro clínico, en especial prestando atención a la presencia de infección, el germen ($germen) y el nivel de dolor ($dolor/10). Si el dolor es elevado (>= 4), destaca la importancia de terapias atraumáticas.
+            Basándote en estos valores y el acrónimo TIMERS, justifica brevemente por qué el tratamiento ($recomendacionBD) es adecuado.
+            Asegúrate de justificar el tratamiento en base a TODO el cuadro clínico, en especial prestando atención al tipo de exudado ($tipoExudado), el estado de la piel perilesional ($pielPerilesional) para recomendar protección si es necesario, la presencia de infección, el germen ($germen) y el nivel de dolor ($dolor/10). Si el dolor es elevado (>= 4), destaca la importancia de terapias atraumáticas.
             Devuelve un JSON estrictamente con los campos objetivo_time, justificacion_aposito, consejo_clinico.
         """.trimIndent()
 
@@ -112,7 +114,7 @@ class AsistenteIA(private val sharedPrefs: SharedPreferences) {
         fun construirFallback(): String {
             val infPart = if (infeccion) "y reducir la carga bacteriana provocada por $germen" else "evitando complicaciones"
             val dolorPart = if (dolor >= 4) " y manejando el dolor local ($dolor/10) mediante técnicas atraumáticas" else ""
-            return "Objetivo TIME(RS): Preparar el lecho de la herida ($lecho), gestionar el nivel de exudado ($exudado), cuidar los bordes ($bordes)$dolorPart.\n\n" +
+            return "Objetivo TIMERS: Preparar el lecho de la herida ($lecho), gestionar el exudado $tipoExudado ($exudado), cuidar los bordes ($bordes) y proteger la piel perilesional ($pielPerilesional)$dolorPart.\n\n" +
                    "Justificación: El uso de $recomendacionBD está indicado para mantener un ambiente húmedo óptimo $infPart.\n\n" +
                    "Consejo Clínico: Evaluar regularmente el estado de la piel perilesional y aplicar barrera protectora si es necesario."
         }

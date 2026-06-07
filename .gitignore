@@ -66,3 +66,12 @@ app/src/main/res/drawable/img_esfacelo.*
 app/src/main/res/drawable/img_granulacion.*
 app/src/main/res/drawable/img_epitelial.*
 app/src/main/res/drawable/cn_*
+
+# --- Antigravity / Gemini Artifacts ---
+.gemini/
+.antigravity/
+artifacts/
+task.md
+implementation_plan.md
+walkthrough.md
+scratch/
