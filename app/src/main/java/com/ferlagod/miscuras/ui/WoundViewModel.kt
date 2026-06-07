@@ -33,14 +33,20 @@ data class WoundUiState(
     val woundWidth: String = "",
     val specialLocation: String = "Ninguno",
     val infectionGerm: String = "Desconocido",
+    val selectedBordes: String = "Sanos/Íntegros",
     val familiaRecomendada: String? = null,
     val productos: List<ApositoEntity> = emptyList(),
     val showResults: Boolean = false,
     val isLoading: Boolean = false,
     val noMatchFound: Boolean = false,
+    val safetyAlerts: List<String> = emptyList(),
     val showSplash: Boolean = true,
+    val showArMeasure: Boolean = false,
+    val showBraden: Boolean = false,
+    val painLevel: Float = 0f,
     val aiResponse: String? = null,
     val isAiLoading: Boolean = false,
+    val showGlossary: Boolean = false,
     val currentLanguage: String = "es",
     val currentTheme: String = "dark", // system, light, dark
     // Estado del formulario de sugerencia
@@ -92,6 +98,7 @@ class WoundViewModel(
     companion object {
         val opcionesLecho = listOf("Necrosis", "Esfacelo", "Granulación", "Epitelización", "Piel Intacta (Prevención)")
         val opcionesExudado = listOf("Nulo", "Bajo", "Moderado", "Alto")
+        val opcionesBordes = listOf("Sanos/Íntegros", "Macerados", "Descamativos", "Hiperqueratósicos", "Socavados", "Epibólicos (enrollados)")
     }
 
     /**
@@ -141,18 +148,111 @@ class WoundViewModel(
         _uiState.update { it.copy(specialLocation = location) }
     }
 
+    fun setSpecialLocation(location: String) {
+        _uiState.update { it.copy(specialLocation = location) }
+    }
+
+    fun showGlossary() {
+        _uiState.update { it.copy(showGlossary = true) }
+    }
+
+    fun hideGlossary() {
+        _uiState.update { it.copy(showGlossary = false) }
+    }
+
+    fun showArMeasure() {
+        _uiState.update { it.copy(showArMeasure = true) }
+    }
+
+    fun hideArMeasure() {
+        _uiState.update { it.copy(showArMeasure = false) }
+    }
+
+    fun showBraden() {
+        _uiState.update { it.copy(showBraden = true) }
+    }
+
+    fun hideBraden() {
+        _uiState.update { it.copy(showBraden = false) }
+    }
+
+    fun onPainLevelChanged(pain: Float) {
+        _uiState.update { it.copy(painLevel = pain) }
+    }
+
+    fun onArMeasured(lengthCm: Float, widthCm: Float) {
+        val lengthStr = String.format(java.util.Locale.US, "%.1f", lengthCm)
+        val widthStr = String.format(java.util.Locale.US, "%.1f", widthCm)
+        _uiState.update { 
+            it.copy(
+                woundLength = lengthStr, 
+                woundWidth = widthStr,
+                showArMeasure = false
+            ) 
+        }
+    }
+
     fun onInfectionGermChanged(germ: String) {
         _uiState.update { it.copy(infectionGerm = germ) }
     }
 
+    fun onBordesChanged(bordes: String) {
+        _uiState.update { it.copy(selectedBordes = bordes) }
+    }
 
+    /**
+     * Genera un resumen clínico estructurado basado en los criterios TIME
+     */
+    fun generarResumenEvolutivo(productoSeleccionado: String): String {
+        val state = uiState.value
+        val infText = if (state.selectedInfeccion) "Sí (Sospecha/Confirmado: ${state.infectionGerm})" else "No"
+        val tamaño = if (state.woundLength.isNotEmpty() && state.woundWidth.isNotEmpty()) {
+            "${state.woundLength} x ${state.woundWidth} cm"
+        } else {
+            "No especificado"
+        }
+        
+        val aiPlan = state.aiResponse ?: "Pendiente de análisis clínico."
+
+        return """
+            [VALORACIÓN DE HERIDA - CRITERIOS TIME(RS)]
+            - Tejido (T): ${state.selectedLecho}
+            - Infección/Inflamación (I): $infText
+            - Exudado/Humedad (M): ${state.selectedExudado}
+            - Bordes (E): ${state.selectedBordes}
+            - Sensibilidad/Dolor (S): ${state.painLevel.toInt()}/10
+            - Tamaño: $tamaño
+            - Localización: ${state.specialLocation}
+
+            [PLAN TERAPÉUTICO PROPUESTO (GNEAUPP)]
+            $aiPlan
+
+            [PRODUCTO LOCAL SELECCIONADO]
+            - $productoSeleccionado
+        """.trimIndent()
+    }
     /**
      * Ejecuta la búsqueda de apósitos basados en los parámetros clínicos
      * actuales almacenados en el estado de la UI.
      */
     fun buscarAposito() {
         val state = _uiState.value
-        _uiState.update { it.copy(isLoading = true, noMatchFound = false) }
+        
+        val alerts = mutableListOf<String>()
+        if (state.selectedInfeccion) {
+            alerts.add("Precaución: Evitar apósitos oclusivos como hidrocoloides. Priorizar apósitos de plata, DACC o cadexómero yodado.")
+        }
+        if (state.selectedLecho == "Necrosis") {
+            alerts.add("Recordatorio: No aplicar desbridamiento enzimático (colagenasa) junto con apósitos de plata porque se inactiva la enzima.")
+        }
+        if (state.selectedExudado == "Alto") {
+            alerts.add("Aviso: Ante exudado alto, vigilar maceración en bordes. Considerar películas barrera no irritantes.")
+        }
+        if (state.painLevel >= 4f) {
+            alerts.add("Aviso: Dolor significativo (${state.painLevel.toInt()}/10). Priorizar apósitos atraumáticos (bordes de silicona suave, hidrogeles) y evitar gasas adherentes.")
+        }
+        
+        _uiState.update { it.copy(isLoading = true, noMatchFound = false, safetyAlerts = alerts) }
 
         viewModelScope.launch(Dispatchers.IO) {
             val familia = repository.obtenerRecomendacion(
@@ -280,14 +380,16 @@ class WoundViewModel(
                 }
 
                 viewModelScope.launch(Dispatchers.IO) {
-                    val respuesta = com.ferlagod.miscuras.network.AsistenteIA().obtenerExplicacionEducativa(
+                    val respuesta = com.ferlagod.miscuras.network.AsistenteIA(sharedPrefs).obtenerExplicacionEducativa(
                         lecho = state.selectedLecho,
                         exudado = state.selectedExudado,
                         infeccion = state.selectedInfeccion,
                         germen = state.infectionGerm,
                         tamanoLargo = state.woundLength,
                         tamanoAncho = state.woundWidth,
-                        recomendacionBD = familiaFormateada
+                        bordes = state.selectedBordes,
+                        recomendacionBD = familiaFormateada,
+                        dolor = state.painLevel.toInt()
                     )
                     _uiState.update { it.copy(aiResponse = respuesta, isAiLoading = false) }
                 }

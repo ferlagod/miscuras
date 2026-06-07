@@ -26,6 +26,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material.icons.filled.LocalHospital
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
@@ -40,9 +47,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.MenuBook
 import com.ferlagod.miscuras.ui.AppStrings
+import com.ferlagod.miscuras.ui.screens.GlossaryScreen
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -67,7 +77,7 @@ import com.ferlagod.miscuras.R
 // ============================================================
 
 private enum class ScreenState {
-    Splash, Selection, Results
+    Splash, Selection, Results, Glossary, ArMeasure, Braden
 }
 
 /**
@@ -104,6 +114,9 @@ fun WoundScreen(viewModel: WoundViewModel) {
     AnimatedContent(
         targetState = when {
             uiState.showSplash -> ScreenState.Splash
+            uiState.showBraden -> ScreenState.Braden
+            uiState.showGlossary -> ScreenState.Glossary
+            uiState.showArMeasure -> ScreenState.ArMeasure
             uiState.showResults -> ScreenState.Results
             else -> ScreenState.Selection
         },
@@ -129,13 +142,18 @@ fun WoundScreen(viewModel: WoundViewModel) {
                     strings = strings,
                     onLechoChanged = { viewModel.onLechoChanged(it) },
                     onExudadoChanged = { viewModel.onExudadoChanged(it) },
+                    onBordesChanged = { viewModel.onBordesChanged(it) },
                     onInfeccionChanged = { viewModel.onInfeccionChanged(it) },
                     onInfectionGermChanged = { viewModel.onInfectionGermChanged(it) },
+                    onPainLevelChanged = { viewModel.onPainLevelChanged(it) },
                     onWoundLengthChanged = { viewModel.onWoundLengthChanged(it) },
                     onWoundWidthChanged = { viewModel.onWoundWidthChanged(it) },
                     onSpecialLocationChanged = { viewModel.onSpecialLocationChanged(it) },
-                    onSearch = { viewModel.buscarAposito() },
-                    onSettingsClick = { showSettings = true }
+                    onFindApositoClick = { viewModel.buscarAposito() },
+                    onSettingsClick = { showSettings = true },
+                    onGlossaryClick = { viewModel.showGlossary() },
+                    onArMeasureClick = { viewModel.showArMeasure() },
+                    onBradenClick = { viewModel.showBraden() }
                 )
             }
             ScreenState.Results -> {
@@ -143,7 +161,26 @@ fun WoundScreen(viewModel: WoundViewModel) {
                     uiState = uiState,
                     strings = strings,
                     onBack = { viewModel.volverASeleccion() },
-                    onSuggestProductClick = { viewModel.setAddProductDialogVisibility(true) }
+                    onSuggestProductClick = { viewModel.setAddProductDialogVisibility(true) },
+                    onCopyProductSummary = { productoNombre -> viewModel.generarResumenEvolutivo(productoNombre) }
+                )
+            }
+            ScreenState.Glossary -> {
+                GlossaryScreen(
+                    onBackClick = { viewModel.hideGlossary() },
+                    currentLanguage = uiState.currentLanguage
+                )
+            }
+            ScreenState.ArMeasure -> {
+                com.ferlagod.miscuras.ui.screens.ARMeasureScreen(
+                    onBackClick = { viewModel.hideArMeasure() },
+                    onMeasured = { length, width -> viewModel.onArMeasured(length, width) }
+                )
+            }
+            ScreenState.Braden -> {
+                BradenScreen(
+                    onBackClick = { viewModel.hideBraden() },
+                    strings = strings
                 )
             }
         }
@@ -262,8 +299,9 @@ private fun SplashContent(strings: AppStrings) {
  * @param onLechoChanged Callback cuando se cambia el lecho.
  * @param onExudadoChanged Callback cuando se cambia el exudado.
  * @param onInfeccionChanged Callback cuando se cambia el estado de infección.
- * @param onSearch Callback para iniciar la búsqueda de apósitos.
+ * @param onFindApositoClick Callback para iniciar la búsqueda de apósitos.
  * @param onSettingsClick Callback para abrir el menú de ajustes.
+ * @param onGlossaryClick Callback para abrir el glosario.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -272,19 +310,46 @@ private fun SelectionContent(
     strings: AppStrings,
     onLechoChanged: (String) -> Unit,
     onExudadoChanged: (String) -> Unit,
+    onBordesChanged: (String) -> Unit,
     onInfeccionChanged: (Boolean) -> Unit,
     onInfectionGermChanged: (String) -> Unit,
+    onPainLevelChanged: (Float) -> Unit,
     onWoundLengthChanged: (String) -> Unit,
     onWoundWidthChanged: (String) -> Unit,
     onSpecialLocationChanged: (String) -> Unit,
-    onSearch: () -> Unit,
-    onSettingsClick: () -> Unit
+    onFindApositoClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onGlossaryClick: () -> Unit,
+    onArMeasureClick: () -> Unit,
+    onBradenClick: () -> Unit
 ) {
+    // Gestor de permisos de cámara
+    val cameraPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            onArMeasureClick()
+        }
+    }
+    
+    val context = androidx.compose.ui.platform.LocalContext.current
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { },
                 actions = {
+                    IconButton(onClick = onBradenClick) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = "Calculadora Braden"
+                        )
+                    }
+                    IconButton(onClick = onGlossaryClick) {
+                        Icon(
+                            imageVector = Icons.Default.MenuBook,
+                            contentDescription = "Glosario / Biblioteca"
+                        )
+                    }
                     IconButton(onClick = onSettingsClick) {
                         Icon(
                             imageVector = Icons.Default.Settings,
@@ -342,12 +407,13 @@ private fun SelectionContent(
             item {
                 val currentLechoTrans = AppStrings.translateClinicalTerm(uiState.selectedLecho, uiState.currentLanguage)
                 val optionsLechoTrans = WoundViewModel.opcionesLecho.map { AppStrings.translateClinicalTerm(it, uiState.currentLanguage) }
-                SelectorCard(
+                ChipGroupCard(
                     label = strings.bedStateLabel,
                     description = strings.bedStateDesc,
                     selectedOption = currentLechoTrans,
                     options = optionsLechoTrans,
-                    onOptionSelected = { onLechoChanged(AppStrings.mapToDbTerm(it)) }
+                    onOptionSelected = { onLechoChanged(AppStrings.mapToDbTerm(it)) },
+                    chipType = "tissue"
                 )
             }
 
@@ -381,7 +447,16 @@ private fun SelectionContent(
                             }
                             onSpecialLocationChanged(dbLoc)
                         },
-                        strings = strings
+                        strings = strings,
+                        onArMeasureClick = {
+                            val permission = android.Manifest.permission.CAMERA
+                            val isGranted = androidx.core.content.ContextCompat.checkSelfPermission(context, permission) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                            if (isGranted) {
+                                onArMeasureClick()
+                            } else {
+                                cameraPermissionLauncher.launch(permission)
+                            }
+                        }
                     )
                 }
             }
@@ -390,13 +465,29 @@ private fun SelectionContent(
             item {
                 val currentExudadoTrans = AppStrings.translateClinicalTerm(uiState.selectedExudado, uiState.currentLanguage)
                 val optionsExudadoTrans = WoundViewModel.opcionesExudado.map { AppStrings.translateClinicalTerm(it, uiState.currentLanguage) }
-                SelectorCard(
+                ChipGroupCard(
                     label = strings.exudateLevelLabel,
                     description = strings.exudateLevelDesc,
                     selectedOption = currentExudadoTrans,
                     options = optionsExudadoTrans,
                     onOptionSelected = { onExudadoChanged(AppStrings.mapToDbTerm(it)) },
-                    enabled = !isPielIntacta
+                    enabled = !isPielIntacta,
+                    chipType = "exudate"
+                )
+            }
+
+            // — Selector: Bordes —
+            item {
+                val currentBordes = uiState.selectedBordes
+                val optionsBordes = WoundViewModel.opcionesBordes
+                ChipGroupCard(
+                    label = "Bordes de la herida (E)",
+                    description = "Estado de los bordes perilesionales",
+                    selectedOption = currentBordes,
+                    options = optionsBordes,
+                    onOptionSelected = onBordesChanged,
+                    enabled = !isPielIntacta,
+                    chipType = "edge"
                 )
             }
 
@@ -457,11 +548,19 @@ private fun SelectionContent(
                 }
             }
 
+            // — Dolor (TIMERS) —
+            item {
+                PainCard(
+                    painLevel = uiState.painLevel,
+                    onPainChange = onPainLevelChanged,
+                    enabled = !isPielIntacta
+                )
+            }
 
             // — Botón de búsqueda —
             item {
                 Button(
-                    onClick = onSearch,
+                    onClick = onFindApositoClick,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
@@ -510,25 +609,24 @@ private fun SelectionContent(
 // COMPONENTE — Tarjeta con Dropdown selector
 // ============================================================
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-private fun SelectorCard(
+private fun ChipGroupCard(
     label: String,
     description: String,
     selectedOption: String,
     options: List<String>,
     onOptionSelected: (String) -> Unit,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    chipType: String = "default" // "tissue", "exudate", "edge", "infection"
 ) {
-    var expanded by remember { mutableStateOf(false) }
-
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (enabled) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
+            containerColor = if (enabled) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -541,58 +639,71 @@ private fun SelectorCard(
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
             )
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { if (enabled) expanded = it }
+            FlowRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OutlinedTextField(
-                    value = selectedOption,
-                    onValueChange = {},
-                    readOnly = true,
-                    enabled = enabled,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
-                        focusedContainerColor = MaterialTheme.colorScheme.surface,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
-                )
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    options.forEach { option ->
-                        DropdownMenuItem(
-                            text = {
-                                Text(
-                                    text = option,
-                                    fontWeight = if (option == selectedOption) FontWeight.SemiBold else FontWeight.Normal
-                                )
-                            },
-                            onClick = {
-                                onOptionSelected(option)
-                                expanded = false
-                            },
-                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
-                            trailingIcon = {
-                                if (option == selectedOption) {
-                                    Icon(
-                                        imageVector = Icons.Default.CheckCircle,
-                                        contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.primary,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            }
-                        )
+                options.forEach { option ->
+                    val isSelected = option == selectedOption
+                    
+                    val selectedContainerColor = when(chipType) {
+                        "tissue" -> com.ferlagod.miscuras.ui.theme.ChipTissueSelected
+                        "exudate" -> com.ferlagod.miscuras.ui.theme.ChipExudateSelected
+                        "edge" -> com.ferlagod.miscuras.ui.theme.ChipEdgeSelected
+                        "infection" -> com.ferlagod.miscuras.ui.theme.ChipInfectionSelected
+                        else -> MaterialTheme.colorScheme.primaryContainer
                     }
+                    val containerColor = when(chipType) {
+                        "tissue" -> com.ferlagod.miscuras.ui.theme.ChipTissue
+                        "exudate" -> com.ferlagod.miscuras.ui.theme.ChipExudate
+                        "edge" -> com.ferlagod.miscuras.ui.theme.ChipEdge
+                        "infection" -> com.ferlagod.miscuras.ui.theme.ChipInfection
+                        else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                    }
+                    val darkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+                    
+                    val finalSelectedContainerColor = if (darkTheme) {
+                        when(chipType) {
+                            "tissue" -> com.ferlagod.miscuras.ui.theme.ChipTissueSelectedDark
+                            "exudate" -> com.ferlagod.miscuras.ui.theme.ChipExudateSelectedDark
+                            "edge" -> com.ferlagod.miscuras.ui.theme.ChipEdgeSelectedDark
+                            "infection" -> com.ferlagod.miscuras.ui.theme.ChipInfectionSelectedDark
+                            else -> MaterialTheme.colorScheme.primaryContainer
+                        }
+                    } else selectedContainerColor
+                    
+                    val finalContainerColor = if (darkTheme) {
+                        when(chipType) {
+                            "tissue" -> com.ferlagod.miscuras.ui.theme.ChipTissueDark
+                            "exudate" -> com.ferlagod.miscuras.ui.theme.ChipExudateDark
+                            "edge" -> com.ferlagod.miscuras.ui.theme.ChipEdgeDark
+                            "infection" -> com.ferlagod.miscuras.ui.theme.ChipInfectionDark
+                            else -> MaterialTheme.colorScheme.surfaceVariant
+                        }
+                    } else containerColor
+                    
+                    FilterChip(
+                        selected = isSelected,
+                        onClick = { if (enabled) onOptionSelected(option) },
+                        label = { 
+                            Text(
+                                text = option, 
+                                style = MaterialTheme.typography.labelLarge,
+                                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                            ) 
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            containerColor = finalContainerColor,
+                            selectedContainerColor = finalSelectedContainerColor,
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        ),
+                        border = null,
+                        shape = RoundedCornerShape(12.dp),
+                        enabled = enabled
+                    )
                 }
             }
         }
@@ -602,6 +713,81 @@ private fun SelectorCard(
 // ============================================================
 // COMPONENTE — Tarjeta de Infección (Switch)
 // ============================================================
+// COMPONENTE — Tarjeta de Dolor (TIMERS)
+// ============================================================
+
+@Composable
+private fun PainCard(
+    painLevel: Float,
+    onPainChange: (Float) -> Unit,
+    enabled: Boolean = true
+) {
+    val painDescription = when {
+        painLevel == 0f -> "Sin Dolor"
+        painLevel <= 3f -> "Leve"
+        painLevel <= 7f -> "Moderado"
+        else -> "Severo"
+    }
+
+    val painColor = when {
+        painLevel == 0f -> MaterialTheme.colorScheme.primary
+        painLevel <= 3f -> androidx.compose.ui.graphics.Color(0xFF4CAF50)
+        painLevel <= 7f -> androidx.compose.ui.graphics.Color(0xFFFF9800)
+        else -> MaterialTheme.colorScheme.error
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth().alpha(if (enabled) 1f else 0.5f),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column {
+                    Text(
+                        text = "Sensibilidad / Dolor (S)",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = "Escala EVA (0-10) al cambio de apósito",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Text(
+                    text = "${painLevel.toInt()}/10",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                    color = painColor
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            androidx.compose.material3.Slider(
+                value = painLevel,
+                onValueChange = { if (enabled) onPainChange(it) },
+                valueRange = 0f..10f,
+                steps = 9,
+                colors = androidx.compose.material3.SliderDefaults.colors(
+                    thumbColor = painColor,
+                    activeTrackColor = painColor,
+                    activeTickColor = MaterialTheme.colorScheme.surfaceVariant
+                )
+            )
+            Text(
+                text = painDescription,
+                style = MaterialTheme.typography.labelLarge,
+                color = painColor,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
 
 @Composable
 private fun InfectionCard(
@@ -617,12 +803,12 @@ private fun InfectionCard(
             containerColor = if (!enabled) {
                 MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.2f)
             } else if (checked) {
-                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f)
+                if (MaterialTheme.colorScheme.surface.luminance() < 0.5f) com.ferlagod.miscuras.ui.theme.ChipInfectionDark else com.ferlagod.miscuras.ui.theme.ChipInfection
             } else {
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                MaterialTheme.colorScheme.surface
             }
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
@@ -698,7 +884,8 @@ private fun ResultsContent(
     uiState: WoundUiState,
     strings: AppStrings,
     onBack: () -> Unit,
-    onSuggestProductClick: () -> Unit
+    onSuggestProductClick: () -> Unit,
+    onCopyProductSummary: (String) -> String
 ) {
     var selectedProduct by remember { mutableStateOf<ApositoEntity?>(null) }
 
@@ -726,6 +913,9 @@ private fun ResultsContent(
     // Estado para llevar la cuenta de qué familias están expandidas.
     // Por defecto, abrimos solo la primera.
     var expandedFamilies by remember(familiasOrdenadas) { mutableStateOf(setOf(familiasOrdenadas.firstOrNull() ?: "")) }
+
+    val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
+    val context = androidx.compose.ui.platform.LocalContext.current
 
 
     Scaffold(
@@ -797,6 +987,13 @@ private fun ResultsContent(
                                 contentScale = ContentScale.FillWidth
                             )
                         }
+                    }
+                }
+                
+                // Alertas de Seguridad
+                if (uiState.safetyAlerts.isNotEmpty()) {
+                    item {
+                        SafetyAlertsCard(alerts = uiState.safetyAlerts)
                     }
                 }
 
@@ -882,7 +1079,14 @@ private fun ResultsContent(
                         items(productosDeFamilia) { producto ->
                             ProductCard(
                                 producto = producto,
-                                onClick = { selectedProduct = producto }
+                                onClick = {
+                                    selectedProduct = producto
+                                },
+                                onCopyClick = {
+                                    val resumen = onCopyProductSummary(producto.nombreComercial)
+                                    clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(resumen))
+                                    android.widget.Toast.makeText(context, "Resumen evolutivo copiado", android.widget.Toast.LENGTH_SHORT).show()
+                                }
                             )
                         }
                     }
@@ -1035,7 +1239,11 @@ private fun RecommendedFamilyCard(familia: String, strings: AppStrings) {
 // ============================================================
 
 @Composable
-private fun ProductCard(producto: ApositoEntity, onClick: () -> Unit) {
+private fun ProductCard(
+    producto: ApositoEntity,
+    onClick: () -> Unit,
+    onCopyClick: () -> Unit
+) {
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
@@ -1043,14 +1251,17 @@ private fun ProductCard(producto: ApositoEntity, onClick: () -> Unit) {
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(16.dp)
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
             // Miniatura del producto cargada con Coil
             Surface(
                 modifier = Modifier.size(52.dp),
@@ -1094,12 +1305,12 @@ private fun ProductCard(producto: ApositoEntity, onClick: () -> Unit) {
                         dimensionesList.forEach { dim ->
                             Surface(
                                 shape = RoundedCornerShape(8.dp),
-                                color = MaterialTheme.colorScheme.tertiaryContainer
+                                color = MaterialTheme.colorScheme.primaryContainer
                             ) {
                                 Text(
                                     text = dim,
                                     style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                                 )
                             }
@@ -1109,16 +1320,31 @@ private fun ProductCard(producto: ApositoEntity, onClick: () -> Unit) {
                     // Una sola medida: badge inline
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.tertiaryContainer
+                        color = MaterialTheme.colorScheme.primaryContainer
                     ) {
                         Text(
                             text = producto.dimensiones,
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                         )
                     }
                 }
+            }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedButton(
+                onClick = onCopyClick,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.ContentCopy,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Copiar para Evolutivo Hospitalario")
             }
         }
     }
@@ -1458,6 +1684,7 @@ private fun SettingsDialog(
 ) {
     val strings = AppStrings.getStrings(currentLanguage)
     val uriHandler = LocalUriHandler.current
+    var showDeveloperInfo by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -1550,11 +1777,11 @@ private fun SettingsDialog(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = strings.developerLabel,
+                        text = "Desarrollador",
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     Button(
-                        onClick = { uriHandler.openUri("https://frikiverse.zone/@ferlagod") },
+                        onClick = { showDeveloperInfo = true },
                         modifier = Modifier.fillMaxWidth(),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -1562,7 +1789,11 @@ private fun SettingsDialog(
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text(strings.devProfileText)
+                        Text("Sobre el desarrollador")
+                    }
+
+                    if (showDeveloperInfo) {
+                        DeveloperInfoDialog(onDismiss = { showDeveloperInfo = false })
                     }
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -1761,8 +1992,14 @@ private fun SizeInputCard(
     locationSelected: String,
     locationOptions: List<String>,
     onLocationChange: (String) -> Unit,
-    strings: AppStrings
+    strings: AppStrings,
+    onArMeasureClick: () -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val isArSupported = remember {
+        context.packageManager.hasSystemFeature(android.content.pm.PackageManager.FEATURE_CAMERA_AR)
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -1772,16 +2009,36 @@ private fun SizeInputCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = strings.woundSizeLabel,
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = strings.woundSizeDesc,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column {
+                    Text(
+                        text = strings.woundSizeLabel,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = strings.woundSizeDesc,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                if (isArSupported) {
+                    IconButton(
+                        onClick = onArMeasureClick,
+                        modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer, androidx.compose.foundation.shape.CircleShape)
+                    ) {
+                        Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Default.Search,
+                            contentDescription = "Medir con Cámara AR",
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+            }
             Spacer(modifier = Modifier.height(10.dp))
             
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -1983,6 +2240,50 @@ private fun GermSelectorCard(
 // ============================================================
 // COMPONENTE — AI Response Card
 // ============================================================
+@Composable
+private fun SafetyAlertsCard(alerts: List<String>) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Default.Warning,
+                    contentDescription = "Alerta Clínica",
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Alertas de Seguridad Clínica",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+            alerts.forEach { alert ->
+                Row(modifier = Modifier.padding(top = 4.dp)) {
+                    Text(
+                        text = "•",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(
+                        text = alert,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+            }
+        }
+    }
+}
 
 @Composable
 private fun AiResponseCard(isLoading: Boolean, response: String?, strings: AppStrings) {
@@ -2034,4 +2335,55 @@ private fun AiResponseCard(isLoading: Boolean, response: String?, strings: AppSt
             }
         }
     }
+}
+
+@Composable
+fun DeveloperInfoDialog(onDismiss: () -> Unit) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            androidx.compose.material3.TextButton(onClick = onDismiss) {
+                Text("Cerrar")
+            }
+        },
+        title = { Text("Sobre el desarrollador") },
+        text = {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ) {
+                Surface(
+                    shape = androidx.compose.foundation.shape.CircleShape,
+                    modifier = Modifier.size(120.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+                ) {
+                    androidx.compose.foundation.Image(
+                        painter = painterResource(id = com.ferlagod.miscuras.R.drawable.perfil_rrss),
+                        contentDescription = "Foto de perfil de ferlagod",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop
+                    )
+                }
+                Text(
+                    text = "ferlagod (Fernando Lago) | Enfermero y desarrollador de software libre.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = "Apasionado por la tecnología independiente, la privacidad y la lectura. Desarrollo herramientas nacidas de mis propias aficiones y necesidades profesionales, como BiblioHouse, Mis Curas y Rocinante.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = "Puedes encontrar el código fuente de todos mis proyectos en mi instancia de Forgejo: forjalibre.eu.",
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    )
 }
