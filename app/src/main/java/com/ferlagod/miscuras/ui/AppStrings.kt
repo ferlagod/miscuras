@@ -168,6 +168,86 @@ sealed interface AppStrings {
     val bradenEvaluateButton: String
     val bradenPreventiveAlert: String
 
+    
+    // Additional WoundScreen
+    val edgesLabel: String
+    val edgesDesc: String
+    val copySummaryToast: String
+    val copySummaryButton: String
+
+    // GlossaryScreen
+    val glossaryTitle: String
+    val glossaryBack: String
+    val glossaryDescription: String
+    val glossaryCollapse: String
+    val glossaryExpand: String
+    
+    // BradenScreen
+    val bradenTitle: String
+    val bradenBack: String
+    val bradenCopiedSnackbar: String
+    val bradenOk: String
+    val bradenPoints: String
+    val bradenRiskLow: String
+    val bradenRiskModerate: String
+    val bradenRiskHigh: String
+    val bradenRiskVeryHigh: String
+    val bradenSensory: String
+    val bradenSensory1: String
+    val bradenSensory2: String
+    val bradenSensory3: String
+    val bradenSensory4: String
+    val bradenMoisture: String
+    val bradenMoisture1: String
+    val bradenMoisture2: String
+    val bradenMoisture3: String
+    val bradenMoisture4: String
+    val bradenActivity: String
+    val bradenActivity1: String
+    val bradenActivity2: String
+    val bradenActivity3: String
+    val bradenActivity4: String
+    val bradenMobility: String
+    val bradenMobility1: String
+    val bradenMobility2: String
+    val bradenMobility3: String
+    val bradenMobility4: String
+    val bradenNutrition: String
+    val bradenNutrition1: String
+    val bradenNutrition2: String
+    val bradenNutrition3: String
+    val bradenNutrition4: String
+    val bradenFriction: String
+    val bradenFriction1: String
+    val bradenFriction2: String
+    val bradenFriction3: String
+    val bradenSuggestedPlan: String
+    val bradenCopyClipboard: String
+    val bradenRecLow: String
+    val bradenRecModerate: String
+    val bradenRecHigh: String
+    val bradenRecVeryHigh: String
+
+    // Resumen Evolutivo
+    val repTimersTitle: String
+    val repTissue: String
+    val repInfection: String
+    val repMoisture: String
+    val repEdgesFormat: String
+    val repPainFormat: String
+    val repSizeFormat: String
+    val repLocationFormat: String
+    val repBradenTitle: String
+    val repBradenScoreFormat: String
+    val repBradenPreventiveTitle: String
+    val repBradenPreventiveText: String
+    val repPlanTitle: String
+    val repPending: String
+    val repProductTitle: String
+    val repInfYesFormat: String
+    val repUnspecified: String
+
+        val confirmButton: String
     companion object {
         /**
          * Retorna el objeto contenedor de strings para el idioma especificado.
@@ -423,6 +503,81 @@ object EsStrings : AppStrings {
     override val bradenProactiveSuggest = "¿Deseas realizar la valoración de riesgo de Braden para este paciente?"
     override val bradenEvaluateButton = "Evaluar Escala Braden"
     override val bradenPreventiveAlert = "Alerta Preventiva Braden (%s)"
+
+    override val edgesLabel = "Bordes de la herida"
+    override val edgesDesc = "Estado de los márgenes de la lesión"
+    override val copySummaryToast = "Resumen evolutivo copiado"
+    override val copySummaryButton = "Copiar para Evolutivo Hospitalario"
+
+    override val glossaryTitle = "Biblioteca Clínica GNEAUPP"
+    override val glossaryBack = "Volver a la calculadora"
+    override val glossaryDescription = "Glosario de consulta rápida para estudiantes y profesionales. Toda la información está basada en los estándares del Grupo Nacional para el Estudio y Asesoramiento en Úlceras por Presión y Heridas Crónicas."
+    override val glossaryCollapse = "Colapsar"
+    override val glossaryExpand = "Expandir"
+
+    override val bradenTitle = "Escala de Braden"
+    override val bradenBack = "Volver"
+    override val bradenCopiedSnackbar = "Plan preventivo copiado al portapapeles"
+    override val bradenOk = "OK"
+    override val bradenPoints = "Puntos"
+    override val bradenRiskLow = "Riesgo Bajo / Sin Riesgo"
+    override val bradenRiskModerate = "Riesgo Moderado"
+    override val bradenRiskHigh = "Riesgo Alto"
+    override val bradenRiskVeryHigh = "Riesgo Muy Alto"
+    override val bradenSensory = "Percepción Sensorial"
+    override val bradenSensory1 = "Completamente limitada (1)"
+    override val bradenSensory2 = "Muy limitada (2)"
+    override val bradenSensory3 = "Ligeramente limitada (3)"
+    override val bradenSensory4 = "Sin limitación (4)"
+    override val bradenMoisture = "Exposición a la Humedad"
+    override val bradenMoisture1 = "Constantemente húmeda (1)"
+    override val bradenMoisture2 = "A menudo húmeda (2)"
+    override val bradenMoisture3 = "Ocasionalmente húmeda (3)"
+    override val bradenMoisture4 = "Raramente húmeda (4)"
+    override val bradenActivity = "Actividad"
+    override val bradenActivity1 = "Encamado (1)"
+    override val bradenActivity2 = "En silla (2)"
+    override val bradenActivity3 = "Deambula ocasionalmente (3)"
+    override val bradenActivity4 = "Deambula frecuentemente (4)"
+    override val bradenMobility = "Movilidad"
+    override val bradenMobility1 = "Completamente inmóvil (1)"
+    override val bradenMobility2 = "Muy limitada (2)"
+    override val bradenMobility3 = "Ligeramente limitada (3)"
+    override val bradenMobility4 = "Sin limitaciones (4)"
+    override val bradenNutrition = "Nutrición"
+    override val bradenNutrition1 = "Muy pobre (1)"
+    override val bradenNutrition2 = "Probablemente inadecuada (2)"
+    override val bradenNutrition3 = "Adecuada (3)"
+    override val bradenNutrition4 = "Excelente (4)"
+    override val bradenFriction = "Roce y Peligro de Lesiones"
+    override val bradenFriction1 = "Problema (1)"
+    override val bradenFriction2 = "Problema potencial (2)"
+    override val bradenFriction3 = "No hay problema aparente (3)"
+    override val bradenSuggestedPlan = "Plan Preventivo Sugerido:"
+    override val bradenCopyClipboard = "Copiar al Portapapeles"
+    override val bradenRecLow = "• Cuidados básicos de la piel.\n• Fomentar la movilidad."
+    override val bradenRecModerate = "• Cambios posturales regulares.\n• Aplicación de Ácidos Grasos Hiperoxigenados (AGHO).\n• Vigilancia estrecha de puntos de apoyo."
+    override val bradenRecHigh = "• Cambios posturales cada 2-3 horas.\n• Uso de Superficies Especiales de Manejo de la Presión (SEMP) estáticas/dinámicas.\n• AGHO diarios.\n• Suplementación nutricional si procede."
+    override val bradenRecVeryHigh = "• Cambios posturales estrictos cada 2 horas.\n• Uso de SEMP dinámicas de alta gama (colchón de aire alternante).\n• Elevación de talones.\n• Protección proactiva con apósitos multicapa."
+
+    override val repTimersTitle = "[VALORACIÓN DE HERIDA - CRITERIOS TIMERS]"
+    override val repTissue = "- Tejido (T): "
+    override val repInfection = "- Infección/Inflamación (I): "
+    override val repMoisture = "- Exudado/Humedad (M): "
+    override val repEdgesFormat = "- Bordes y Perilesional (E): Bordes %s / Piel %s"
+    override val repPainFormat = "- Sensibilidad/Dolor (S): %s/10"
+    override val repSizeFormat = "- Tamaño: %s"
+    override val repLocationFormat = "- Localización: %s"
+    override val repBradenTitle = "[ESCALA BRADEN]"
+    override val repBradenScoreFormat = "- Puntuación: %s/23 (%s)"
+    override val repBradenPreventiveTitle = "[PREVENCIÓN ALTO RIESGO LPP]"
+    override val repBradenPreventiveText = "- Ácidos Grasos Hiperoxigenados (AGHO).\n- Espumas de poliuretano sacras/talonares de 5 capas.\n- Superficies Especiales de Manejo de la Presión (SEMP) / Colchón de aire alternante."
+    override val repPlanTitle = "[PLAN TERAPÉUTICO PROPUESTO (GNEAUPP)]"
+    override val repPending = "Pendiente de análisis clínico."
+    override val repProductTitle = "[PRODUCTO LOCAL SELECCIONADO]"
+    override val repInfYesFormat = "Sí (Sospecha/Confirmado: %s)"
+    override val repUnspecified = "No especificado"
+    override val confirmButton = "Confirmar"
 }
 
 /** Implementación de [AppStrings] para Inglés. */
@@ -570,6 +725,81 @@ object EnStrings : AppStrings {
     override val bradenProactiveSuggest = "Do you want to perform a Braden risk assessment for this patient?"
     override val bradenEvaluateButton = "Evaluate Braden Scale"
     override val bradenPreventiveAlert = "Braden Preventive Alert (%s)"
+
+    override val edgesLabel = "Wound edges"
+    override val edgesDesc = "Condition of the lesion margins"
+    override val copySummaryToast = "Clinical summary copied"
+    override val copySummaryButton = "Copy for Clinical Report"
+
+    override val glossaryTitle = "GNEAUPP Clinical Library"
+    override val glossaryBack = "Back to calculator"
+    override val glossaryDescription = "Quick reference glossary for students and professionals. All information is based on the standards of the National Group for the Study and Advice on Pressure Ulcers and Chronic Wounds."
+    override val glossaryCollapse = "Collapse"
+    override val glossaryExpand = "Expand"
+
+    override val bradenTitle = "Braden Scale"
+    override val bradenBack = "Back"
+    override val bradenCopiedSnackbar = "Preventive plan copied to clipboard"
+    override val bradenOk = "OK"
+    override val bradenPoints = "Points"
+    override val bradenRiskLow = "Low Risk / No Risk"
+    override val bradenRiskModerate = "Moderate Risk"
+    override val bradenRiskHigh = "High Risk"
+    override val bradenRiskVeryHigh = "Very High Risk"
+    override val bradenSensory = "Sensory Perception"
+    override val bradenSensory1 = "Completely limited (1)"
+    override val bradenSensory2 = "Very limited (2)"
+    override val bradenSensory3 = "Slightly limited (3)"
+    override val bradenSensory4 = "No impairment (4)"
+    override val bradenMoisture = "Moisture Exposure"
+    override val bradenMoisture1 = "Constantly moist (1)"
+    override val bradenMoisture2 = "Very moist (2)"
+    override val bradenMoisture3 = "Occasionally moist (3)"
+    override val bradenMoisture4 = "Rarely moist (4)"
+    override val bradenActivity = "Activity"
+    override val bradenActivity1 = "Bedfast (1)"
+    override val bradenActivity2 = "Chairfast (2)"
+    override val bradenActivity3 = "Walks occasionally (3)"
+    override val bradenActivity4 = "Walks frequently (4)"
+    override val bradenMobility = "Mobility"
+    override val bradenMobility1 = "Completely immobile (1)"
+    override val bradenMobility2 = "Very limited (2)"
+    override val bradenMobility3 = "Slightly limited (3)"
+    override val bradenMobility4 = "No limitations (4)"
+    override val bradenNutrition = "Nutrition"
+    override val bradenNutrition1 = "Very poor (1)"
+    override val bradenNutrition2 = "Probably inadequate (2)"
+    override val bradenNutrition3 = "Adequate (3)"
+    override val bradenNutrition4 = "Excellent (4)"
+    override val bradenFriction = "Friction and Shear"
+    override val bradenFriction1 = "Problem (1)"
+    override val bradenFriction2 = "Potential problem (2)"
+    override val bradenFriction3 = "No apparent problem (3)"
+    override val bradenSuggestedPlan = "Suggested Preventive Plan:"
+    override val bradenCopyClipboard = "Copy to Clipboard"
+    override val bradenRecLow = "• Basic skin care.\n• Encourage mobility."
+    override val bradenRecModerate = "• Regular positional changes.\n• Application of Hyperoxygenated Fatty Acids (HOFA).\n• Close monitoring of pressure points."
+    override val bradenRecHigh = "• Positional changes every 2-3 hours.\n• Use of static/dynamic pressure-relieving surfaces.\n• Daily HOFA.\n• Nutritional supplementation if applicable."
+    override val bradenRecVeryHigh = "• Strict positional changes every 2 hours.\n• Use of high-end dynamic pressure-relieving surfaces (alternating air mattress).\n• Heel elevation.\n• Proactive protection with multi-layer dressings."
+
+    override val repTimersTitle = "[WOUND ASSESSMENT - TIMERS CRITERIA]"
+    override val repTissue = "- Tissue (T): "
+    override val repInfection = "- Infection/Inflammation (I): "
+    override val repMoisture = "- Moisture/Exudate (M): "
+    override val repEdgesFormat = "- Edges and Periwound (E): Edges %s / Skin %s"
+    override val repPainFormat = "- Sensitivity/Pain (S): %s/10"
+    override val repSizeFormat = "- Size: %s"
+    override val repLocationFormat = "- Location: %s"
+    override val repBradenTitle = "[BRADEN SCALE]"
+    override val repBradenScoreFormat = "- Score: %s/23 (%s)"
+    override val repBradenPreventiveTitle = "[HIGH RISK PU PREVENTION]"
+    override val repBradenPreventiveText = "- Hyperoxygenated Fatty Acids (HOFA).\n- 5-layer sacral/heel polyurethane foams.\n- Pressure-relieving surfaces / Alternating air mattress."
+    override val repPlanTitle = "[PROPOSED THERAPEUTIC PLAN (GNEAUPP)]"
+    override val repPending = "Pending clinical analysis."
+    override val repProductTitle = "[SELECTED LOCAL PRODUCT]"
+    override val repInfYesFormat = "Yes (Suspected/Confirmed: %s)"
+    override val repUnspecified = "Not specified"
+    override val confirmButton = "Confirm"
 }
 
 /** Implementación de [AppStrings] para Portugués. */
@@ -717,4 +947,79 @@ object PtStrings : AppStrings {
     override val bradenProactiveSuggest = "Deseja realizar a avaliação de risco de Braden para este paciente?"
     override val bradenEvaluateButton = "Avaliar Escala de Braden"
     override val bradenPreventiveAlert = "Alerta Preventivo Braden (%s)"
+
+    override val edgesLabel = "Bordas da ferida"
+    override val edgesDesc = "Condição das margens da lesão"
+    override val copySummaryToast = "Resumo clínico copiado"
+    override val copySummaryButton = "Copiar para Relatório Clínico"
+
+    override val glossaryTitle = "Biblioteca Clínica GNEAUPP"
+    override val glossaryBack = "Voltar à calculadora"
+    override val glossaryDescription = "Glossário de referência rápida para estudantes e profissionais. Todas as informações são baseadas nas normas do Grupo Nacional para o Estudo e Aconselhamento de Úlceras por Pressão e Feridas Crônicas."
+    override val glossaryCollapse = "Recolher"
+    override val glossaryExpand = "Expandir"
+
+    override val bradenTitle = "Escala de Braden"
+    override val bradenBack = "Voltar"
+    override val bradenCopiedSnackbar = "Plano preventivo copiado para a área de transferência"
+    override val bradenOk = "OK"
+    override val bradenPoints = "Pontos"
+    override val bradenRiskLow = "Risco Baixo / Sem Risco"
+    override val bradenRiskModerate = "Risco Moderado"
+    override val bradenRiskHigh = "Risco Alto"
+    override val bradenRiskVeryHigh = "Risco Muito Alto"
+    override val bradenSensory = "Percepção Sensorial"
+    override val bradenSensory1 = "Completamente limitada (1)"
+    override val bradenSensory2 = "Muito limitada (2)"
+    override val bradenSensory3 = "Ligeiramente limitada (3)"
+    override val bradenSensory4 = "Sem limitação (4)"
+    override val bradenMoisture = "Exposição à Umidade"
+    override val bradenMoisture1 = "Constantemente úmida (1)"
+    override val bradenMoisture2 = "Muito úmida (2)"
+    override val bradenMoisture3 = "Ocasionalmente úmida (3)"
+    override val bradenMoisture4 = "Raramente úmida (4)"
+    override val bradenActivity = "Atividade"
+    override val bradenActivity1 = "Acamado (1)"
+    override val bradenActivity2 = "Confinado à cadeira (2)"
+    override val bradenActivity3 = "Caminha ocasionalmente (3)"
+    override val bradenActivity4 = "Caminha frequentemente (4)"
+    override val bradenMobility = "Mobilidade"
+    override val bradenMobility1 = "Completamente imóvel (1)"
+    override val bradenMobility2 = "Muito limitada (2)"
+    override val bradenMobility3 = "Ligeiramente limitada (3)"
+    override val bradenMobility4 = "Sem limitações (4)"
+    override val bradenNutrition = "Nutrição"
+    override val bradenNutrition1 = "Muito pobre (1)"
+    override val bradenNutrition2 = "Provavelmente inadequada (2)"
+    override val bradenNutrition3 = "Adequada (3)"
+    override val bradenNutrition4 = "Excelente (4)"
+    override val bradenFriction = "Fricção e Cisalhamento"
+    override val bradenFriction1 = "Problema (1)"
+    override val bradenFriction2 = "Problema potencial (2)"
+    override val bradenFriction3 = "Nenhum problema aparente (3)"
+    override val bradenSuggestedPlan = "Plano Preventivo Sugerido:"
+    override val bradenCopyClipboard = "Copiar para Área de Transferência"
+    override val bradenRecLow = "• Cuidados básicos da pele.\n• Incentivar a mobilidade."
+    override val bradenRecModerate = "• Mudanças posturais regulares.\n• Aplicação de Ácidos Graxos Hiperoxigenados (AGHO).\n• Vigilância rigorosa de pontos de pressão."
+    override val bradenRecHigh = "• Mudanças posturais a cada 2-3 horas.\n• Uso de superfícies especiais de alívio de pressão (SEMP) estáticas/dinâmicas.\n• AGHO diários.\n• Suplementação nutricional, se aplicável."
+    override val bradenRecVeryHigh = "• Mudanças posturais rigorosas a cada 2 horas.\n• Uso de SEMP dinâmicas de alta tecnologia (colchão de ar alternado).\n• Elevação dos calcanhares.\n• Proteção proativa com curativos multicamadas."
+
+    override val repTimersTitle = "[AVALIAÇÃO DE FERIDA - CRITÉRIOS TIMERS]"
+    override val repTissue = "- Tecido (T): "
+    override val repInfection = "- Infecção/Inflamação (I): "
+    override val repMoisture = "- Umidade/Exsudato (M): "
+    override val repEdgesFormat = "- Bordas e Perilesional (E): Bordas %s / Pele %s"
+    override val repPainFormat = "- Sensibilidade/Dor (S): %s/10"
+    override val repSizeFormat = "- Tamanho: %s"
+    override val repLocationFormat = "- Localização: %s"
+    override val repBradenTitle = "[ESCALA BRADEN]"
+    override val repBradenScoreFormat = "- Pontuação: %s/23 (%s)"
+    override val repBradenPreventiveTitle = "[PREVENÇÃO ALTO RISCO LPP]"
+    override val repBradenPreventiveText = "- Ácidos Graxos Hiperoxigenados (AGHO).\n- Espumas de poliuretano sacrais/calcâneas de 5 camadas.\n- Superfícies Especiais de Manejo da Pressão (SEMP) / Colchão de ar alternado."
+    override val repPlanTitle = "[PLANO TERAPÊUTICO PROPOSTO (GNEAUPP)]"
+    override val repPending = "Pendente de análise clínica."
+    override val repProductTitle = "[PRODUTO LOCAL SELECIONADO]"
+    override val repInfYesFormat = "Sim (Suspeita/Confirmado: %s)"
+    override val repUnspecified = "Não especificado"
+    override val confirmButton = "Confirmar"
 }

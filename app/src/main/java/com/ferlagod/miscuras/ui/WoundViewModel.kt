@@ -220,45 +220,45 @@ class WoundViewModel(
     /**
      * Genera un resumen clínico estructurado basado en los criterios TIME
      */
-    fun generarResumenEvolutivo(productoSeleccionado: String): String {
+    fun generarResumenEvolutivo(productoSeleccionado: String, strings: AppStrings): String {
         val state = uiState.value
-        val infText = if (state.selectedInfeccion) "Sí (Sospecha/Confirmado: ${state.infectionGerm})" else "No"
+        val infText = if (state.selectedInfeccion) String.format(strings.repInfYesFormat, state.infectionGerm) else strings.no
         val tamaño = if (state.woundLength.isNotEmpty() && state.woundWidth.isNotEmpty()) {
             "${state.woundLength} x ${state.woundWidth} cm"
         } else {
-            "No especificado"
+            strings.repUnspecified
         }
         
-        val aiPlan = state.aiResponse ?: "Pendiente de análisis clínico."
+        val aiPlan = state.aiResponse ?: strings.repPending
 
         val bradenText = if (state.bradenScore != null) {
             val riskText = when {
-                state.bradenScore >= 15 -> "Riesgo Bajo / Sin Riesgo"
-                state.bradenScore in 13..14 -> "Riesgo Moderado"
-                state.bradenScore in 10..12 -> "Riesgo Alto"
-                else -> "Riesgo Muy Alto"
+                state.bradenScore >= 15 -> strings.bradenRiskLow
+                state.bradenScore in 13..14 -> strings.bradenRiskModerate
+                state.bradenScore in 10..12 -> strings.bradenRiskHigh
+                else -> strings.bradenRiskVeryHigh
             }
-            "\n            [ESCALA BRADEN]\n            - Puntuación: ${state.bradenScore}/23 ($riskText)\n"
+            "\n            ${strings.repBradenTitle}\n            ${String.format(strings.repBradenScoreFormat, state.bradenScore, riskText)}\n"
         } else ""
 
         val bradenPrevencion = if (state.bradenScore != null && state.bradenScore < 12) {
-            "\n            [PREVENCIÓN ALTO RIESGO LPP]\n            - Ácidos Grasos Hiperoxigenados (AGHO).\n            - Espumas de poliuretano sacras/talonares de 5 capas.\n            - Superficies Especiales de Manejo de la Presión (SEMP) / Colchón de aire alternante.\n"
+            "\n            ${strings.repBradenPreventiveTitle}\n            ${strings.repBradenPreventiveText}\n"
         } else ""
 
         return """
-            [VALORACIÓN DE HERIDA - CRITERIOS TIMERS]
-            - Tejido (T): ${state.selectedLecho}
-            - Infección/Inflamación (I): $infText
-            - Exudado/Humedad (M): ${state.selectedExudado} (${state.selectedExudateType})
-            - Bordes y Perilesional (E): Bordes ${state.selectedBordes} / Piel ${state.selectedPerilesional}
-            - Sensibilidad/Dolor (S): ${state.painLevel.toInt()}/10
-            - Tamaño: $tamaño
-            - Localización: ${state.specialLocation}$bradenText
+            ${strings.repTimersTitle}
+            ${strings.repTissue}${state.selectedLecho}
+            ${strings.repInfection}$infText
+            ${strings.repMoisture}${state.selectedExudado} (${state.selectedExudateType})
+            ${String.format(strings.repEdgesFormat, state.selectedBordes, state.selectedPerilesional)}
+            ${String.format(strings.repPainFormat, state.painLevel.toInt())}
+            ${String.format(strings.repSizeFormat, tamaño)}
+            ${String.format(strings.repLocationFormat, state.specialLocation)}$bradenText
 
-            [PLAN TERAPÉUTICO PROPUESTO (GNEAUPP)]
+            ${strings.repPlanTitle}
             $aiPlan$bradenPrevencion
 
-            [PRODUCTO LOCAL SELECCIONADO]
+            ${strings.repProductTitle}
             - $productoSeleccionado
         """.trimIndent()
     }
@@ -417,7 +417,7 @@ class WoundViewModel(
                     if (cachedResponse != null) {
                         _uiState.update { it.copy(aiResponse = cachedResponse, isAiLoading = false) }
                     } else {
-                        val respuesta = com.ferlagod.miscuras.network.AsistenteIA(sharedPrefs).obtenerExplicacionEducativa(
+                        val respuesta = com.ferlagod.miscuras.network.AsistenteIA().obtenerExplicacionEducativa(
                             lecho = state.selectedLecho,
                             exudado = state.selectedExudado,
                             tipoExudado = state.selectedExudateType,

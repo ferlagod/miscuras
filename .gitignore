@@ -53,6 +53,8 @@ update_csv_images.py
 install_libs.py
 generate_csv.py
 process_images.py
+update_strings.py
+update_strings2.py
 test.png
 .venv/
 

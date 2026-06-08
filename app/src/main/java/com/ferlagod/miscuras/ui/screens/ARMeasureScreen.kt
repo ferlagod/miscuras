@@ -77,7 +77,7 @@ fun ARMeasureScreen(
                     onClick = { onMeasured(lengthCm, widthCm) },
                     containerColor = MaterialTheme.colorScheme.primary
                 ) {
-                    Icon(Icons.Default.Check, contentDescription = "Confirmar", tint = Color.White)
+                    Icon(Icons.Default.Check, contentDescription = strings.confirmButton, tint = Color.White)
                 }
             }
         },

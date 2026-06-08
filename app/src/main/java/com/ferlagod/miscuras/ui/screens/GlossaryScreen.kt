@@ -126,12 +126,12 @@ fun GlossaryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Biblioteca Clínica GNEAUPP") },
+                title = { Text(strings.glossaryTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver a la calculadora"
+                            contentDescription = strings.glossaryBack
                         )
                     }
                 },
@@ -151,7 +151,7 @@ fun GlossaryScreen(
         ) {
             item {
                 Text(
-                    text = "Glosario de consulta rápida para estudiantes y profesionales. Toda la información está basada en los estándares del Grupo Nacional para el Estudio y Asesoramiento en Úlceras por Presión y Heridas Crónicas.",
+                    text = strings.glossaryDescription,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 24.dp)
@@ -170,7 +170,7 @@ fun GlossaryScreen(
                 }
 
                 items(category.items) { item ->
-                    GlossaryAccordion(item = item)
+                    GlossaryAccordion(item = item, strings = strings)
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
@@ -179,7 +179,7 @@ fun GlossaryScreen(
 }
 
 @Composable
-fun GlossaryAccordion(item: GlossaryItem) {
+fun GlossaryAccordion(item: GlossaryItem, strings: AppStrings) {
     var expanded by remember { mutableStateOf(false) }
 
     Card(
@@ -217,7 +217,7 @@ fun GlossaryAccordion(item: GlossaryItem) {
                 }
                 Icon(
                     imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (expanded) "Colapsar" else "Expandir",
+                    contentDescription = if (expanded) strings.glossaryCollapse else strings.glossaryExpand,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

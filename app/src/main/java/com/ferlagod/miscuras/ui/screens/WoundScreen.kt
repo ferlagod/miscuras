@@ -166,7 +166,7 @@ fun WoundScreen(viewModel: WoundViewModel) {
                     strings = strings,
                     onBack = { viewModel.volverASeleccion() },
                     onSuggestProductClick = { viewModel.setAddProductDialogVisibility(true) },
-                    onCopyProductSummary = { productoNombre -> viewModel.generarResumenEvolutivo(productoNombre) }
+                    onCopyProductSummary = { productoNombre -> viewModel.generarResumenEvolutivo(productoNombre, strings) }
                 )
             }
             ScreenState.Glossary -> {
@@ -507,8 +507,8 @@ private fun SelectionContent(
                 val currentBordes = uiState.selectedBordes
                 val optionsBordes = WoundViewModel.opcionesBordes
                 ChipGroupCard(
-                    label = "Bordes de la herida",
-                    description = "Estado de los márgenes de la lesión",
+                    label = strings.edgesLabel,
+                    description = strings.edgesDesc,
                     selectedOption = currentBordes,
                     options = optionsBordes,
                     onOptionSelected = onBordesChanged,
@@ -1203,13 +1203,14 @@ private fun ResultsContent(
                         items(productosDeFamilia) { producto ->
                             ProductCard(
                                 producto = producto,
+                                strings = strings,
                                 onClick = {
                                     selectedProduct = producto
                                 },
                                 onCopyClick = {
                                     val resumen = onCopyProductSummary(producto.nombreComercial)
                                     clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(resumen))
-                                    android.widget.Toast.makeText(context, "Resumen evolutivo copiado", android.widget.Toast.LENGTH_SHORT).show()
+                                    android.widget.Toast.makeText(context, strings.copySummaryToast, android.widget.Toast.LENGTH_SHORT).show()
                                 }
                             )
                         }
@@ -1270,13 +1271,14 @@ private fun ResultsContent(
                         items(productosDeFamilia) { producto ->
                             ProductCard(
                                 producto = producto,
+                                strings = strings,
                                 onClick = {
                                     selectedProduct = producto
                                 },
                                 onCopyClick = {
                                     val resumen = onCopyProductSummary(producto.nombreComercial)
                                     clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(resumen))
-                                    android.widget.Toast.makeText(context, "Resumen evolutivo copiado", android.widget.Toast.LENGTH_SHORT).show()
+                                    android.widget.Toast.makeText(context, strings.copySummaryToast, android.widget.Toast.LENGTH_SHORT).show()
                                 }
                             )
                         }
@@ -1432,6 +1434,7 @@ private fun RecommendedFamilyCard(familia: String, strings: AppStrings) {
 @Composable
 private fun ProductCard(
     producto: ApositoEntity,
+    strings: AppStrings,
     onClick: () -> Unit,
     onCopyClick: () -> Unit
 ) {
@@ -1535,7 +1538,7 @@ private fun ProductCard(
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Copiar para Evolutivo Hospitalario")
+                Text(strings.copySummaryButton)
             }
         }
     }
@@ -1976,11 +1979,11 @@ private fun SettingsDialog(
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Sobre el desarrollador")
+                        Text(strings.developerLabel)
                     }
 
                     if (showDeveloperInfo) {
-                        DeveloperInfoDialog(onDismiss = { showDeveloperInfo = false })
+                        DeveloperInfoDialog(strings = strings, onDismiss = { showDeveloperInfo = false })
                     }
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -2556,15 +2559,15 @@ private fun parseSimpleMarkdown(text: String): androidx.compose.ui.text.Annotate
 }
 
 @Composable
-fun DeveloperInfoDialog(onDismiss: () -> Unit) {
+fun DeveloperInfoDialog(strings: AppStrings, onDismiss: () -> Unit) {
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             androidx.compose.material3.TextButton(onClick = onDismiss) {
-                Text("Cerrar")
+                Text(strings.closeButton)
             }
         },
-        title = { Text("Sobre el desarrollador") },
+        title = { Text(strings.developerLabel) },
         text = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,

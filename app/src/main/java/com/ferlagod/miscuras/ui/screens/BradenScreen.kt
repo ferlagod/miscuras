@@ -43,10 +43,10 @@ fun BradenScreen(
     }
 
     val riskLevel = when {
-        totalScore >= 15 -> "Riesgo Bajo / Sin Riesgo"
-        totalScore in 13..14 -> "Riesgo Moderado"
-        totalScore in 10..12 -> "Riesgo Alto"
-        else -> "Riesgo Muy Alto"
+        totalScore >= 15 -> strings.bradenRiskLow
+        totalScore in 13..14 -> strings.bradenRiskModerate
+        totalScore in 10..12 -> strings.bradenRiskHigh
+        else -> strings.bradenRiskVeryHigh
     }
 
     val colorRisk = when {
@@ -56,10 +56,10 @@ fun BradenScreen(
     }
 
     val recommendations = when {
-        totalScore >= 15 -> "• Cuidados básicos de la piel.\n• Fomentar la movilidad."
-        totalScore in 13..14 -> "• Cambios posturales regulares.\n• Aplicación de Ácidos Grasos Hiperoxigenados (AGHO).\n• Vigilancia estrecha de puntos de apoyo."
-        totalScore in 10..12 -> "• Cambios posturales cada 2-3 horas.\n• Uso de Superficies Especiales de Manejo de la Presión (SEMP) estáticas/dinámicas.\n• AGHO diarios.\n• Suplementación nutricional si procede."
-        else -> "• Cambios posturales estrictos cada 2 horas.\n• Uso de SEMP dinámicas de alta gama (colchón de aire alternante).\n• Elevación de talones.\n• Protección proactiva con apósitos multicapa."
+        totalScore >= 15 -> strings.bradenRecLow
+        totalScore in 13..14 -> strings.bradenRecModerate
+        totalScore in 10..12 -> strings.bradenRecHigh
+        else -> strings.bradenRecVeryHigh
     }
 
     val clipboard = LocalClipboardManager.current
@@ -69,10 +69,10 @@ fun BradenScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Escala de Braden") },
+                title = { Text(strings.bradenTitle) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.bradenBack)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -85,9 +85,9 @@ fun BradenScreen(
                 Snackbar(
                     modifier = Modifier.padding(16.dp),
                     action = {
-                        TextButton(onClick = { showSnackbar = false }) { Text("OK") }
+                        TextButton(onClick = { showSnackbar = false }) { Text(strings.bradenOk) }
                     }
-                ) { Text("Plan preventivo copiado al portapapeles") }
+                ) { Text(strings.bradenCopiedSnackbar) }
             }
         }
     ) { padding ->
@@ -109,7 +109,7 @@ fun BradenScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "$totalScore Puntos",
+                        text = "$totalScore ${strings.bradenPoints}",
                         style = MaterialTheme.typography.displayMedium,
                         fontWeight = FontWeight.Bold,
                         color = colorRisk
@@ -124,38 +124,38 @@ fun BradenScreen(
 
             // Categorías
             BradenCategory(
-                title = "Percepción Sensorial",
-                options = listOf("Completamente limitada (1)", "Muy limitada (2)", "Ligeramente limitada (3)", "Sin limitación (4)"),
+                title = strings.bradenSensory,
+                options = listOf(strings.bradenSensory1, strings.bradenSensory2, strings.bradenSensory3, strings.bradenSensory4),
                 selectedValue = percepcion,
                 onSelected = { percepcion = it }
             )
             BradenCategory(
-                title = "Exposición a la Humedad",
-                options = listOf("Constantemente húmeda (1)", "A menudo húmeda (2)", "Ocasionalmente húmeda (3)", "Raramente húmeda (4)"),
+                title = strings.bradenMoisture,
+                options = listOf(strings.bradenMoisture1, strings.bradenMoisture2, strings.bradenMoisture3, strings.bradenMoisture4),
                 selectedValue = humedad,
                 onSelected = { humedad = it }
             )
             BradenCategory(
-                title = "Actividad",
-                options = listOf("Encamado (1)", "En silla (2)", "Deambula ocasionalmente (3)", "Deambula frecuentemente (4)"),
+                title = strings.bradenActivity,
+                options = listOf(strings.bradenActivity1, strings.bradenActivity2, strings.bradenActivity3, strings.bradenActivity4),
                 selectedValue = actividad,
                 onSelected = { actividad = it }
             )
             BradenCategory(
-                title = "Movilidad",
-                options = listOf("Completamente inmóvil (1)", "Muy limitada (2)", "Ligeramente limitada (3)", "Sin limitaciones (4)"),
+                title = strings.bradenMobility,
+                options = listOf(strings.bradenMobility1, strings.bradenMobility2, strings.bradenMobility3, strings.bradenMobility4),
                 selectedValue = movilidad,
                 onSelected = { movilidad = it }
             )
             BradenCategory(
-                title = "Nutrición",
-                options = listOf("Muy pobre (1)", "Probablemente inadecuada (2)", "Adecuada (3)", "Excelente (4)"),
+                title = strings.bradenNutrition,
+                options = listOf(strings.bradenNutrition1, strings.bradenNutrition2, strings.bradenNutrition3, strings.bradenNutrition4),
                 selectedValue = nutricion,
                 onSelected = { nutricion = it }
             )
             BradenCategory(
-                title = "Roce y Peligro de Lesiones",
-                options = listOf("Problema (1)", "Problema potencial (2)", "No hay problema aparente (3)"),
+                title = strings.bradenFriction,
+                options = listOf(strings.bradenFriction1, strings.bradenFriction2, strings.bradenFriction3),
                 selectedValue = roce,
                 onSelected = { roce = it }
             )
@@ -167,7 +167,7 @@ fun BradenScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = "Plan Preventivo Sugerido:",
+                        text = strings.bradenSuggestedPlan,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -181,9 +181,9 @@ fun BradenScreen(
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
                         onClick = {
-                            val text = "[VALORACIÓN DE RIESGO DE UPP - BRADEN]\n" +
-                                       "- Puntuación: $totalScore/23 ($riskLevel)\n\n" +
-                                       "[PLAN PREVENTIVO]\n$recommendations"
+                            val text = "${strings.repBradenTitle}\n" +
+                                       "${String.format(strings.repBradenScoreFormat, totalScore, riskLevel)}\n\n" +
+                                       "${strings.bradenSuggestedPlan}\n$recommendations"
                             coroutineScope.launch {
                                 clipboard?.setText(AnnotatedString(text))
                                 showSnackbar = true
@@ -196,7 +196,7 @@ fun BradenScreen(
                     ) {
                         Icon(Icons.Default.ContentCopy, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Copiar al Portapapeles")
+                        Text(strings.bradenCopyClipboard)
                     }
                 }
             }

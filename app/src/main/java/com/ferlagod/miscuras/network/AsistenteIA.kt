@@ -17,7 +17,6 @@
  */
 package com.ferlagod.miscuras.network
 
-import android.content.SharedPreferences
 import android.util.Log
 import com.ferlagod.miscuras.BuildConfig
 import com.google.ai.client.generativeai.GenerativeModel
@@ -32,7 +31,7 @@ import org.json.JSONObject
  * Servicio encargado de la integración con el modelo de lenguaje de IA de Google (Gemini).
  * Formatea el contexto clínico y obtiene respuestas educativas alineadas con TIME y GNEAUPP.
  */
-class AsistenteIA(private val sharedPrefs: SharedPreferences) {
+class AsistenteIA {
 
     // Se instancia el modelo usando la clave API inyectada de forma segura desde BuildConfig
     private val generativeModel = GenerativeModel(
@@ -82,15 +81,6 @@ class AsistenteIA(private val sharedPrefs: SharedPreferences) {
         recomendacionBD: String,
         dolor: Int
     ): String {
-        // 4. Caché Local (Ahorro de API):
-        val claveCache = "ia_cache_${lecho}_${exudado}_${tipoExudado}_${bordes}_${pielPerilesional}_${infeccion}_${germen}_${dolor}_${recomendacionBD}"
-        val respuestaGuardada = sharedPrefs.getString(claveCache, null)
-        
-        if (respuestaGuardada != null) {
-            Log.d("AsistenteIA", "Respuesta recuperada de la caché local.")
-            return respuestaGuardada
-        }
-
         val infText = if (infeccion) "Sí (Germen: $germen)" else "No"
         val tamText = if (tamanoLargo.isNotEmpty() && tamanoAncho.isNotEmpty()) "${tamanoLargo}x${tamanoAncho} cm" else "No especificado"
         
@@ -145,8 +135,6 @@ class AsistenteIA(private val sharedPrefs: SharedPreferences) {
                             Log.e("AsistenteIA", "Respuesta descartada por ser demasiado escueta (<100 caracteres).")
                             construirFallback()
                         } else {
-                            // Guardar en caché antes de devolver
-                            sharedPrefs.edit().putString(claveCache, formattedResponse).apply()
                             formattedResponse
                         }
                     }
