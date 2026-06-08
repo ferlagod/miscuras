@@ -275,6 +275,9 @@ class WoundViewModel(
         }
         if (state.selectedLecho == "Necrosis") {
             alerts.add("Recordatorio: No aplicar desbridamiento enzimático (colagenasa) junto con apósitos de plata porque se inactiva la enzima.")
+            if (state.selectedExudado == "Nulo") {
+                alerts.add("Alerta: Ante necrosis seca con sospecha de isquemia, evite el desbridamiento y valore derivación a especialista/cirugía vascular.")
+            }
         }
         if (state.selectedExudado == "Alto") {
             alerts.add("Aviso: Ante exudado alto, vigilar maceración en bordes. Considerar películas barrera no irritantes.")
