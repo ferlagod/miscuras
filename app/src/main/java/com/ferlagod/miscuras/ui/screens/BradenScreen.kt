@@ -1,5 +1,6 @@
 package com.ferlagod.miscuras.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -231,6 +232,7 @@ private fun BradenCategory(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(8.dp))
+                        .background(bgColor)
                         .clickable { onSelected(value) }
                         .padding(vertical = 4.dp, horizontal = 8.dp)
                 ) {

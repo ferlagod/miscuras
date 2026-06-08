@@ -51,7 +51,7 @@ data class WoundUiState(
     val isAiLoading: Boolean = false,
     val showGlossary: Boolean = false,
     val currentLanguage: String = "es",
-    val currentTheme: String = "dark", // system, light, dark
+    val currentTheme: String = "system", // system, light, dark
     // Estado del formulario de sugerencia
     val showAddProductDialog: Boolean = false,
     val isFormSubmitting: Boolean = false,
@@ -80,7 +80,7 @@ class WoundViewModel(
     init {
         viewModelScope.launch(Dispatchers.IO) {
             val savedLang = sharedPrefs.getString("language", "es") ?: "es"
-            val savedTheme = sharedPrefs.getString("theme", "dark") ?: "dark"
+            val savedTheme = sharedPrefs.getString("theme", "system") ?: "system"
             val disclaimerSeen = sharedPrefs.getBoolean("has_seen_disclaimer", false)
             _uiState.update { 
                 it.copy(
