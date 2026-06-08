@@ -37,15 +37,15 @@ data class FormPayload(
 )
 
 /**
- * Cliente HTTP Retrofit para el servicio FormSubmit.co.
+ * Cliente HTTP Retrofit para el servicio Formspree.io.
  * Permite enviar sugerencias de productos de forma anónima o identificada
  * directamente a un correo electrónico sin necesitar backend propio.
  */
 interface FormSubmitApi {
     /**
-     * Dispara la petición POST al servicio de envío de correos de FormSubmit.
+     * Dispara la petición POST al servicio de envío de correos de Formspree.
      *
-     * @param formId Identificador único asignado por FormSubmit para la cuenta de correo de destino.
+     * @param formId Identificador único asignado por Formspree para la cuenta de correo de destino.
      * @param payload Objeto que contiene los datos del formulario a enviar.
      * @return Respuesta que indica el éxito de la petición.
      */

@@ -113,7 +113,9 @@ class AsistenteIA {
             val response = generativeModel.generateContent(promptUsuario)
             val textoIA = response.text
             if (textoIA.isNullOrBlank()) {
-                Log.e("AsistenteIA", "Gemini devolvió texto nulo o bloqueado por seguridad.")
+                if (BuildConfig.DEBUG) {
+                    Log.e("AsistenteIA", "Error en IA (Respuesta nula o bloqueada)")
+                }
                 construirFallback()
             } else {
                 try {
@@ -126,25 +128,33 @@ class AsistenteIA {
                     val consejo = json.optString("consejo_clinico", "").trim()
 
                     if (objetivo.isEmpty() || justificacion.isEmpty() || consejo.isEmpty()) {
-                        Log.e("AsistenteIA", "El JSON devuelto tiene algún campo vacío.")
+                        if (BuildConfig.DEBUG) {
+                            Log.e("AsistenteIA", "Error en IA (JSON incompleto)")
+                        }
                         construirFallback()
                     } else {
                         val formattedResponse = "Objetivo TIME: $objetivo\n\nJustificación: $justificacion\n\nConsejo Clínico: $consejo"
                         
                         if (formattedResponse.length < 100) {
-                            Log.e("AsistenteIA", "Respuesta descartada por ser demasiado escueta (<100 caracteres).")
+                            if (BuildConfig.DEBUG) {
+                                Log.e("AsistenteIA", "Error en IA (Respuesta escueta)")
+                            }
                             construirFallback()
                         } else {
                             formattedResponse
                         }
                     }
                 } catch (e: Exception) {
-                    Log.e("AsistenteIA", "Error al parsear el JSON de Gemini: ${e.message}")
+                    if (BuildConfig.DEBUG) {
+                        Log.e("AsistenteIA", "Error en IA (Fallo de parseo)")
+                    }
                     construirFallback()
                 }
             }
         } catch (e: Exception) {
-            Log.e("AsistenteIA", "Excepción al llamar a Gemini: ${e.message}", e)
+            if (BuildConfig.DEBUG) {
+                Log.e("AsistenteIA", "Error en IA (Excepción de red o API)")
+            }
             construirFallback()
         }
     }

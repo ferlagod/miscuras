@@ -246,8 +246,10 @@ sealed interface AppStrings {
     val repProductTitle: String
     val repInfYesFormat: String
     val repUnspecified: String
+    val confirmButton: String
+    val settingsSuggestTitle: String
+    val settingsSuggestDesc: String
 
-        val confirmButton: String
     companion object {
         /**
          * Retorna el objeto contenedor de strings para el idioma especificado.
@@ -578,6 +580,8 @@ object EsStrings : AppStrings {
     override val repInfYesFormat = "Sí (Sospecha/Confirmado: %s)"
     override val repUnspecified = "No especificado"
     override val confirmButton = "Confirmar"
+    override val settingsSuggestTitle = "Enviar sugerencias (requiere internet)"
+    override val settingsSuggestDesc = "Sugiere un apósito que no encuentres. Solo se enviará la información del producto y tu nombre (opcional), ningún dato de pacientes sale del dispositivo."
 }
 
 /** Implementación de [AppStrings] para Inglés. */
@@ -800,6 +804,8 @@ object EnStrings : AppStrings {
     override val repInfYesFormat = "Yes (Suspected/Confirmed: %s)"
     override val repUnspecified = "Not specified"
     override val confirmButton = "Confirm"
+    override val settingsSuggestTitle = "Send suggestions (requires internet)"
+    override val settingsSuggestDesc = "Suggest a dressing you can't find. Only the product info and your name (optional) will be sent. No patient data leaves the device."
 }
 
 /** Implementación de [AppStrings] para Portugués. */
@@ -1022,4 +1028,6 @@ object PtStrings : AppStrings {
     override val repInfYesFormat = "Sim (Suspeita/Confirmado: %s)"
     override val repUnspecified = "Não especificado"
     override val confirmButton = "Confirmar"
+    override val settingsSuggestTitle = "Enviar sugestões (requer internet)"
+    override val settingsSuggestDesc = "Sugira um curativo que você não encontre. Apenas as informações do produto e seu nome (opcional) serão enviados. Nenhum dado do paciente sai do dispositivo."
 }

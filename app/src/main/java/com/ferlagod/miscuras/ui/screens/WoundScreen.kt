@@ -109,7 +109,11 @@ fun WoundScreen(viewModel: WoundViewModel) {
             onLanguageChanged = { viewModel.changeLanguage(it) },
             currentTheme = uiState.currentTheme,
             onThemeChanged = { viewModel.changeTheme(it) },
-            onDismiss = { showSettings = false }
+            onDismiss = { showSettings = false },
+            onSuggestProductClick = { 
+                showSettings = false
+                viewModel.setAddProductDialogVisibility(true)
+            }
         )
     }
 
@@ -1874,7 +1878,8 @@ private fun SettingsDialog(
     onLanguageChanged: (String) -> Unit,
     currentTheme: String,
     onThemeChanged: (String) -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    onSuggestProductClick: () -> Unit
 ) {
     val strings = AppStrings.getStrings(currentLanguage)
     val uriHandler = LocalUriHandler.current
@@ -1943,6 +1948,33 @@ private fun SettingsDialog(
                                 modifier = Modifier.weight(1f)
                             )
                         }
+                    }
+                }
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                // --- SUGERENCIAS ---
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = strings.settingsSuggestTitle,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                    Text(
+                        text = strings.settingsSuggestDesc,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Button(
+                        onClick = onSuggestProductClick,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text(strings.suggestProductButton)
                     }
                 }
 
