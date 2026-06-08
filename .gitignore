@@ -77,3 +77,17 @@ task.md
 implementation_plan.md
 walkthrough.md
 scratch/
+fix_strings.py
+refactor_wizard.py
+rewrite_selection_content.py
+update_strings3.py
+fix_errors.py
+fix_topbar.py
+update_strings_mapper.py
+add_welcome_strings.py
+.gitignore
+add_strings_py.py
+update_strings_welcome.py
+fix_appstrings.py
+add_docs.py
+fix_location.py

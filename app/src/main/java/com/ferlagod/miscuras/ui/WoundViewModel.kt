@@ -20,12 +20,27 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+enum class WizardStep(val progress: Float) {
+    ETIOLOGY(0.1f),
+    TISSUE(0.2f),
+    SIZE_AND_LOCATION(0.3f),
+    EXUDATE(0.4f),
+    EXUDATE_TYPE(0.5f),
+    EDGES(0.6f),
+    PERILESIONAL(0.7f),
+    INFECTION(0.8f),
+    PAIN(0.9f),
+    SUMMARY(1.0f)
+}
+
 /**
  * Estado unificado de la UI para la pantalla de evaluación de heridas.
  * Toda la información necesaria para renderizar la pantalla vive aquí
  * de forma inmutable.
  */
 data class WoundUiState(
+    val currentWizardStep: WizardStep = WizardStep.ETIOLOGY,
+    val selectedEtiology: String = "Indeterminada",
     val selectedLecho: String = "Piel Intacta (Prevención)",
     val selectedExudado: String = "Nulo",
     val selectedExudateType: String = "Seroso",
@@ -69,6 +84,10 @@ data class WoundUiState(
  * @property repository Repositorio de datos para obtener las reglas y productos.
  * @property sharedPrefs Preferencias locales para persistir configuraciones.
  */
+/**
+ * ViewModel principal para el flujo de evaluación de heridas.
+ * Gestiona el estado de la UI ([WoundUiState]), procesa la lógica de negocio, reglas clínicas y obtiene recomendaciones desde el repositorio.
+ */
 class WoundViewModel(
     private val repository: ApositosRepository,
     private val sharedPrefs: android.content.SharedPreferences
@@ -99,11 +118,63 @@ class WoundViewModel(
     }
 
     companion object {
+        val opcionesEtiologia = listOf("Indeterminada", "Pie Diabético", "Quemadura", "Quirúrgica", "Traumática", "UPP", "Úlcera Arterial", "Úlcera Venosa")
         val opcionesLecho = listOf("Necrosis", "Esfacelo", "Granulación", "Epitelización", "Piel Intacta (Prevención)")
         val opcionesExudado = listOf("Nulo", "Bajo", "Moderado", "Alto")
         val opcionesTipoExudado = listOf("Seroso", "Turbio", "Purulento", "Hemorrágico", "Serohemorrágico")
         val opcionesBordes = listOf("Sanos/Íntegros", "Macerados", "Descamativos", "Hiperqueratósicos", "Socavados", "Epibólicos (enrollados)")
         val opcionesPerilesional = listOf("Sana", "Macerada", "Descamativa", "Eccematosa", "Eritematosa")
+    }
+
+    /**
+     * Navegación del asistente (Wizard)
+     */
+    fun nextStep() {
+        val current = _uiState.value.currentWizardStep
+        val values = WizardStep.values()
+        
+        var nextOrdinal = current.ordinal + 1
+        if (nextOrdinal >= values.size) return
+        
+        var nextStep = values[nextOrdinal]
+        val state = _uiState.value
+        
+        // Branching logic
+        if (current == WizardStep.TISSUE && state.selectedLecho == "Piel Intacta (Prevención)") {
+            nextStep = WizardStep.SUMMARY
+        } else if (current == WizardStep.EXUDATE && state.selectedExudado == "Nulo") {
+            // Skip exudate type
+            nextStep = WizardStep.EDGES
+        }
+        
+        _uiState.update { it.copy(currentWizardStep = nextStep) }
+    }
+
+    fun previousStep() {
+        val current = _uiState.value.currentWizardStep
+        val values = WizardStep.values()
+        
+        var prevOrdinal = current.ordinal - 1
+        if (prevOrdinal < 0) return
+        
+        var prevStep = values[prevOrdinal]
+        val state = _uiState.value
+        
+        // Reverse branching logic
+        if (current == WizardStep.SUMMARY && state.selectedLecho == "Piel Intacta (Prevención)") {
+            prevStep = WizardStep.TISSUE
+        } else if (current == WizardStep.EDGES && state.selectedExudado == "Nulo") {
+            prevStep = WizardStep.EXUDATE
+        }
+        
+        _uiState.update { it.copy(currentWizardStep = prevStep) }
+    }
+
+    /**
+     * Actualiza la etiología seleccionada.
+     */
+    fun onEtiologyChanged(etiology: String) {
+        _uiState.update { it.copy(selectedEtiology = etiology) }
     }
 
     /**
@@ -247,6 +318,7 @@ class WoundViewModel(
 
         return """
             ${strings.repTimersTitle}
+            ${strings.etiologyLabel}: ${state.selectedEtiology}
             ${strings.repTissue}${state.selectedLecho}
             ${strings.repInfection}$infText
             ${strings.repMoisture}${state.selectedExudado} (${state.selectedExudateType})
@@ -270,6 +342,16 @@ class WoundViewModel(
         val state = _uiState.value
         
         val alerts = mutableListOf<String>()
+        if (state.selectedEtiology == "Úlcera Arterial") {
+            alerts.add("Alerta Crítica: En úlceras arteriales el desbridamiento está contraindicado sin valoración vascular previa. Evite la terapia compresiva.")
+        }
+        if (state.selectedEtiology == "Úlcera Venosa") {
+            alerts.add("Aviso: En úlceras venosas, la terapia de compresión es el pilar fundamental del tratamiento si el índice tobillo-brazo (ITB) es adecuado.")
+        }
+        if (state.selectedEtiology == "Pie Diabético") {
+            alerts.add("Aviso: En pie diabético, la descarga eficaz de la presión y el control glucémico son esenciales para la cicatrización.")
+        }
+
         if (state.selectedInfeccion) {
             alerts.add("Precaución: Evitar apósitos oclusivos como hidrocoloides. Priorizar apósitos de plata, DACC o cadexómero yodado.")
         }
@@ -398,6 +480,14 @@ class WoundViewModel(
                     } else {
                         true
                     }
+                }.sortedByDescending { producto ->
+                    val dimStr = producto.dimensiones.lowercase()
+                    val locStr = state.specialLocation.lowercase()
+                    if (state.specialLocation != "Ninguno" && ((locStr == "talón" && dimStr.contains("talón")) || (locStr == "sacro" && dimStr.contains("sacro")))) {
+                        1
+                    } else {
+                        0
+                    }
                 }
 
                 val familiaFormateada = familiaModificada.split("/").joinToString(" y ") { it.trim() }
@@ -414,13 +504,14 @@ class WoundViewModel(
                 }
 
                 viewModelScope.launch(Dispatchers.IO) {
-                    val cacheKey = "${state.selectedLecho}|${state.selectedExudado}|${state.selectedExudateType}|${state.selectedInfeccion}|${state.infectionGerm}|${state.woundLength}|${state.woundWidth}|${state.selectedBordes}|${state.selectedPerilesional}|${familiaFormateada}|${state.painLevel.toInt()}"
+                    val cacheKey = "${state.selectedLecho}|${state.selectedExudado}|${state.selectedExudateType}|${state.selectedInfeccion}|${state.infectionGerm}|${state.woundLength}|${state.woundWidth}|${state.selectedBordes}|${state.selectedPerilesional}|${familiaFormateada}|${state.painLevel.toInt()}|${state.specialLocation}"
                     val cachedResponse = repository.getCachedAiResponse(cacheKey)
 
                     if (cachedResponse != null) {
                         _uiState.update { it.copy(aiResponse = cachedResponse, isAiLoading = false) }
                     } else {
                         val respuesta = com.ferlagod.miscuras.network.AsistenteIA().obtenerExplicacionEducativa(
+                            etiologia = state.selectedEtiology,
                             lecho = state.selectedLecho,
                             exudado = state.selectedExudado,
                             tipoExudado = state.selectedExudateType,
@@ -429,6 +520,7 @@ class WoundViewModel(
                             tamanoLargo = state.woundLength,
                             tamanoAncho = state.woundWidth,
                             bordes = state.selectedBordes,
+                            zonaEspecial = state.specialLocation,
                             pielPerilesional = state.selectedPerilesional,
                             recomendacionBD = familiaFormateada,
                             dolor = state.painLevel.toInt()
@@ -461,6 +553,7 @@ class WoundViewModel(
         _uiState.update {
             it.copy(
                 showResults = false,
+                currentWizardStep = WizardStep.ETIOLOGY,
                 familiaRecomendada = null,
                 productos = emptyList(),
                 noMatchFound = false

@@ -37,6 +37,21 @@ sealed interface AppStrings {
     val locationSacrum: String
     
     val germLabel: String
+    val welcomeTitle: String
+    val welcomeDesc: String
+    val etiologyLabel: String
+    val etiologyDesc: String
+    val etiologyNotSpecified: String
+    val etiologyUpp: String
+    val etiologyVenous: String
+    val etiologyArterial: String
+    val etiologyDiabetic: String
+    val etiologySurgical: String
+    val etiologyBurn: String
+    val etiologyTraumatic: String
+    val etiologyIndeterminate: String
+    val etiologyError: String
+
     val germDesc: String
     val germNone: String
     val germPseudomonas: String
@@ -275,6 +290,15 @@ sealed interface AppStrings {
         fun translateClinicalTerm(term: String, lang: String): String {
             val s = getStrings(lang)
             return when (term.trim()) {
+                "No especificada" -> s.etiologyNotSpecified
+                "UPP" -> s.etiologyUpp
+                "Úlcera Venosa" -> s.etiologyVenous
+                "Úlcera Arterial" -> s.etiologyArterial
+                "Pie Diabético" -> s.etiologyDiabetic
+                "Quirúrgica" -> s.etiologySurgical
+                "Quemadura" -> s.etiologyBurn
+                "Traumática" -> s.etiologyTraumatic
+                "Indeterminada" -> s.etiologyIndeterminate
                 "Necrosis" -> s.necrosis
                 "Esfacelo" -> s.esfacelo
                 "Granulación" -> s.granulacion
@@ -321,6 +345,15 @@ sealed interface AppStrings {
             val sPt = getStrings("pt")
             
             return when (translatedTerm.trim()) {
+                sEs.etiologyNotSpecified, sEn.etiologyNotSpecified, sPt.etiologyNotSpecified -> "No especificada"
+                sEs.etiologyUpp, sEn.etiologyUpp, sPt.etiologyUpp -> "UPP"
+                sEs.etiologyVenous, sEn.etiologyVenous, sPt.etiologyVenous -> "Úlcera Venosa"
+                sEs.etiologyArterial, sEn.etiologyArterial, sPt.etiologyArterial -> "Úlcera Arterial"
+                sEs.etiologyDiabetic, sEn.etiologyDiabetic, sPt.etiologyDiabetic -> "Pie Diabético"
+                sEs.etiologySurgical, sEn.etiologySurgical, sPt.etiologySurgical -> "Quirúrgica"
+                sEs.etiologyBurn, sEn.etiologyBurn, sPt.etiologyBurn -> "Quemadura"
+                sEs.etiologyTraumatic, sEn.etiologyTraumatic, sPt.etiologyTraumatic -> "Traumática"
+                sEs.etiologyIndeterminate, sEn.etiologyIndeterminate, sPt.etiologyIndeterminate -> "Indeterminada"
                 sEs.necrosis, sEn.necrosis, sPt.necrosis -> "Necrosis"
                 sEs.esfacelo, sEn.esfacelo, sPt.esfacelo -> "Esfacelo"
                 sEs.granulacion, sEn.granulacion, sPt.granulacion -> "Granulación"
@@ -367,6 +400,21 @@ object EsStrings : AppStrings {
     override val disclaimerText = "Esta aplicación es una herramienta de apoyo a la toma de decisiones clínicas y no reemplaza el juicio clínico independiente de un profesional sanitario cualificado. La Inteligencia Artificial proporciona sugerencias orientativas basadas en la información proporcionada; el diagnóstico y tratamiento definitivo son responsabilidad exclusiva del profesional."
     override val acceptButton = "Entendido y Aceptar"
     override val splashSubtitle = "Guía de apósitos para enfermeras"
+
+    override val welcomeTitle = "¡Hola! Bienvenido a Mis Curas"
+    override val welcomeDesc = "Para recomendarte el mejor tratamiento, vamos a evaluar tu herida paso a paso. Comencemos con la etiología (origen)."
+    override val etiologyLabel = "Etiología"
+    override val etiologyDesc = "Causa principal de la lesión"
+    override val etiologyNotSpecified = "No especificada"
+    override val etiologyUpp = "UPP"
+    override val etiologyVenous = "Úlcera Venosa"
+    override val etiologyArterial = "Úlcera Arterial"
+    override val etiologyDiabetic = "Pie Diabético"
+    override val etiologySurgical = "Quirúrgica"
+    override val etiologyBurn = "Quemadura"
+    override val etiologyTraumatic = "Traumática"
+    override val etiologyIndeterminate = "Indeterminada"
+    override val etiologyError = "Debes seleccionar la etiología de la herida."
     
     override val bedStateLabel = "Estado del lecho de la herida"
     override val bedStateDesc = "Tipo de tejido predominante en la herida"
@@ -591,6 +639,21 @@ object EnStrings : AppStrings {
     override val disclaimerText = "This application is a clinical decision support tool and does not replace the independent clinical judgment of a qualified healthcare professional. Artificial Intelligence provides orientative suggestions based on the information provided; definitive diagnosis and treatment are the exclusive responsibility of the professional."
     override val acceptButton = "Understood & Accept"
     override val splashSubtitle = "Dressing guide for nurses"
+
+    override val welcomeTitle = "Hello! Welcome to Mis Curas"
+    override val welcomeDesc = "To recommend the best treatment, let's evaluate your wound step by step. Let's start with the etiology (origin)."
+    override val etiologyLabel = "Etiology"
+    override val etiologyDesc = "Main cause of the wound"
+    override val etiologyNotSpecified = "Not specified"
+    override val etiologyUpp = "Pressure Ulcer"
+    override val etiologyVenous = "Venous Ulcer"
+    override val etiologyArterial = "Arterial Ulcer"
+    override val etiologyDiabetic = "Diabetic Foot"
+    override val etiologySurgical = "Surgical"
+    override val etiologyBurn = "Burn"
+    override val etiologyTraumatic = "Traumatic"
+    override val etiologyIndeterminate = "Indeterminate"
+    override val etiologyError = "You must select the wound etiology."
     
     override val bedStateLabel = "Wound bed status"
     override val bedStateDesc = "Predominant tissue type in the wound"
@@ -815,6 +878,21 @@ object PtStrings : AppStrings {
     override val disclaimerText = "Este aplicativo é uma ferramenta de apoio à decisão clínica e não substitui o julgamento clínico independente de um profissional de saúde qualificado. A Inteligência Artificial fornece sugestões orientativas baseadas nas informações fornecidas; o diagnóstico e tratamento definitivos são de responsabilidade exclusiva do profissional."
     override val acceptButton = "Entendido e Aceito"
     override val splashSubtitle = "Guia de curativos para enfermeiras"
+
+    override val welcomeTitle = "Olá! Bem-vindo ao Mis Curas"
+    override val welcomeDesc = "Para recomendar o melhor tratamento, vamos avaliar sua ferida passo a passo. Vamos começar com a etiologia (origem)."
+    override val etiologyLabel = "Etiologia"
+    override val etiologyDesc = "Causa principal da lesão"
+    override val etiologyNotSpecified = "Não especificada"
+    override val etiologyUpp = "LPP"
+    override val etiologyVenous = "Úlcera Venosa"
+    override val etiologyArterial = "Úlcera Arterial"
+    override val etiologyDiabetic = "Pé Diabético"
+    override val etiologySurgical = "Cirúrgica"
+    override val etiologyBurn = "Queimadura"
+    override val etiologyTraumatic = "Traumática"
+    override val etiologyIndeterminate = "Indeterminada"
+    override val etiologyError = "Você deve selecionar a etiologia da ferida."
     
     override val bedStateLabel = "Estado do leito da ferida"
     override val bedStateDesc = "Tipo de tecido predominante na ferida"

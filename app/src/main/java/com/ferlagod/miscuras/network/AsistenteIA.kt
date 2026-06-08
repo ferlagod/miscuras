@@ -69,6 +69,7 @@ class AsistenteIA {
      * Envía los datos locales de tu app a Gemini para que redacte la explicación.
      */
     suspend fun obtenerExplicacionEducativa(
+        etiologia: String,
         lecho: String,
         exudado: String,
         tipoExudado: String,
@@ -77,6 +78,7 @@ class AsistenteIA {
         tamanoLargo: String,
         tamanoAncho: String,
         bordes: String,
+        zonaEspecial: String,
         pielPerilesional: String,
         recomendacionBD: String,
         dolor: Int
@@ -86,17 +88,19 @@ class AsistenteIA {
         
         val promptUsuario = """
             Datos clínicos de la evaluación:
+            - Etiología: $etiologia
             - Lecho de la herida: $lecho
             - Exudado: Nivel $exudado, Tipo $tipoExudado
             - Bordes y Piel: Bordes $bordes, Piel perilesional $pielPerilesional
             - Infección: $infText
             - Sensibilidad/Dolor (S): $dolor/10
             - Tamaño (Largo x Ancho): $tamText
+            - Ubicación especial / Zona anatómica: $zonaEspecial
             - Tratamiento recomendado por el sistema: $recomendacionBD
             
             Instrucciones:
             Basándote en estos valores y el acrónimo TIMERS, justifica brevemente por qué el tratamiento ($recomendacionBD) es adecuado.
-            Asegúrate de justificar el tratamiento en base a TODO el cuadro clínico, en especial prestando atención al tipo de exudado ($tipoExudado), el estado de la piel perilesional ($pielPerilesional) para recomendar protección si es necesario, la presencia de infección, el germen ($germen) y el nivel de dolor ($dolor/10). Si el dolor es elevado (>= 4), destaca la importancia de terapias atraumáticas.
+            Asegúrate de justificar el tratamiento en base a TODO el cuadro clínico, en especial prestando atención al tipo de exudado ($tipoExudado), el estado de la piel perilesional ($pielPerilesional) para recomendar protección si es necesario, la presencia de infección, el germen ($germen) y el nivel de dolor ($dolor/10). Presta atención si la ubicación es en zonas especiales como talón o sacro ($zonaEspecial) para recomendar apósitos específicos de descarga. Si el dolor es elevado (>= 4), destaca la importancia de terapias atraumáticas.
             Devuelve un JSON estrictamente con los campos objetivo_time, justificacion_aposito, consejo_clinico.
         """.trimIndent()
 
@@ -104,7 +108,7 @@ class AsistenteIA {
         fun construirFallback(): String {
             val infPart = if (infeccion) "y reducir la carga bacteriana provocada por $germen" else "evitando complicaciones"
             val dolorPart = if (dolor >= 4) " y manejando el dolor local ($dolor/10) mediante técnicas atraumáticas" else ""
-            return "Objetivo TIMERS: Preparar el lecho de la herida ($lecho), gestionar el exudado $tipoExudado ($exudado), cuidar los bordes ($bordes) y proteger la piel perilesional ($pielPerilesional)$dolorPart.\n\n" +
+            return "Objetivo TIMERS: Preparar el lecho de la herida ($lecho) en una lesión de etiología $etiologia (Zona: $zonaEspecial), gestionar el exudado $tipoExudado ($exudado), cuidar los bordes ($bordes) y proteger la piel perilesional ($pielPerilesional)$dolorPart.\n\n" +
                    "Justificación: El uso de $recomendacionBD está indicado para mantener un ambiente húmedo óptimo $infPart.\n\n" +
                    "Consejo Clínico: Evaluar regularmente el estado de la piel perilesional y aplicar barrera protectora si es necesario."
         }

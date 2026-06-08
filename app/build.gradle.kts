@@ -101,4 +101,7 @@ dependencies {
 
         // ARCore Sceneview para Realidad Aumentada
         implementation("io.github.sceneview:arsceneview:0.10.1")
+
+        // Google Fonts para Compose
+        implementation("androidx.compose.ui:ui-text-google-fonts:1.6.7")
 }
