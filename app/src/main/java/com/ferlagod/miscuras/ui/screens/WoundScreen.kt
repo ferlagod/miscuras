@@ -865,6 +865,12 @@ fun ChipGroupCard(
                         label = "scale"
                     )
                     
+                    val textColor = if (isSelected) {
+                        if (finalSelectedContainerColor.luminance() > 0.45f) com.ferlagod.miscuras.ui.theme.SlateDark else Color.White
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    }
+                    
                     FilterChip(
                         selected = isSelected,
                         onClick = { if (enabled) onOptionSelected(option) },
@@ -873,7 +879,7 @@ fun ChipGroupCard(
                             Text(
                                 text = option, 
                                 style = MaterialTheme.typography.labelLarge,
-                                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                                color = textColor
                             ) 
                         },
                         colors = FilterChipDefaults.filterChipColors(

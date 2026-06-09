@@ -23,7 +23,7 @@ val OutlineLight = Color(0xFFCBD5E1) // Slate 300
 
 // Surfaces (Modo oscuro)
 val SurfaceDark = Color(0xFF0F172A) // Slate 900 - Navy profundo (reduce fatiga)
-val SurfaceVariantDark = Color(0xFF1E293B) // Slate 800
+val SurfaceVariantDark = Color(0xFF334155) // Slate 700
 val OutlineDark = Color(0xFF475569) // Slate 600
 
 // --- Chips Semánticos ---
