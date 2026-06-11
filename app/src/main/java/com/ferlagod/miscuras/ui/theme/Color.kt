@@ -2,58 +2,61 @@ package com.ferlagod.miscuras.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// === Paleta Sanitaria Premium (WCAG AAA) - Modernizada ===
+// === Premium Navy & Light Blue Palette (from Design Mockups) ===
 
-// Primary — Teal moderno (Salud, frescura, limpieza)
-val TealPrimary = Color(0xFF0D9488) // Tailwind Teal 600
-val TealDark = Color(0xFF0F766E) // Tailwind Teal 700
-val TealLight = Color(0xFF2DD4BF) // Tailwind Teal 400
-val TealContainer = Color(0xFFF0FDFA) // Tailwind Teal 50
-val OnTealContainer = Color(0xFF134E4A)
+// Primary — Deep Navy Blue
+val BluePrimary = Color(0xFF002B5B) // Navy blue
+val BlueDark = Color(0xFF001A38)
+val BlueLight = Color(0xFF3A5A80) // For secondary text
+val BlueContainer = Color(0xFFE6EDF5) // Very light blue for selected chips / cards
+val OnBlueContainer = Color(0xFF002B5B)
 
-// Textos y Neutrales (Slate modernos)
-val SlateDark = Color(0xFF1E293B) // Textos principales oscuros
-val SlateMedium = Color(0xFF64748B) // Textos secundarios
-val SlateLight = Color(0xFFE2E8F0) // Bordes claros
+// Secondary — Green (from Logo Leaf / Success states)
+val GreenSecondary = Color(0xFF2E7D32)
+val GreenContainer = Color(0xFFE8F5E9)
+val OnGreenContainer = Color(0xFF1B5E20)
+
+// Textos y Neutrales
+val GreyDark = Color(0xFF1F1F1F)
+val GreyMedium = Color(0xFF5E5E5E)
+val GreyLight = Color(0xFFE0E0E0)
 
 // Surfaces (Modo claro)
-val SurfaceLight = Color(0xFFF8FAFC) // Slate 50 - Fondo general
-val SurfaceVariantLight = Color(0xFFF1F5F9) // Slate 100
-val OutlineLight = Color(0xFFCBD5E1) // Slate 300
+val SurfaceLight = Color(0xFFF9FAFB) // App background
+val SurfaceVariantLight = Color(0xFFFFFFFF) // White cards
+val OutlineLight = Color(0xFFE0E0E0)
 
-// Surfaces (Modo oscuro)
-val SurfaceDark = Color(0xFF0F172A) // Slate 900 - Navy profundo (reduce fatiga)
-val SurfaceVariantDark = Color(0xFF334155) // Slate 700
-val OutlineDark = Color(0xFF475569) // Slate 600
+// Surfaces (Modo oscuro) - Premium Dark Mode
+val SurfaceDark = Color(0xFF0B1120) // Deep Navy/Slate background
+val SurfaceVariantDark = Color(0xFF1E293B) // Slate 800 for unselected items
+val OutlineDark = Color(0xFF334155) // Slate 700
 
 // --- Chips Semánticos ---
-// Ajustados para ser pastel/vibrantes según tema
+// Tejido (Verde)
+val ChipTissue = Color(0xFFE6F4EA)
+val ChipTissueSelected = Color(0xFF1E8E3E)
+val ChipTissueDark = Color(0xFF132A24) // Subtle green-tinted dark surface
+val ChipTissueSelectedDark = Color(0xFF10B981) // Vibrant Emerald
 
-// Tejido (Verde esmeralda suave)
-val ChipTissue = Color(0xFFECFDF5)
-val ChipTissueSelected = Color(0xFF10B981)
-val ChipTissueDark = Color(0xFF065F46)
-val ChipTissueSelectedDark = Color(0xFF34D399)
+// Exudado (Azul)
+val ChipExudate = Color(0xFFE8F0FE)
+val ChipExudateSelected = Color(0xFF1A73E8)
+val ChipExudateDark = Color(0xFF12233D) // Subtle blue-tinted dark surface
+val ChipExudateSelectedDark = Color(0xFF3B82F6) // Vibrant Blue
 
-// Exudado (Azul cielo)
-val ChipExudate = Color(0xFFF0F9FF)
-val ChipExudateSelected = Color(0xFF0EA5E9)
-val ChipExudateDark = Color(0xFF075985)
-val ChipExudateSelectedDark = Color(0xFF38BDF8)
+// Infección (Rojo)
+val ChipInfection = Color(0xFFFCE8E6)
+val ChipInfectionSelected = Color(0xFFD93025)
+val ChipInfectionDark = Color(0xFF32181A) // Subtle red-tinted dark surface
+val ChipInfectionSelectedDark = Color(0xFFEF4444) // Vibrant Red
 
-// Infección / Alertas (Rojo rosa suave)
-val ChipInfection = Color(0xFFFEF2F2)
-val ChipInfectionSelected = Color(0xFFEF4444)
-val ChipInfectionDark = Color(0xFF7F1D1D)
-val ChipInfectionSelectedDark = Color(0xFFF87171)
-
-// Bordes (Ámbar)
-val ChipEdge = Color(0xFFFFFBEB)
-val ChipEdgeSelected = Color(0xFFF59E0B)
-val ChipEdgeDark = Color(0xFF78350F)
-val ChipEdgeSelectedDark = Color(0xFFFBBF24)
+// Bordes (Amarillo/Naranja)
+val ChipEdge = Color(0xFFFEF7E0)
+val ChipEdgeSelected = Color(0xFFF9AB00)
+val ChipEdgeDark = Color(0xFF2D2214) // Subtle amber-tinted dark surface
+val ChipEdgeSelectedDark = Color(0xFFF59E0B) // Vibrant Amber
 
 // Colores especiales heredados
 val CardBackground = Color(0xFFFFFFFF)
-val CardBackgroundDark = Color(0xFF1E293B)
-val InfectionBadge = Color(0xFFDC2626)
+val CardBackgroundDark = Color(0xFF111827) // Elevación sutil para tarjetas en modo oscuro
+val InfectionBadge = Color(0xFFD93025)

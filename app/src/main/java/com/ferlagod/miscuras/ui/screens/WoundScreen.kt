@@ -365,19 +365,13 @@ fun SelectionContent(
     
     
     val context = androidx.compose.ui.platform.LocalContext.current
-    val gradientBrush = Brush.verticalGradient(
-        colors = listOf(
-            MaterialTheme.colorScheme.background,
-            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
-    )
 
-    Box(modifier = Modifier.fillMaxSize().background(gradientBrush)) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Scaffold(
             containerColor = Color.Transparent,
         topBar = {
             Column {
-                TopAppBar(
+                CenterAlignedTopAppBar(
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Image(
@@ -463,14 +457,9 @@ fun SelectionContent(
                 val optionsEtiologyTrans = WoundViewModel.opcionesEtiologia.map { AppStrings.translateClinicalTerm(it, uiState.currentLanguage) }.sorted()
                 
                 Card(
-                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp).shadow(
-                        elevation = 16.dp,
-                        shape = RoundedCornerShape(24.dp),
-                        ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                        spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                    ),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
                     elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
@@ -495,13 +484,11 @@ fun SelectionContent(
                     selectedOption = currentEtiologyTrans,
                     options = optionsEtiologyTrans,
                     onOptionSelected = { 
-                        onEtiologyChanged(AppStrings.mapToDbTerm(it)); onNextStep() 
+                        onEtiologyChanged(AppStrings.mapToDbTerm(it))
                     },
                     chipType = "etiology"
                 )
             }
-                    }
-                    com.ferlagod.miscuras.ui.WizardStep.TISSUE -> {
                         item {
                 val currentLechoTrans = AppStrings.translateClinicalTerm(uiState.selectedLecho, uiState.currentLanguage)
                 val optionsLechoTrans = WoundViewModel.opcionesLecho.map { AppStrings.translateClinicalTerm(it, uiState.currentLanguage) }
@@ -510,10 +497,19 @@ fun SelectionContent(
                     description = strings.bedStateDesc,
                     selectedOption = currentLechoTrans,
                     options = optionsLechoTrans,
-                    onOptionSelected = { onLechoChanged(AppStrings.mapToDbTerm(it)); onNextStep() },
+                    onOptionSelected = { onLechoChanged(AppStrings.mapToDbTerm(it)) },
                     chipType = "tissue"
                 )
             }
+                        item {
+                            Button(
+                                onClick = onNextStep, 
+                                modifier = Modifier.fillMaxWidth().padding(top = 16.dp).height(56.dp),
+                                shape = androidx.compose.foundation.shape.CircleShape
+                            ) {
+                                Text("Siguiente")
+                            }
+                        }
                     }
                     com.ferlagod.miscuras.ui.WizardStep.SIZE_AND_LOCATION -> {
                         item {
@@ -556,7 +552,11 @@ fun SelectionContent(
                     )
                 }
                         item {
-                            Button(onClick = onNextStep, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
+                            Button(
+                                onClick = onNextStep, 
+                                modifier = Modifier.fillMaxWidth().padding(top = 16.dp).height(56.dp),
+                                shape = androidx.compose.foundation.shape.CircleShape
+                            ) {
                                 Text("Siguiente")
                             }
                         }
@@ -570,13 +570,11 @@ fun SelectionContent(
                     description = strings.exudateLevelDesc,
                     selectedOption = currentExudadoTrans,
                     options = optionsExudadoTrans,
-                    onOptionSelected = { onExudadoChanged(AppStrings.mapToDbTerm(it)); onNextStep() },
+                    onOptionSelected = { onExudadoChanged(AppStrings.mapToDbTerm(it)) },
                     
                     chipType = "exudate"
                 )
             }
-                    }
-                    com.ferlagod.miscuras.ui.WizardStep.EXUDATE_TYPE -> {
                         item {
                     val currentExuTypeTrans = AppStrings.translateClinicalTerm(uiState.selectedExudateType, uiState.currentLanguage)
                     val optionsExuTypeTrans = WoundViewModel.opcionesTipoExudado.map { AppStrings.translateClinicalTerm(it, uiState.currentLanguage) }
@@ -585,11 +583,20 @@ fun SelectionContent(
                         description = strings.exudateTypeDesc,
                         selectedOption = currentExuTypeTrans,
                         options = optionsExuTypeTrans,
-                        onOptionSelected = { onExudateTypeChanged(AppStrings.mapToDbTerm(it)); onNextStep() },
-                        enabled = true,
+                        onOptionSelected = { onExudateTypeChanged(AppStrings.mapToDbTerm(it)) },
+                        enabled = uiState.selectedExudado != "Nulo",
                         chipType = "exudate"
                     )
                 }
+                        item {
+                            Button(
+                                onClick = onNextStep, 
+                                modifier = Modifier.fillMaxWidth().padding(top = 16.dp).height(56.dp),
+                                shape = androidx.compose.foundation.shape.CircleShape
+                            ) {
+                                Text("Siguiente")
+                            }
+                        }
                     }
                     com.ferlagod.miscuras.ui.WizardStep.EDGES -> {
                         item {
@@ -600,13 +607,11 @@ fun SelectionContent(
                     description = strings.edgesDesc,
                     selectedOption = currentBordes,
                     options = optionsBordes,
-                    onOptionSelected = { onBordesChanged(it); onNextStep() },
+                    onOptionSelected = { onBordesChanged(it) },
                     
                     chipType = "edge"
                 )
             }
-                    }
-                    com.ferlagod.miscuras.ui.WizardStep.PERILESIONAL -> {
                         item {
                 val currentPeriTrans = AppStrings.translateClinicalTerm(uiState.selectedPerilesional, uiState.currentLanguage)
                 val optionsPeriTrans = WoundViewModel.opcionesPerilesional.map { AppStrings.translateClinicalTerm(it, uiState.currentLanguage) }
@@ -615,11 +620,20 @@ fun SelectionContent(
                     description = strings.perilesionalDesc,
                     selectedOption = currentPeriTrans,
                     options = optionsPeriTrans,
-                    onOptionSelected = { onPerilesionalChanged(AppStrings.mapToDbTerm(it)); onNextStep() },
+                    onOptionSelected = { onPerilesionalChanged(AppStrings.mapToDbTerm(it)) },
                     
                     chipType = "edge"
                 )
             }
+                        item {
+                            Button(
+                                onClick = onNextStep, 
+                                modifier = Modifier.fillMaxWidth().padding(top = 16.dp).height(56.dp),
+                                shape = androidx.compose.foundation.shape.CircleShape
+                            ) {
+                                Text("Siguiente")
+                            }
+                        }
                     }
                     com.ferlagod.miscuras.ui.WizardStep.INFECTION -> {
                         item {
@@ -675,13 +689,6 @@ fun SelectionContent(
                     )
                 }
                         item {
-                            Button(onClick = onNextStep, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-                                Text("Siguiente")
-                            }
-                        }
-                    }
-                    com.ferlagod.miscuras.ui.WizardStep.PAIN -> {
-                        item {
                 PainCard(
                     painLevel = uiState.painLevel,
                     onPainChange = onPainLevelChanged,
@@ -689,7 +696,11 @@ fun SelectionContent(
                 )
             }
                         item {
-                            Button(onClick = onNextStep, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
+                            Button(
+                                onClick = onNextStep, 
+                                modifier = Modifier.fillMaxWidth().padding(top = 16.dp).height(56.dp),
+                                shape = androidx.compose.foundation.shape.CircleShape
+                            ) {
                                 Text("Siguiente")
                             }
                         }
@@ -789,17 +800,12 @@ fun ChipGroupCard(
     chipType: String = "default" // "tissue", "exudate", "edge", "infection"
 ) {
     Card(
-        modifier = Modifier.fillMaxWidth().shadow(
-            elevation = 16.dp,
-            shape = RoundedCornerShape(24.dp),
-            ambientColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-            spotColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-        ),
-        shape = RoundedCornerShape(24.dp),
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (enabled) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
@@ -822,42 +828,6 @@ fun ChipGroupCard(
                 options.forEach { option ->
                     val isSelected = option == selectedOption
                     
-                    val selectedContainerColor = when(chipType) {
-                        "tissue" -> com.ferlagod.miscuras.ui.theme.ChipTissueSelected
-                        "exudate" -> com.ferlagod.miscuras.ui.theme.ChipExudateSelected
-                        "edge" -> com.ferlagod.miscuras.ui.theme.ChipEdgeSelected
-                        "infection" -> com.ferlagod.miscuras.ui.theme.ChipInfectionSelected
-                        else -> MaterialTheme.colorScheme.primaryContainer
-                    }
-                    val containerColor = when(chipType) {
-                        "tissue" -> com.ferlagod.miscuras.ui.theme.ChipTissue
-                        "exudate" -> com.ferlagod.miscuras.ui.theme.ChipExudate
-                        "edge" -> com.ferlagod.miscuras.ui.theme.ChipEdge
-                        "infection" -> com.ferlagod.miscuras.ui.theme.ChipInfection
-                        else -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-                    }
-                    val darkTheme = MaterialTheme.colorScheme.surface.luminance() < 0.5f
-                    
-                    val finalSelectedContainerColor = if (darkTheme) {
-                        when(chipType) {
-                            "tissue" -> com.ferlagod.miscuras.ui.theme.ChipTissueSelectedDark
-                            "exudate" -> com.ferlagod.miscuras.ui.theme.ChipExudateSelectedDark
-                            "edge" -> com.ferlagod.miscuras.ui.theme.ChipEdgeSelectedDark
-                            "infection" -> com.ferlagod.miscuras.ui.theme.ChipInfectionSelectedDark
-                            else -> MaterialTheme.colorScheme.primaryContainer
-                        }
-                    } else selectedContainerColor
-                    
-                    val finalContainerColor = if (darkTheme) {
-                        when(chipType) {
-                            "tissue" -> com.ferlagod.miscuras.ui.theme.ChipTissueDark
-                            "exudate" -> com.ferlagod.miscuras.ui.theme.ChipExudateDark
-                            "edge" -> com.ferlagod.miscuras.ui.theme.ChipEdgeDark
-                            "infection" -> com.ferlagod.miscuras.ui.theme.ChipInfectionDark
-                            else -> MaterialTheme.colorScheme.surfaceVariant
-                        }
-                    } else containerColor
-                    
                     val interactionSource = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
                     val isPressed by interactionSource.collectIsPressedAsState()
                     val scale by androidx.compose.animation.core.animateFloatAsState(
@@ -865,11 +835,7 @@ fun ChipGroupCard(
                         label = "scale"
                     )
                     
-                    val textColor = if (isSelected) {
-                        if (finalSelectedContainerColor.luminance() > 0.45f) com.ferlagod.miscuras.ui.theme.SlateDark else Color.White
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    }
+                    val textColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
                     
                     FilterChip(
                         selected = isSelected,
@@ -879,15 +845,16 @@ fun ChipGroupCard(
                             Text(
                                 text = option, 
                                 style = MaterialTheme.typography.labelLarge,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                 color = textColor
                             ) 
                         },
                         colors = FilterChipDefaults.filterChipColors(
-                            containerColor = finalContainerColor,
-                            selectedContainerColor = finalSelectedContainerColor,
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                             disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                         ),
-                        border = null,
+                        border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)),
                         shape = CircleShape,
                         enabled = enabled,
                         modifier = Modifier.defaultMinSize(minHeight = 48.dp).scale(scale)

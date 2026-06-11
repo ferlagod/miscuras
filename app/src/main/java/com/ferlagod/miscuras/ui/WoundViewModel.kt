@@ -21,15 +21,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 enum class WizardStep(val progress: Float) {
-    ETIOLOGY(0.1f),
-    TISSUE(0.2f),
-    SIZE_AND_LOCATION(0.3f),
-    EXUDATE(0.4f),
-    EXUDATE_TYPE(0.5f),
-    EDGES(0.6f),
-    PERILESIONAL(0.7f),
-    INFECTION(0.8f),
-    PAIN(0.9f),
+    ETIOLOGY(0.16f),
+    SIZE_AND_LOCATION(0.33f),
+    EXUDATE(0.50f),
+    EDGES(0.66f),
+    INFECTION(0.83f),
     SUMMARY(1.0f)
 }
 
@@ -140,11 +136,8 @@ class WoundViewModel(
         val state = _uiState.value
         
         // Branching logic
-        if (current == WizardStep.TISSUE && state.selectedLecho == "Piel Intacta (Prevención)") {
+        if (current == WizardStep.ETIOLOGY && state.selectedLecho == "Piel Intacta (Prevención)") {
             nextStep = WizardStep.SUMMARY
-        } else if (current == WizardStep.EXUDATE && state.selectedExudado == "Nulo") {
-            // Skip exudate type
-            nextStep = WizardStep.EDGES
         }
         
         _uiState.update { it.copy(currentWizardStep = nextStep) }
@@ -162,9 +155,7 @@ class WoundViewModel(
         
         // Reverse branching logic
         if (current == WizardStep.SUMMARY && state.selectedLecho == "Piel Intacta (Prevención)") {
-            prevStep = WizardStep.TISSUE
-        } else if (current == WizardStep.EDGES && state.selectedExudado == "Nulo") {
-            prevStep = WizardStep.EXUDATE
+            prevStep = WizardStep.ETIOLOGY
         }
         
         _uiState.update { it.copy(currentWizardStep = prevStep) }

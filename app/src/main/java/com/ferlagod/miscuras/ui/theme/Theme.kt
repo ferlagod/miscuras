@@ -8,21 +8,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 private val LightColorScheme = lightColorScheme(
-    primary = TealPrimary,
+    primary = BluePrimary,
     onPrimary = Color.White,
-    primaryContainer = TealContainer,
-    onPrimaryContainer = OnTealContainer,
-    secondary = Color(0xFF0277BD),
+    primaryContainer = BlueContainer,
+    onPrimaryContainer = OnBlueContainer,
+    secondary = GreenSecondary,
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFE1F5FE),
-    onSecondaryContainer = Color(0xFF01579B),
+    secondaryContainer = GreenContainer,
+    onSecondaryContainer = OnGreenContainer,
 
     background = SurfaceLight,
-    onBackground = SlateDark,
+    onBackground = BluePrimary, // Emphasize navy blue text
     surface = CardBackground,
-    onSurface = SlateDark,
+    onSurface = BluePrimary, // Navy blue text on cards
     surfaceVariant = SurfaceVariantLight,
-    onSurfaceVariant = SlateMedium,
+    onSurfaceVariant = BlueLight, // Slightly lighter blue for secondary text
     outline = OutlineLight,
 
     error = ChipInfectionSelected,
@@ -32,25 +32,25 @@ private val LightColorScheme = lightColorScheme(
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = TealLight,
-    onPrimary = TealDark,
-    primaryContainer = TealDark,
-    onPrimaryContainer = TealLight,
-    secondary = Color(0xFF29B6F6),
-    onSecondary = Color(0xFF01579B),
-    secondaryContainer = Color(0xFF01579B),
-    onSecondaryContainer = Color(0xFFE1F5FE),
+    primary = Color(0xFF60A5FA), // Vibrant Blue
+    onPrimary = Color(0xFF090E17), // Deep Navy Text
+    primaryContainer = Color(0xFF1D4ED8), // Deep vibrant blue
+    onPrimaryContainer = Color(0xFFEFF6FF), // White-blue text
+    secondary = Color(0xFF34D399), // Vibrant Mint Green
+    onSecondary = Color(0xFF090E17),
+    secondaryContainer = Color(0xFF065F46), // Deep emerald
+    onSecondaryContainer = Color(0xFFD1FAE5),
 
     background = SurfaceDark,
-    onBackground = Color(0xFFECEFF1),
+    onBackground = Color(0xFFF8FAFC), // Crisp white text
     surface = CardBackgroundDark,
-    onSurface = Color(0xFFECEFF1),
+    onSurface = Color(0xFFF8FAFC),
     surfaceVariant = SurfaceVariantDark,
-    onSurfaceVariant = Color(0xFFCFD8DC),
+    onSurfaceVariant = Color(0xFFCBD5E1), // Slate 300 for secondary text
     outline = OutlineDark,
 
     error = ChipInfectionSelectedDark,
-    onError = Color(0xFF4A0000),
+    onError = Color(0xFF450A0A),
     errorContainer = ChipInfectionDark,
     onErrorContainer = ChipInfectionSelectedDark
 )
