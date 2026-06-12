@@ -505,9 +505,30 @@ fun SelectionContent(
                             Button(
                                 onClick = onNextStep, 
                                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp).height(56.dp),
-                                shape = androidx.compose.foundation.shape.CircleShape
+                                shape = if (isPielIntacta) RoundedCornerShape(16.dp) else androidx.compose.foundation.shape.CircleShape,
+                                enabled = !uiState.isLoading,
+                                colors = if (isPielIntacta) ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary) else ButtonDefaults.buttonColors()
                             ) {
-                                Text("Siguiente")
+                                if (isPielIntacta && uiState.isLoading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(24.dp),
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        strokeWidth = 2.dp
+                                    )
+                                } else if (isPielIntacta) {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = strings.searchButton,
+                                        style = MaterialTheme.typography.labelLarge
+                                    )
+                                } else {
+                                    Text("Siguiente")
+                                }
                             }
                         }
                     }
@@ -696,49 +717,6 @@ fun SelectionContent(
                 )
             }
                         item {
-                            Button(
-                                onClick = onNextStep, 
-                                modifier = Modifier.fillMaxWidth().padding(top = 16.dp).height(56.dp),
-                                shape = androidx.compose.foundation.shape.CircleShape
-                            ) {
-                                Text("Siguiente")
-                            }
-                        }
-                    }
-                    com.ferlagod.miscuras.ui.WizardStep.SUMMARY -> {
-                        item {
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Warning,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                                modifier = Modifier.size(32.dp)
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = strings.bradenProactiveSuggest,
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSecondaryContainer,
-                                textAlign = TextAlign.Center
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Button(
-                                onClick = onBradenClick,
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-                            ) {
-                                Text(strings.bradenEvaluateButton)
-                            }
-                        }
-                    }
-                }
-                        item {
                 Button(
                     onClick = {
                         onFindApositoClick()
@@ -779,7 +757,6 @@ fun SelectionContent(
     }
 }
 }
-
 // ============================================================
 // COMPONENTE — Tarjeta con Dropdown selector
 // ============================================================
