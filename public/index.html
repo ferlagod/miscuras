@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidad - Mis Curas</title>
+    <meta name="description" content="Política de privacidad de la aplicación Mis Curas.">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+
+        :root {
+            --bg-color: #f8fafc;
+            --text-color: #334155;
+            --heading-color: #0f172a;
+            --primary-color: #0ea5e9;
+            --container-bg: #ffffff;
+            --border-color: #e2e8f0;
+            --link-hover: #0284c7;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #0f172a;
+                --text-color: #cbd5e1;
+                --heading-color: #f8fafc;
+                --primary-color: #38bdf8;
+                --container-bg: #1e293b;
+                --border-color: #334155;
+                --link-hover: #7dd3fc;
+            }
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.7;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 40px 20px;
+            background-color: var(--container-bg);
+            padding: 50px;
+            border-radius: 24px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border: 1px solid var(--border-color);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        h1, h2, h3 {
+            color: var(--heading-color);
+            margin-top: 1.8em;
+            margin-bottom: 0.6em;
+            font-weight: 700;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-top: 0;
+            text-align: center;
+            background: -webkit-linear-gradient(45deg, var(--primary-color), #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+        }
+
+        p, ul, li {
+            font-size: 1.1rem;
+        }
+
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-weight: 600;
+        }
+
+        a:hover {
+            color: var(--link-hover);
+            text-decoration: underline;
+        }
+
+        .meta {
+            font-size: 0.95rem;
+            color: #64748b;
+            margin-bottom: 40px;
+            text-align: center;
+            font-style: italic;
+        }
+
+        ul {
+            padding-left: 20px;
+        }
+
+        li {
+            margin-bottom: 12px;
+        }
+
+        strong {
+            color: var(--heading-color);
+            font-weight: 600;
+        }
+
+        .footer {
+            margin-top: 50px;
+            padding-top: 30px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 0.95rem;
+            color: var(--text-color);
+        }
+
+        .footer a {
+            margin: 0 10px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 20px 10px;
+                padding: 30px 20px;
+                border-radius: 16px;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Mis Curas: Política de privacidad</h1>
+    <div class="meta">Última actualización: 7 de junio de 2026</div>
+
+    <p>La aplicación <strong>"Mis Curas"</strong> es una herramienta de apoyo a la toma de decisiones dirigida exclusivamente a profesionales de enfermería. El diseño de este software prioriza de forma absoluta la privacidad, procesando la información de evaluación localmente y limitando las comunicaciones externas a funciones técnicas específicas debidamente declaradas.</p>
+
+    <h2>1. Recopilación y almacenamiento de datos</h2>
+    <ul>
+        <li><strong>Datos locales:</strong> La aplicación funciona mediante una base de datos local que se inicializa de forma autónoma con archivos predefinidos. No requiere conexión a servidores externos para realizar las consultas clínicas o consultar el catálogo de productos.</li>
+        <li><strong>Preferencias:</strong> Los ajustes de la interfaz, como el idioma y el tema visual, se guardan exclusivamente en el almacenamiento local del dispositivo mediante mecanismos nativos del sistema operativo.</li>
+        <li><strong>Uso de la cámara (Regla Virtual):</strong> La aplicación solicita el permiso de cámara exclusivamente para la función de medición de heridas en tiempo real mediante realidad aumentada. El flujo de vídeo se procesa de forma efímera en la memoria volátil del dispositivo para calcular distancias físicas. No se realiza ninguna captura fotográfica o de vídeo, no se almacena en el dispositivo y no se transmite ninguna imagen a servidores externos, garantizando una privacidad clínica total.</li>
+        <li><strong>Formulario de sugerencias:</strong> La aplicación incluye un formulario opcional para proponer la adición de nuevos productos. La información introducida se transmite a través del proveedor de servicios externo Formspree, encargado de procesar la petición y redirigirla a <a href="mailto:proyectos@oniros.eu">proyectos@oniros.eu</a>. Formspree puede recopilar metadatos técnicos (como la dirección IP) estrictamente por motivos de seguridad y prevención de spam. El uso de esta función está sujeto a la política de privacidad de Formspree.</li>
+        <li><strong>Asistente Educativo IA:</strong> La aplicación incorpora una función opcional de asistencia teórica interactiva que se conecta con la API de Google Gemini. Al solicitar una aclaración, el sistema envía únicamente datos técnicos genéricos y despersonalizados extraídos de la base de datos local (fase del lecho de la herida, estado del exudado y directriz teórica de curas). Bajo ninguna circunstancia se capturan, transmiten o almacenan nombres, datos de salud, historias clínicas ni imágenes reales de pacientes. La consulta viaja de forma cifrada y segura hacia los servicios de Google AI.</li>
+        <li><strong>Privacidad del paciente:</strong> El código de la aplicación ha sido diseñado para no recopilar información personal ni datos identificativos de pacientes. Las selecciones de evaluación de heridas se mantienen únicamente en la memoria temporal durante el uso de la pantalla correspondiente y se destruyen al cerrarla.</li>
+    </ul>
+
+    <h2>2. Permisos, Telemetría y servicios de terceros</h2>
+    <ul>
+        <li><strong>Permiso de Cámara:</strong> Utilizado de forma restrictiva, aislado de la red y sin acceso a la memoria de almacenamiento. Solo se activa a petición del usuario para cálculos matemáticos locales.</li>
+        <li><strong>Carencia de rastreadores:</strong> No se integra ningún tipo de SDK de terceros para publicidad, rastreo de uso (trackers), herramientas de analítica comercial o recolección automatizada de errores. La privacidad es total y el código es auditable.</li>
+        <li><strong>Uso de red:</strong> El permiso de acceso a Internet del dispositivo se utiliza de forma restrictiva y exclusiva para:
+            <ul>
+                <li>Renderizar determinados recursos gráficos de la interfaz.</li>
+                <li>La transmisión unidireccional del formulario de sugerencias (Formspree).</li>
+                <li>La comunicación directa y cifrada con la API de Google Gemini para la generación de las explicaciones de texto del Asistente Educativo.</li>
+            </ul>
+        </li>
+    </ul>
+
+    <h2>3. Eliminación de datos</h2>
+    <p>La eliminación total de los datos de configuración locales o contadores de la aplicación se efectúa de forma inmediata e irreversible al ejecutar cualquiera de las siguientes acciones en el dispositivo:</p>
+    <ul>
+        <li>Desinstalar la aplicación del sistema.</li>
+        <li>Borrar la caché y los datos de la aplicación directamente desde los ajustes del sistema operativo Android.</li>
+    </ul>
+
+    <h2>4. Responsabilidad clínica y limitaciones de la IA</h2>
+    <p>La aplicación es un recurso puramente consultivo e informativo basado en las directrices de la GNEAUPP y el marco teórico TIME.</p>
+    <p>Las sugerencias automatizadas de la base de datos y las explicaciones redactadas por el Asistente Educativo IA tienen un propósito exclusivamente formativo y pedagógico. No sustituyen el juicio clínico profesional, no valoran casos reales, no prescriben tratamientos específicos y no constituyen en ningún caso un diagnóstico médico o de enfermería. El profesional sanitario a cargo es el único responsable de validar la idoneidad del protocolo antes de su aplicación real.</p>
+
+    <h2>5. Contacto y Transparencia</h2>
+    <p>Para cualquier consulta técnica relacionada con esta política de privacidad, el tratamiento de datos o el funcionamiento del código abierto, es posible utilizar los siguientes canales oficiales:</p>
+    <ul>
+        <li><strong>Desarrollador:</strong> Fernando Lago (ferlagod)</li>
+        <li><strong>Correo electrónico:</strong> <a href="mailto:proyectos@oniros.eu">proyectos@oniros.eu</a></li>
+        <li><strong>Sitio web de referencia:</strong> <a href="https://ferlagod.eu" target="_blank" rel="noopener noreferrer">ferlagod.eu</a></li>
+        <li><strong>Código fuente auditable:</strong> <a href="https://forjalibre.eu/ferlagod/miscuras" target="_blank" rel="noopener noreferrer">https://forjalibre.eu/ferlagod/miscuras</a></li>
+    </ul>
+
+    <div class="footer">
+        <p>
+            <a href="#">Subscribe via RSS</a> / <a href="#">via Email</a><br>
+            🌐 Explora mis proyectos en <a href="https://ForjaLibre.eu" target="_blank" rel="noopener noreferrer">ForjaLibre.eu</a> · <a href="#">Apóyame en Liberapay</a>
+        </p>
+        <p>Desarrollado con ❤️ y mucho café por ferlagod. <a href="#">Mastodon</a></p>
+        <p>Contenido bajo licencia <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener noreferrer">CC BY-SA 4.0</a>.</p>
+    </div>
+</div>
+
+</body>
+</html>
