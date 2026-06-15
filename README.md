@@ -2,6 +2,12 @@
 
 ![Banner de Mis Curas](https://i.imgur.com/IEFXtMX.png)
 
+<div align="center">
+  <a href="https://play.google.com/store/apps/details?id=com.ferlagod.miscuras">
+    <img alt="Disponible en Google Play" src="https://play.google.com/intl/en_us/badges/static/images/badges/es_badge_web_generic.png" width="200">
+  </a>
+</div>
+
 **Mis Curas** es una aplicación móvil moderna y ligera construida con Android, Kotlin y Jetpack Compose, diseñada exclusivamente como una herramienta de apoyo a la toma de decisiones clínicas para profesionales de enfermería en el tratamiento de heridas crónicas y agudas.
 
 Las recomendaciones sugeridas por la aplicación se fundamentan estrictamente en las directrices y documentos de consenso del **GNEAUPP** (Grupo Nacional para el Estudio y Asesoramiento en Úlceras por Presión y Heridas Crónicas) y en el catálogo habitual de productos del **Servicio Andaluz de Salud (SAS)**.
@@ -34,7 +40,7 @@ Las recomendaciones sugeridas por la aplicación se fundamentan estrictamente en
 
 Este proyecto se divide en dos componentes diferenciados bajo las siguientes condiciones legales:
 
-1. **Código Fuente (Software):** Este proyecto es software libre y se distribuye bajo los términos de la licencia GNU GPLv3. Consultar el archivo `LICENSE` para más detalles. Puedes estudiar el código, auditarlo y contribuir a su desarrollo en [ForjaLibre](https://forjalibre.eu/ferlagod/miscuras).
+1. **Código Fuente (Software):** Este proyecto es software libre y se distribuye bajo los términos de la licencia GNU GPLv3. Consultar el archivo `LICENSE` para más detalles. Puedes estudiar el código, auditarlo y contribuir a su desarrollo en [Github](https://github.com/ferlagod/miscuras).
 2. **Datos Clínicos y de Catálogo (Contenido):** **Los datos de los productos y el catálogo no son libres**. El archivo de productos recopila información comercial, códigos nacionales y marcas registradas protegidos por sus respectivos fabricantes y distribuidores de salud. Queda prohibida la explotación comercial o redistribución masiva de este catálogo de datos sin autorización explícita.
 
 ---
@@ -54,8 +60,8 @@ Si esta herramienta te resulta útil en tu práctica diaria o quieres contribuir
 [![Apóyame en Liberapay](https://liberapay.com/assets/widgets/donate.svg)](https://liberapay.com/ferlagod./)
 
 - 💬 **Contacto y Comunidad:** Sígueme en el Fediverso a través de [Frikiverse (Mastodon)](https://frikiverse.zone/@ferlagod).
-- 💻 **Desarrollo:** Consulta el repositorio del código en [ForjaLibre](https://forjalibre.eu/ferlagod/miscuras).
+- 💻 **Desarrollo:** Consulta el repositorio del código en [Github](https://github.com/ferlagod/miscuras).
 
 ---
 
-*Desarrollado con ❤️ y mucho café por [ferlagod](https://forjalibre.eu/ferlagod).*
+*Desarrollado con ❤️ y mucho café por [ferlagod](https://github.com/ferlagod).*

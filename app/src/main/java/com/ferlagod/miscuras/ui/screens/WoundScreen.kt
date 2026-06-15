@@ -2107,11 +2107,25 @@ private fun SettingsDialog(
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     OutlinedButton(
-                        onClick = { uriHandler.openUri("https://forjalibre.eu/ferlagod/miscuras") },
+                        onClick = { uriHandler.openUri("https://github.com/ferlagod") },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("ForjaLibre")
+                        Text("GitHub")
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = "Política de Privacidad",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                    OutlinedButton(
+                        onClick = { uriHandler.openUri("https://ferlagod.github.io/miscuras/") },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("Ver Política de Privacidad")
                     }
                 }
 
@@ -2698,12 +2712,6 @@ fun DeveloperInfoDialog(strings: AppStrings, onDismiss: () -> Unit) {
                     text = "Apasionado por la tecnología independiente, la privacidad y la lectura. Desarrollo herramientas nacidas de mis propias aficiones y necesidades profesionales, como BiblioHouse, Mis Curas y Rocinante.",
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
-                )
-                Text(
-                    text = "Puedes encontrar el código fuente de todos mis proyectos en mi instancia de Forgejo: forjalibre.eu.",
-                    style = MaterialTheme.typography.bodySmall,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.primary
                 )
             }
         }
