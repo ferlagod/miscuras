@@ -17,15 +17,21 @@ import androidx.compose.ui.unit.dp
 import com.ferlagod.miscuras.ui.viewmodels.PatientViewModel
 import com.ferlagod.miscuras.ui.AppStrings
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ferlagod.miscuras.ui.WoundViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DashboardScreen(
     patientViewModel: PatientViewModel,
+    woundViewModel: WoundViewModel,
     onQuickEvaluationClick: () -> Unit,
-    onPatientClick: (Long) -> Unit
+    onPatientClick: (Long) -> Unit,
+    onNavigateToWoundEval: () -> Unit
 ) {
     val patients by patientViewModel.patients.collectAsState()
+    val uiState by woundViewModel.uiState.collectAsStateWithLifecycle()
+    var showSettings by remember { mutableStateOf(false) }
     var showAddDialog by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
@@ -37,6 +43,32 @@ fun DashboardScreen(
         topBar = {
             TopAppBar(
                 title = { Text(strings.myPatientsTitle) },
+                actions = {
+                    IconButton(onClick = { 
+                        woundViewModel.showBraden()
+                        onNavigateToWoundEval()
+                    }) {
+                        Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Default.Warning,
+                            contentDescription = "Calculadora Braden"
+                        )
+                    }
+                    IconButton(onClick = { 
+                        woundViewModel.showGlossary()
+                        onNavigateToWoundEval()
+                    }) {
+                        Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Default.MenuBook,
+                            contentDescription = "Glosario / Biblioteca"
+                        )
+                    }
+                    IconButton(onClick = { showSettings = true }) {
+                        Icon(
+                            imageVector = androidx.compose.material.icons.Icons.Default.Settings,
+                            contentDescription = strings.settingsTitle
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
@@ -155,6 +187,20 @@ fun DashboardScreen(
                 TextButton(onClick = { showAddDialog = false }) {
                     Text(strings.cancelButton)
                 }
+            }
+        )
+    }
+
+    if (showSettings) {
+        SettingsDialog(
+            currentLanguage = uiState.currentLanguage,
+            onLanguageChanged = { woundViewModel.changeLanguage(it) },
+            currentTheme = uiState.currentTheme,
+            onThemeChanged = { woundViewModel.changeTheme(it) },
+            onDismiss = { showSettings = false },
+            onSuggestProductClick = { 
+                showSettings = false
+                woundViewModel.setAddProductDialogVisibility(true)
             }
         )
     }

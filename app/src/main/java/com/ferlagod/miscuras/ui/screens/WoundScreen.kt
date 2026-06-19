@@ -2212,7 +2212,7 @@ private fun DisclaimerDialog(strings: AppStrings, onAccept: () -> Unit) {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SettingsDialog(
+fun SettingsDialog(
     currentLanguage: String,
     onLanguageChanged: (String) -> Unit,
     currentTheme: String,

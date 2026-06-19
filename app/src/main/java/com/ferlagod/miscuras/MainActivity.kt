@@ -117,12 +117,16 @@ class MainActivity : ComponentActivity() {
                         composable("dashboard") {
                             DashboardScreen(
                                 patientViewModel = patientViewModel,
+                                woundViewModel = viewModel,
                                 onQuickEvaluationClick = { 
                                     viewModel.resetWizard() // Helper to add later or just clear state
                                     navController.navigate("wound_eval/-1") 
                                 },
                                 onPatientClick = { patientId ->
                                     navController.navigate("patient_detail/$patientId")
+                                },
+                                onNavigateToWoundEval = {
+                                    navController.navigate("wound_eval/-1")
                                 }
                             )
                         }
