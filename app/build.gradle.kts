@@ -104,4 +104,23 @@ dependencies {
 
         // Google Fonts para Compose
         implementation("androidx.compose.ui:ui-text-google-fonts:1.6.7")
+
+        // Navigation Compose
+        implementation("androidx.navigation:navigation-compose:2.7.7")
+
+        // Base de datos cifrada (SQLCipher + Security Crypto)
+        implementation("net.zetetic:android-database-sqlcipher:4.5.4")
+        implementation("androidx.security:security-crypto:1.1.0-alpha06")
+
+        // Vico Charts (Gráficas)
+        val vicoVersion = "1.15.0"
+        implementation("com.patrykandpatrick.vico:compose-m3:$vicoVersion")
+        implementation("com.patrykandpatrick.vico:core:$vicoVersion")
+
+        // SQLCipher para cifrado de Room
+        implementation("net.zetetic:android-database-sqlcipher:4.5.4")
+        implementation("androidx.sqlite:sqlite-ktx:2.4.0")
+
+        // Coil para carga de imágenes asíncronas
+        implementation("io.coil-kt:coil-compose:2.6.0")
 }

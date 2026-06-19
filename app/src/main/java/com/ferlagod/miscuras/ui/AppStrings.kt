@@ -269,6 +269,38 @@ sealed interface AppStrings {
     val settingsSuggestTitle: String
     val settingsSuggestDesc: String
 
+    // Patient Tracking & Dashboard
+    val myPatientsTitle: String
+    val addPatientDesc: String
+    val quickEvaluationBtn: String
+    val registeredPatientsLabel: String
+    val noPatientsMsg: String
+    val newPatientTitle: String
+    val nameInitialsLabel: String
+    val roomBedLabel: String
+    val saveButton: String
+
+    // Patient Detail
+    val patientWoundsTitle: String
+    val addWoundDesc: String
+    val noWoundsMsg: String
+    val newWoundTitle: String
+    val woundLocationNameLabel: String
+
+    // Wound Detail
+    val woundDetailTitleFallback: String
+    val evaluateBtn: String
+    val noEvaluationsMsg: String
+    val sizeEvolutionChartTitle: String
+    val evalHistoryTitle: String
+    val evalChartLabel: String
+    val evalSizeFormat: String
+    val evalBedFormat: String
+    val evalExudateFormat: String
+    val evalInfectionFormat: String
+    val evalTreatmentFormat: String
+    val photoEvolutionDesc: String
+
     companion object {
         /**
          * Retorna el objeto contenedor de strings para el idioma especificado.
@@ -638,6 +670,35 @@ object EsStrings : AppStrings {
     override val confirmButton = "Confirmar"
     override val settingsSuggestTitle = "Enviar sugerencias (requiere internet)"
     override val settingsSuggestDesc = "Sugiere un apósito que no encuentres. Solo se enviará la información del producto y tu nombre (opcional), ningún dato de pacientes sale del dispositivo."
+
+    override val myPatientsTitle = "Mis Pacientes"
+    override val addPatientDesc = "Añadir Paciente"
+    override val quickEvaluationBtn = "Evaluación Rápida (Sin Guardar)"
+    override val registeredPatientsLabel = "Pacientes Registrados"
+    override val noPatientsMsg = "No hay pacientes registrados.\nToca el botón + para añadir uno."
+    override val newPatientTitle = "Nuevo Paciente"
+    override val nameInitialsLabel = "Nombre / Iniciales"
+    override val roomBedLabel = "Habitación / Cama"
+    override val saveButton = "Guardar"
+
+    override val patientWoundsTitle = "Heridas del Paciente"
+    override val addWoundDesc = "Añadir Herida"
+    override val noWoundsMsg = "Este paciente no tiene heridas registradas.\nToca el botón + para añadir una."
+    override val newWoundTitle = "Nueva Herida"
+    override val woundLocationNameLabel = "Ubicación / Nombre (ej. Talón izq)"
+
+    override val woundDetailTitleFallback = "Detalle de Herida"
+    override val evaluateBtn = "Evaluar"
+    override val noEvaluationsMsg = "No hay evaluaciones para esta herida.\nToca 'Evaluar' para crear la primera."
+    override val sizeEvolutionChartTitle = "Evolución del Tamaño (Área cm²)"
+    override val evalHistoryTitle = "Historial de Evaluaciones"
+    override val evalChartLabel = "Eval"
+    override val evalSizeFormat = "Tamaño: %s x %s %s cm"
+    override val evalBedFormat = "Lecho: %s"
+    override val evalExudateFormat = "Exudado: %s (%s)"
+    override val evalInfectionFormat = "Infección: Sí (%s)"
+    override val evalTreatmentFormat = "Tratamiento: %s"
+    override val photoEvolutionDesc = "Foto de evolución"
 }
 
 /** Implementación de [AppStrings] para Inglés. */
@@ -879,8 +940,37 @@ object EnStrings : AppStrings {
     override val repInfYesFormat = "Yes (Suspected/Confirmed: %s)"
     override val repUnspecified = "Not specified"
     override val confirmButton = "Confirm"
-    override val settingsSuggestTitle = "Send suggestions (requires internet)"
-    override val settingsSuggestDesc = "Suggest a dressing you can't find. Only the product info and your name (optional) will be sent. No patient data leaves the device."
+    override val settingsSuggestTitle = "Send suggestions (internet required)"
+    override val settingsSuggestDesc = "Suggest a dressing you can't find. Only the product info and your name (optional) will be sent; no patient data ever leaves the device."
+
+    override val myPatientsTitle = "My Patients"
+    override val addPatientDesc = "Add Patient"
+    override val quickEvaluationBtn = "Quick Evaluation (Unsaved)"
+    override val registeredPatientsLabel = "Registered Patients"
+    override val noPatientsMsg = "No registered patients.\nTap the + button to add one."
+    override val newPatientTitle = "New Patient"
+    override val nameInitialsLabel = "Name / Initials"
+    override val roomBedLabel = "Room / Bed"
+    override val saveButton = "Save"
+
+    override val patientWoundsTitle = "Patient Wounds"
+    override val addWoundDesc = "Add Wound"
+    override val noWoundsMsg = "This patient has no registered wounds.\nTap the + button to add one."
+    override val newWoundTitle = "New Wound"
+    override val woundLocationNameLabel = "Location / Name (e.g. Left Heel)"
+
+    override val woundDetailTitleFallback = "Wound Detail"
+    override val evaluateBtn = "Evaluate"
+    override val noEvaluationsMsg = "No evaluations for this wound.\nTap 'Evaluate' to create the first one."
+    override val sizeEvolutionChartTitle = "Size Evolution (Area cm²)"
+    override val evalHistoryTitle = "Evaluation History"
+    override val evalChartLabel = "Eval"
+    override val evalSizeFormat = "Size: %s x %s %s cm"
+    override val evalBedFormat = "Bed: %s"
+    override val evalExudateFormat = "Exudate: %s (%s)"
+    override val evalInfectionFormat = "Infection: Yes (%s)"
+    override val evalTreatmentFormat = "Treatment: %s"
+    override val photoEvolutionDesc = "Evolution photo"
 }
 
 /** Implementación de [AppStrings] para Portugués. */
@@ -1123,5 +1213,34 @@ object PtStrings : AppStrings {
     override val repUnspecified = "Não especificado"
     override val confirmButton = "Confirmar"
     override val settingsSuggestTitle = "Enviar sugestões (requer internet)"
-    override val settingsSuggestDesc = "Sugira um curativo que você não encontre. Apenas as informações do produto e seu nome (opcional) serão enviados. Nenhum dado do paciente sai do dispositivo."
+    override val settingsSuggestDesc = "Sugira um curativo que você não encontra. Apenas a informação do produto e seu nome (opcional) serão enviados; nenhum dado do paciente sai do dispositivo."
+
+    override val myPatientsTitle = "Meus Pacientes"
+    override val addPatientDesc = "Adicionar Paciente"
+    override val quickEvaluationBtn = "Avaliação Rápida (Sem Salvar)"
+    override val registeredPatientsLabel = "Pacientes Registrados"
+    override val noPatientsMsg = "Nenhum paciente registrado.\nToque no botão + para adicionar."
+    override val newPatientTitle = "Novo Paciente"
+    override val nameInitialsLabel = "Nome / Iniciais"
+    override val roomBedLabel = "Quarto / Cama"
+    override val saveButton = "Salvar"
+
+    override val patientWoundsTitle = "Feridas do Paciente"
+    override val addWoundDesc = "Adicionar Ferida"
+    override val noWoundsMsg = "Este paciente não possui feridas registradas.\nToque no botão + para adicionar."
+    override val newWoundTitle = "Nova Ferida"
+    override val woundLocationNameLabel = "Localização / Nome (ex. Calcanhar Esq)"
+
+    override val woundDetailTitleFallback = "Detalhe da Ferida"
+    override val evaluateBtn = "Avaliar"
+    override val noEvaluationsMsg = "Nenhuma avaliação para esta ferida.\nToque em 'Avaliar' para criar a primeira."
+    override val sizeEvolutionChartTitle = "Evolução do Tamanho (Área cm²)"
+    override val evalHistoryTitle = "Histórico de Avaliações"
+    override val evalChartLabel = "Aval"
+    override val evalSizeFormat = "Tamanho: %s x %s %s cm"
+    override val evalBedFormat = "Leito: %s"
+    override val evalExudateFormat = "Exsudato: %s (%s)"
+    override val evalInfectionFormat = "Infecção: Sim (%s)"
+    override val evalTreatmentFormat = "Tratamento: %s"
+    override val photoEvolutionDesc = "Foto da evolução"
 }

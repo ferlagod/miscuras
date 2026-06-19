@@ -40,7 +40,11 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material.icons.filled.LocalHospital
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.SearchOff
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.outlined.AddCircleOutline
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -76,6 +80,17 @@ import coil.compose.AsyncImage
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider
+import java.io.FileOutputStream
+import java.io.InputStream
 import com.ferlagod.miscuras.R
 
 // ============================================================
@@ -90,17 +105,18 @@ private enum class ScreenState {
  * Pantalla principal de la aplicación.
  * Orquesta la navegación interna (Splash -> Selección -> Resultados) y gestiona
  * los diálogos de ajustes y descargo de responsabilidad.
- *
- * @param viewModel El [WoundViewModel] que provee el estado y las acciones.
- */
-@Composable
-/**
  * Pantalla principal del asistente de evaluación de heridas.
  * Orquesta el flujo de pasos (etiología, lecho, exudado, etc.) y muestra las recomendaciones finales.
  */
-fun WoundScreen(viewModel: WoundViewModel) {
+@Composable
+fun WoundScreen(
+    viewModel: WoundViewModel,
+    woundIdForSave: Long? = null,
+    onBackToDashboard: () -> Unit = {}
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showSettings by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     val strings = AppStrings.getStrings(uiState.currentLanguage)
 
@@ -182,9 +198,19 @@ fun WoundScreen(viewModel: WoundViewModel) {
                 ResultsContent(
                     uiState = uiState,
                     strings = strings,
-                    onBack = { viewModel.volverASeleccion() },
+                    onPreviousStep = { viewModel.previousStep() },
+                    onStartOver = { 
+                        viewModel.resetWizard()
+                        onBackToDashboard()
+                    },
+                    onSaveEvaluation = if (woundIdForSave != null) {
+                        { viewModel.saveEvaluation(woundIdForSave) }
+                    } else null,
                     onSuggestProductClick = { viewModel.setAddProductDialogVisibility(true) },
-                    onCopyProductSummary = { productoNombre -> viewModel.generarResumenEvolutivo(productoNombre, strings) }
+                    onCopyProductSummary = { productoNombre -> viewModel.generarResumenEvolutivo(productoNombre, strings) },
+                    onToggleProductSelection = { codigoCn -> viewModel.toggleProductSelection(codigoCn) },
+                    onPhotoPathChanged = { viewModel.setPhotoPath(it) },
+                    context = context
                 )
             }
             ScreenState.Glossary -> {
@@ -330,11 +356,7 @@ private fun SplashContent(strings: AppStrings) {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private /**
- * Contenido del asistente paso a paso.
- * Renderiza la interfaz correspondiente al paso actual del [WizardStep].
- */
-fun SelectionContent(
+private fun SelectionContent(
     uiState: WoundUiState,
     strings: AppStrings,
     onEtiologyChanged: (String) -> Unit,
@@ -775,11 +797,7 @@ fun SelectionContent(
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-private /**
- * Componente reutilizable para mostrar un grupo de opciones (chips) en formato de tarjeta.
- * Se utiliza para seleccionar parámetros como etiología, lecho, cantidad de exudado, etc.
- */
-fun ChipGroupCard(
+private fun ChipGroupCard(
     label: String,
     description: String,
     selectedOption: String,
@@ -1034,18 +1052,69 @@ private fun InfectionCard(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private /**
- * Muestra los resultados de la evaluación de la herida.
- * Incluye la puntuación de Braden y las listas de apósitos recomendados (primarios y secundarios).
- */
-fun ResultsContent(
+private fun ResultsContent(
     uiState: WoundUiState,
     strings: AppStrings,
-    onBack: () -> Unit,
+    onPreviousStep: () -> Unit,
+    onStartOver: () -> Unit,
+    onSaveEvaluation: (() -> Unit)?,
     onSuggestProductClick: () -> Unit,
-    onCopyProductSummary: (String) -> String
+    onCopyProductSummary: (String) -> String,
+    onToggleProductSelection: (String) -> Unit,
+    onPhotoPathChanged: (String) -> Unit,
+    context: android.content.Context
 ) {
     var selectedProduct by remember { mutableStateOf<ApositoEntity?>(null) }
+
+    // Helpers para fotos
+    var currentPhotoUri by remember { mutableStateOf<Uri?>(null) }
+    var currentPhotoFile by remember { mutableStateOf<File?>(null) }
+
+    val takePictureLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && currentPhotoFile != null) {
+            onPhotoPathChanged(currentPhotoFile!!.absolutePath)
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            val photoFile = File(context.filesDir, "photos")
+            if (!photoFile.exists()) photoFile.mkdirs()
+            val newFile = File(photoFile, "IMG_CAM_${java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US).format(java.util.Date())}.jpg")
+            currentPhotoFile = newFile
+            val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", newFile)
+            takePictureLauncher.launch(uri)
+        } else {
+            android.widget.Toast.makeText(context, "Permiso de cámara denegado", android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val pickMediaLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            // Copiar la imagen a nuestro almacenamiento interno
+            try {
+                val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
+                val photoFile = File(context.filesDir, "photos")
+                if (!photoFile.exists()) photoFile.mkdirs()
+                val newFile = File(photoFile, "IMG_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.jpg")
+                val outputStream = FileOutputStream(newFile)
+                inputStream?.copyTo(outputStream)
+                inputStream?.close()
+                outputStream.close()
+                
+                // Propagamos al ViewModel
+                onPhotoPathChanged(newFile.absolutePath)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     // Listas de productos agrupados por uso
     val productosPrimariosAgrupados = remember(uiState.productos) { 
@@ -1095,7 +1164,7 @@ fun ResultsContent(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = onPreviousStep) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Volver"
@@ -1284,6 +1353,7 @@ fun ResultsContent(
                             ProductCard(
                                 producto = producto,
                                 strings = strings,
+                                isSelected = uiState.selectedTreatmentProducts.contains(producto.nombreComercial),
                                 onClick = {
                                     selectedProduct = producto
                                 },
@@ -1291,6 +1361,9 @@ fun ResultsContent(
                                     val resumen = onCopyProductSummary(producto.nombreComercial)
                                     clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(resumen))
                                     android.widget.Toast.makeText(context, strings.copySummaryToast, android.widget.Toast.LENGTH_SHORT).show()
+                                },
+                                onSelectClick = {
+                                    onToggleProductSelection(producto.nombreComercial)
                                 }
                             )
                         }
@@ -1352,6 +1425,7 @@ fun ResultsContent(
                             ProductCard(
                                 producto = producto,
                                 strings = strings,
+                                isSelected = uiState.selectedTreatmentProducts.contains(producto.nombreComercial),
                                 onClick = {
                                     selectedProduct = producto
                                 },
@@ -1359,8 +1433,88 @@ fun ResultsContent(
                                     val resumen = onCopyProductSummary(producto.nombreComercial)
                                     clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(resumen))
                                     android.widget.Toast.makeText(context, strings.copySummaryToast, android.widget.Toast.LENGTH_SHORT).show()
+                                },
+                                onSelectClick = {
+                                    onToggleProductSelection(producto.nombreComercial)
                                 }
                             )
+                        }
+                    }
+                }
+
+                // Sección de Foto (Opcional)
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(
+                                text = "Registro Fotográfico (Opcional)",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            
+                            if (uiState.photoPath != null) {
+                                AsyncImage(
+                                    model = File(uiState.photoPath),
+                                    contentDescription = "Foto de la herida",
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(200.dp)
+                                        .clip(RoundedCornerShape(12.dp)),
+                                    contentScale = ContentScale.Crop
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                TextButton(onClick = { onPhotoPathChanged("") }) { // TODO: borrar uri
+                                    Text("Eliminar foto", color = MaterialTheme.colorScheme.error)
+                                }
+                            } else {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceEvenly
+                                ) {
+                                    Button(
+                                        onClick = {
+                                            val permission = android.Manifest.permission.CAMERA
+                                            val isGranted = androidx.core.content.ContextCompat.checkSelfPermission(context, permission) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                                            if (isGranted) {
+                                                // Create temp file for camera
+                                                val photoFile = File(context.filesDir, "photos")
+                                                if (!photoFile.exists()) photoFile.mkdirs()
+                                                val newFile = File(photoFile, "IMG_CAM_${java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US).format(java.util.Date())}.jpg")
+                                                currentPhotoFile = newFile
+                                                val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", newFile)
+                                                takePictureLauncher.launch(uri)
+                                            } else {
+                                                cameraPermissionLauncher.launch(permission)
+                                            }
+                                        }
+                                    ) {
+                                        Icon(Icons.Default.CameraAlt, contentDescription = "Cámara")
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Tomar Foto")
+                                    }
+                                    
+                                    OutlinedButton(
+                                        onClick = {
+                                            pickMediaLauncher.launch(androidx.activity.result.PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                                        }
+                                    ) {
+                                        Icon(Icons.Default.PhotoLibrary, contentDescription = "Galería")
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text("Galería")
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -1373,6 +1527,30 @@ fun ResultsContent(
                         modifier = Modifier.fillMaxWidth().height(50.dp)
                     ) {
                         Text(strings.suggestProductButton)
+                    }
+                }
+                
+                // Botón de Guardado Final
+                if (onSaveEvaluation != null) {
+                    item {
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Button(
+                            onClick = onSaveEvaluation,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Icon(androidx.compose.material.icons.Icons.Default.Save, contentDescription = "Guardar")
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                "Guardar Evaluación",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                            )
+                        }
                     }
                 }
             }
@@ -1515,16 +1693,19 @@ private fun RecommendedFamilyCard(familia: String, strings: AppStrings) {
 private fun ProductCard(
     producto: ApositoEntity,
     strings: AppStrings,
+    isSelected: Boolean = false,
     onClick: () -> Unit,
-    onCopyClick: () -> Unit
+    onCopyClick: () -> Unit,
+    onSelectClick: (() -> Unit)? = null
 ) {
     Card(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surface
         ),
+        border = if (isSelected) androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -1607,18 +1788,43 @@ private fun ProductCard(
             }
             }
             Spacer(modifier = Modifier.height(16.dp))
-            OutlinedButton(
-                onClick = onCopyClick,
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.ContentCopy,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(strings.copySummaryButton)
+                if (onSelectClick != null) {
+                    Button(
+                        onClick = onSelectClick,
+                        modifier = Modifier.weight(1f),
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    ) {
+                        Icon(
+                            imageVector = if (isSelected) androidx.compose.material.icons.Icons.Default.CheckCircle else androidx.compose.material.icons.Icons.Outlined.AddCircleOutline,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(if (isSelected) "Añadido" else "Añadir")
+                    }
+                }
+
+                OutlinedButton(
+                    onClick = onCopyClick,
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ContentCopy,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(strings.copySummaryButton)
+                }
             }
         }
     }

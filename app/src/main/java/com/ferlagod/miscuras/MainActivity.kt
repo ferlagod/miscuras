@@ -40,9 +40,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.activity.compose.BackHandler
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.ferlagod.miscuras.ui.screens.DashboardScreen
+import com.ferlagod.miscuras.ui.screens.PatientDetailScreen
+import com.ferlagod.miscuras.ui.screens.WoundDetailScreen
+import com.ferlagod.miscuras.ui.viewmodels.PatientViewModel
 
 /**
  * Actividad principal y punto de entrada de la aplicación.
@@ -64,58 +72,96 @@ class MainActivity : ComponentActivity() {
         )
 
         // 3. Crear un "Factory" para el ViewModel
-        val sharedPrefs = getSharedPreferences("settings", android.content.Context.MODE_PRIVATE)
         val factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 @Suppress("UNCHECKED_CAST")
-                return WoundViewModel(repository, sharedPrefs) as T
+                return WoundViewModel(application, repository) as T
             }
         }
 
         // 4. Obtener el ViewModel
         val viewModel: WoundViewModel by viewModels { factory }
 
-        // 5. Dibujar la pantalla (Abrir la puerta a los clientes)
+        // ViewModel de Pacientes
+        val patientFactory = object : ViewModelProvider.Factory {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                @Suppress("UNCHECKED_CAST")
+                return PatientViewModel(application) as T
+            }
+        }
+        val patientViewModel: PatientViewModel by viewModels { patientFactory }
+
+        // 5. Dibujar la pantalla con Navegación
         setContent {
-            val uiState by viewModel.uiState.collectAsState()
-            val strings = AppStrings.getStrings(uiState.currentLanguage)
-            var showExitDialog by remember { mutableStateOf(false) }
-
-            if (showExitDialog) {
-                AlertDialog(
-                    onDismissRequest = { showExitDialog = false },
-                    title = { Text(strings.exitDialogTitle) },
-                    text = { Text(strings.exitDialogText) },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            showExitDialog = false
-                            finish()
-                        }) {
-                            Text(strings.exitDialogConfirm)
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showExitDialog = false }) {
-                            Text(strings.exitDialogDismiss)
-                        }
-                    }
-                )
-            }
-
-            BackHandler {
-                showExitDialog = true
-            }
-
-            val isDarkTheme = when (uiState.currentTheme) {
+            val isDarkTheme = when (viewModel.uiState.collectAsState().value.currentTheme) {
                 "light" -> false
                 "dark" -> true
                 else -> androidx.compose.foundation.isSystemInDarkTheme()
             }
+            
             MisCurasTheme(darkTheme = isDarkTheme) {
-                Surface(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    WoundScreen(viewModel = viewModel)
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    val navController = rememberNavController()
+
+                    NavHost(navController = navController, startDestination = "dashboard") {
+                        composable("dashboard") {
+                            DashboardScreen(
+                                patientViewModel = patientViewModel,
+                                onQuickEvaluationClick = { 
+                                    viewModel.resetWizard() // Helper to add later or just clear state
+                                    navController.navigate("wound_eval/-1") 
+                                },
+                                onPatientClick = { patientId ->
+                                    navController.navigate("patient_detail/$patientId")
+                                }
+                            )
+                        }
+
+                        composable("patient_detail/{patientId}") { backStackEntry ->
+                            val patientId = backStackEntry.arguments?.getString("patientId")?.toLongOrNull() ?: return@composable
+                            PatientDetailScreen(
+                                patientId = patientId,
+                                patientViewModel = patientViewModel,
+                                onBackClick = { navController.popBackStack() },
+                                onWoundClick = { woundId ->
+                                    navController.navigate("wound_detail/$woundId")
+                                }
+                            )
+                        }
+
+                        composable("wound_detail/{woundId}") { backStackEntry ->
+                            val woundId = backStackEntry.arguments?.getString("woundId")?.toLongOrNull() ?: return@composable
+                            WoundDetailScreen(
+                                woundId = woundId,
+                                patientViewModel = patientViewModel,
+                                onBackClick = { navController.popBackStack() },
+                                onNewEvaluationClick = { wId ->
+                                    viewModel.resetWizard()
+                                    navController.navigate("wound_eval/$wId")
+                                }
+                            )
+                        }
+
+                        composable("wound_eval/{woundId}") { backStackEntry ->
+                            val woundId = backStackEntry.arguments?.getString("woundId")?.toLongOrNull() ?: -1L
+                            
+                            val uiState by viewModel.uiState.collectAsState()
+                            
+                            // Si se ha guardado, volver a la pantalla anterior
+                            LaunchedEffect(uiState.isSaved) {
+                                if (uiState.isSaved) {
+                                    navController.popBackStack()
+                                    viewModel.resetSavedState()
+                                }
+                            }
+
+                            WoundScreen(
+                                viewModel = viewModel,
+                                woundIdForSave = if (woundId != -1L) woundId else null,
+                                onBackToDashboard = { navController.popBackStack("dashboard", false) }
+                            )
+                        }
+                    }
                 }
             }
         }

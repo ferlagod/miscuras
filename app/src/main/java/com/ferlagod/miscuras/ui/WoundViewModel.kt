@@ -9,16 +9,21 @@
  */
 package com.ferlagod.miscuras.ui
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ferlagod.miscuras.data.database.AppDatabase
 import com.ferlagod.miscuras.data.entities.ApositoEntity
+import com.ferlagod.miscuras.data.entities.EvaluationEntity
 import com.ferlagod.miscuras.data.repository.ApositosRepository
+import com.ferlagod.miscuras.domain.rules.RulesEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 enum class WizardStep(val progress: Float) {
     ETIOLOGY(0.20f),
@@ -52,8 +57,10 @@ data class WoundUiState(
     val bradenScore: Int? = null,
     val familiaRecomendada: String? = null,
     val productos: List<ApositoEntity> = emptyList(),
+    val selectedTreatmentProducts: Set<String> = emptySet(),
     val showResults: Boolean = false,
     val isLoading: Boolean = false,
+    val isSaved: Boolean = false,
     val noMatchFound: Boolean = false,
     val safetyAlerts: List<String> = emptyList(),
     val showSplash: Boolean = true,
@@ -65,6 +72,7 @@ data class WoundUiState(
     val showGlossary: Boolean = false,
     val currentLanguage: String = "es",
     val currentTheme: String = "system", // system, light, dark
+    val photoPath: String? = null,
     // Estado del formulario de sugerencia
     val showAddProductDialog: Boolean = false,
     val isFormSubmitting: Boolean = false,
@@ -74,22 +82,17 @@ data class WoundUiState(
 )
 
 /**
- * ViewModel principal de la aplicación.
- * Gestiona el estado de la UI ([WoundUiState]), interactúa con el [ApositosRepository]
- * para realizar búsquedas basadas en los parámetros clínicos, y maneja las
- * preferencias de usuario como el idioma y el tema.
- *
- * @property repository Repositorio de datos para obtener las reglas y productos.
- * @property sharedPrefs Preferencias locales para persistir configuraciones.
- */
-/**
  * ViewModel principal para el flujo de evaluación de heridas.
  * Gestiona el estado de la UI ([WoundUiState]), procesa la lógica de negocio, reglas clínicas y obtiene recomendaciones desde el repositorio.
  */
 class WoundViewModel(
-    private val repository: ApositosRepository,
-    private val sharedPrefs: android.content.SharedPreferences
-) : ViewModel() {
+    application: Application,
+    private val repository: ApositosRepository
+) : AndroidViewModel(application) {
+
+    private val patientDao = AppDatabase.getDatabase(application).patientDao()
+    private val sharedPrefs = application.getSharedPreferences("prefs", android.content.Context.MODE_PRIVATE)
+    private val rulesEngine = RulesEngine()
 
     private val _uiState = MutableStateFlow(WoundUiState())
     val uiState: StateFlow<WoundUiState> = _uiState.asStateFlow()
@@ -348,35 +351,7 @@ class WoundViewModel(
     fun buscarAposito() {
         val state = _uiState.value
         
-        val alerts = mutableListOf<String>()
-        if (state.selectedEtiology == "Úlcera Arterial") {
-            alerts.add("Alerta Crítica: En úlceras arteriales el desbridamiento está contraindicado sin valoración vascular previa. Evite la terapia compresiva.")
-        }
-        if (state.selectedEtiology == "Úlcera Venosa") {
-            alerts.add("Aviso: En úlceras venosas, la terapia de compresión es el pilar fundamental del tratamiento si el índice tobillo-brazo (ITB) es adecuado.")
-        }
-        if (state.selectedEtiology == "Pie Diabético") {
-            alerts.add("Aviso: En pie diabético, la descarga eficaz de la presión y el control glucémico son esenciales para la cicatrización.")
-        }
-
-        if (state.selectedInfeccion) {
-            alerts.add("Precaución: Evitar apósitos oclusivos como hidrocoloides. Priorizar apósitos de plata, DACC o cadexómero yodado.")
-        }
-        if (state.selectedLecho == "Necrosis") {
-            alerts.add("Recordatorio: No aplicar desbridamiento enzimático (colagenasa) junto con apósitos de plata porque se inactiva la enzima.")
-            if (state.selectedExudado == "Nulo") {
-                alerts.add("Alerta: Ante necrosis seca con sospecha de isquemia, evite el desbridamiento y valore derivación a especialista/cirugía vascular.")
-            }
-        }
-        if (state.selectedExudado == "Alto") {
-            alerts.add("Aviso: Ante exudado alto, vigilar maceración en bordes. Considerar películas barrera no irritantes.")
-        }
-        if (state.painLevel >= 4f) {
-            alerts.add("Aviso: Dolor significativo (${state.painLevel.toInt()}/10). Priorizar apósitos atraumáticos (bordes de silicona suave, hidrogeles) y evitar gasas adherentes.")
-        }
-        if (state.woundDepth.isNotEmpty() || state.hasCavitation) {
-            alerts.add("Aviso: Herida cavitada o con profundidad. Considere apósitos de relleno (cintas de alginato/hidrofibra) para el lecho de la herida antes de aplicar el apósito secundario para evitar espacios muertos.")
-        }
+        val alerts = rulesEngine.generateSafetyAlerts(state)
         
         _uiState.update { it.copy(isLoading = true, noMatchFound = false, safetyAlerts = alerts) }
 
@@ -388,109 +363,24 @@ class WoundViewModel(
             )
 
             if (familia != null) {
-                // --- NUEVA LÓGICA DE MICROORGANISMOS ---
-                var familiaModificada = familia
-                    if (state.selectedInfeccion && state.infectionGerm != "Desconocido") {
-                        val germ = state.infectionGerm
-                        // Dependiendo del germen, forzamos la búsqueda de familias específicas además o en lugar de la genérica
-                        val nuevasFamilias = mutableSetOf<String>()
-                        
-                        // Añadir la familia base que corresponde al nivel de exudado (para conservar la textura/absorción correcta)
-                        // Por ejemplo, si es "Plata / Alginato", queremos conservar que es un Alginato si el exudado es alto.
-                        nuevasFamilias.addAll(familia.split("/").map { it.trim() })
-                        
-                        when (germ) {
-                            "Pseudomonas aeruginosa" -> {
-                                nuevasFamilias.add("Plata")
-                                nuevasFamilias.add("Cadexómero Yodado")
-                                nuevasFamilias.add("Limpieza de heridas") // Prontosan (PHMB)
-                                nuevasFamilias.add("Alginogel") // Flaminal
-                            }
-                            "MRSA" -> {
-                                nuevasFamilias.add("Plata")
-                                nuevasFamilias.add("Limpieza de heridas") // Prontosan (PHMB)
-                                nuevasFamilias.add("Alginogel") // Flaminal
-                                nuevasFamilias.add("Malla DACC") // Cutimed Sorbact
-                            }
-                            "Candida albicans" -> {
-                                nuevasFamilias.add("Plata")
-                                nuevasFamilias.add("Limpieza de heridas")
-                                nuevasFamilias.add("Malla DACC") // Cutimed Sorbact (muy eficaz contra hongos)
-                            }
-                            "Acinetobacter" -> {
-                                nuevasFamilias.add("Plata")
-                                nuevasFamilias.add("Limpieza de heridas") // PHMB
-                                nuevasFamilias.add("Malla DACC") // Cutimed Sorbact
-                            }
-                            "Biofilm complejo" -> {
-                                nuevasFamilias.add("Cadexómero Yodado")
-                                nuevasFamilias.add("Limpieza de heridas")
-                                nuevasFamilias.add("Plata")
-                                nuevasFamilias.add("Alginogel")
-                            }
-                        }
-                        
-                        // Reescribimos 'familiaModificada'
-                        familiaModificada = nuevasFamilias.joinToString(" / ")
-                    }
+                // Aplicar anulaciones de microorganismos
+                val familiaModificada = rulesEngine.applyGermOverrides(
+                    baseFamilies = familia,
+                    isSuperficialInfection = state.selectedInfeccion,
+                    germ = state.infectionGerm
+                )
 
-                    val productosBrutos = repository.obtenerProductosPorFamilias(familiaModificada)
+                val productosBrutos = repository.obtenerProductosPorFamilias(familiaModificada)
                     
-                    val wLength = state.woundLength.replace(",", ".").toFloatOrNull()
+                val wLength = state.woundLength.replace(",", ".").toFloatOrNull()
                 val wWidth = state.woundWidth.replace(",", ".").toFloatOrNull()
-                val hasSizeInfo = wLength != null && wWidth != null
-                val hasLocationInfo = state.specialLocation != "Ninguno"
-                val margin = 4.0f // 4 cm de margen total (2cm por lado)
-
-                val productos = productosBrutos.filter { producto ->
-                    val dimStr = producto.dimensiones.lowercase()
-                    val nomStr = producto.nombreComercial.lowercase()
-                    
-                    val isGeneric = dimStr.contains("pomada") || dimStr.contains("crema") || 
-                        dimStr.contains("gel") || dimStr.contains("ml") || 
-                        dimStr.contains("spray") || Regex("\\d+g").containsMatchIn(dimStr) ||
-                        nomStr.contains("cinta") || nomStr.contains("paching")
-
-                    if (isGeneric) return@filter true
-                    if (!hasSizeInfo && !hasLocationInfo) return@filter true
-
-                    var validByLocation = false
-                    if (hasLocationInfo) {
-                        val locStr = state.specialLocation.lowercase()
-                        if ((locStr == "talón" && dimStr.contains("talón")) || 
-                            (locStr == "sacro" && dimStr.contains("sacro"))) {
-                            validByLocation = true
-                        }
-                    }
-
-                    var validBySize = false
-                    if (hasSizeInfo) {
-                        val regex = Regex("([0-9]+(?:\\.[0-9]+)?(?:,[0-9]+)?)[xX]([0-9]+(?:\\.[0-9]+)?(?:,[0-9]+)?)")
-                        val matches = regex.findAll(dimStr)
-                        for (match in matches) {
-                            val dim1 = match.groupValues[1].replace(",", ".").toFloatOrNull() ?: continue
-                            val dim2 = match.groupValues[2].replace(",", ".").toFloatOrNull() ?: continue
-                            
-                            val fitsNormal = dim1 >= (wWidth!! + margin) && dim2 >= (wLength!! + margin)
-                            val fitsRotated = dim1 >= (wLength!! + margin) && dim2 >= (wWidth!! + margin)
-                            
-                            if (fitsNormal || fitsRotated) {
-                                validBySize = true
-                                break
-                            }
-                        }
-                    }
-
-                    if (hasLocationInfo && hasSizeInfo) {
-                        validByLocation || validBySize
-                    } else if (hasLocationInfo) {
-                        validByLocation
-                    } else if (hasSizeInfo) {
-                        validBySize
-                    } else {
-                        true
-                    }
-                }.sortedByDescending { producto ->
+                
+                val productos = rulesEngine.filterProductsByDimensions(
+                    products = productosBrutos,
+                    woundLength = wLength,
+                    woundWidth = wWidth,
+                    specialLocation = state.specialLocation
+                ).sortedByDescending { producto ->
                     val dimStr = producto.dimensiones.lowercase()
                     val locStr = state.specialLocation.lowercase()
                     if (state.specialLocation != "Ninguno" && ((locStr == "talón" && dimStr.contains("talón")) || (locStr == "sacro" && dimStr.contains("sacro")))) {
@@ -671,6 +561,99 @@ class WoundViewModel(
                     )
                 }
             }
+        }
+    }
+
+    fun saveEvaluation(woundId: Long) {
+        val state = _uiState.value
+        viewModelScope.launch(Dispatchers.IO) {
+            val evaluation = EvaluationEntity(
+                woundId = woundId,
+                length = state.woundLength,
+                width = state.woundWidth,
+                depth = state.woundDepth,
+                hasCavitation = state.hasCavitation,
+                cavitationDetails = state.cavitationDetails,
+                etiology = state.selectedEtiology,
+                bedState = state.selectedLecho,
+                exudateLevel = state.selectedExudado,
+                exudateType = state.selectedExudateType,
+                infection = state.selectedInfeccion,
+                infectionGerm = state.infectionGerm,
+                painLevel = state.painLevel,
+                edges = state.selectedBordes,
+                perilesional = state.selectedPerilesional,
+                recommendedTreatment = state.familiaRecomendada ?: "",
+                aiExplanation = state.aiResponse ?: "",
+                photoPath = state.photoPath,
+                selectedProducts = state.selectedTreatmentProducts.joinToString(",")
+            )
+            patientDao.insertEvaluation(evaluation)
+            _uiState.update { it.copy(isSaved = true) }
+        }
+    }
+
+    fun setPhotoPath(path: String) {
+        _uiState.update { it.copy(photoPath = path) }
+    }
+
+    fun resetWizard() {
+        _uiState.update { 
+            WoundUiState(
+                currentTheme = it.currentTheme, 
+                currentLanguage = it.currentLanguage,
+                hasSeenDisclaimer = it.hasSeenDisclaimer,
+                showSplash = false
+            ) 
+        }
+    }
+
+    fun resetSavedState() {
+        _uiState.update { it.copy(isSaved = false) }
+    }
+
+    fun toggleProductSelection(codigoCn: String) {
+        _uiState.update { currentState ->
+            val newSelection = if (currentState.selectedTreatmentProducts.contains(codigoCn)) {
+                currentState.selectedTreatmentProducts - codigoCn
+            } else {
+                currentState.selectedTreatmentProducts + codigoCn
+            }
+            currentState.copy(selectedTreatmentProducts = newSelection)
+        }
+    }
+
+    fun guardarEvaluacion(woundId: Long) {
+        val state = _uiState.value
+        viewModelScope.launch(Dispatchers.IO) {
+            val db = com.ferlagod.miscuras.data.database.AppDatabase.getDatabase(getApplication())
+            val patientDao = db.patientDao()
+            
+            val evaluation = com.ferlagod.miscuras.data.entities.EvaluationEntity(
+                woundId = woundId,
+                length = state.woundLength,
+                width = state.woundWidth,
+                depth = state.woundDepth,
+                hasCavitation = state.hasCavitation,
+                cavitationDetails = state.cavitationDetails,
+                etiology = state.selectedEtiology,
+                bedState = state.selectedLecho,
+                exudateLevel = state.selectedExudado,
+                exudateType = state.selectedExudateType,
+                infection = state.selectedInfeccion,
+                infectionGerm = state.infectionGerm,
+                painLevel = state.painLevel,
+                edges = state.selectedBordes,
+                perilesional = state.selectedPerilesional,
+                recommendedTreatment = state.familiaRecomendada ?: "",
+                aiExplanation = state.aiResponse ?: "",
+                photoPath = state.photoPath,
+                selectedProducts = state.selectedTreatmentProducts.joinToString(",")
+            )
+            patientDao.insertEvaluation(evaluation)
+            
+            // Notificar a la UI que se ha guardado correctamente
+            _uiState.update { it.copy(isSaved = true) }
         }
     }
 }

@@ -28,6 +28,12 @@ import com.ferlagod.miscuras.data.dao.ApositoDao
 import com.ferlagod.miscuras.data.entities.AiCacheEntity
 import com.ferlagod.miscuras.data.entities.ApositoEntity
 import com.ferlagod.miscuras.data.entities.ReglaEntity
+import com.ferlagod.miscuras.data.entities.PatientEntity
+import com.ferlagod.miscuras.data.entities.WoundEntity
+import com.ferlagod.miscuras.data.entities.EvaluationEntity
+import com.ferlagod.miscuras.data.dao.PatientDao
+import com.ferlagod.miscuras.data.security.CryptoManager
+import net.sqlcipher.database.SupportFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -41,8 +47,15 @@ import java.io.InputStreamReader
  * a partir de archivos CSV ubicados en `res/raw`.
  */
 @Database(
-    entities = [ReglaEntity::class, ApositoEntity::class, AiCacheEntity::class],
-    version = 23,
+    entities = [
+        ReglaEntity::class, 
+        ApositoEntity::class, 
+        AiCacheEntity::class,
+        PatientEntity::class,
+        WoundEntity::class,
+        EvaluationEntity::class
+    ],
+    version = 26,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -52,6 +65,9 @@ abstract class AppDatabase : RoomDatabase() {
 
     /** Provee acceso al DAO de la caché de respuestas de la IA. */
     abstract fun aiCacheDao(): AiCacheDao
+
+    /** Provee acceso al DAO de gestión de pacientes. */
+    abstract fun patientDao(): PatientDao
 
     companion object {
         @Volatile
@@ -66,12 +82,45 @@ abstract class AppDatabase : RoomDatabase() {
          */
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
+                val dbName = "mis_curas_database"
+                val dbFile = context.getDatabasePath(dbName)
+                
+                // Si la base de datos existe, comprobamos si es texto plano (versiones anteriores)
+                if (dbFile.exists()) {
+                    try {
+                        val header = ByteArray(16)
+                        java.io.FileInputStream(dbFile).use { it.read(header) }
+                        val headerString = String(header)
+                        // Las bases de datos SQLite no encriptadas empiezan siempre por "SQLite format 3"
+                        if (headerString.startsWith("SQLite format 3")) {
+                            // Es una base de datos antigua sin encriptar.
+                            // Como no contenía datos de usuarios (solo reglas CSV y caché),
+                            // la borramos para que Room la recree de forma cifrada sin dar error.
+                            dbFile.delete()
+                            context.getDatabasePath("$dbName-journal").delete()
+                            context.getDatabasePath("$dbName-shm").delete()
+                            context.getDatabasePath("$dbName-wal").delete()
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+
+                val MIGRATION_25_26 = object : androidx.room.migration.Migration(25, 26) {
+                    override fun migrate(db: SupportSQLiteDatabase) {
+                        db.execSQL("ALTER TABLE evaluaciones ADD COLUMN selectedProducts TEXT")
+                    }
+                }
+
+                val factory = SupportFactory(CryptoManager.getDatabasePassphrase(context))
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "mis_curas_database"
+                    dbName
                 )
-                    .fallbackToDestructiveMigration() // Recrear la base de datos si la versión cambia
+                    .openHelperFactory(factory)
+                    .addMigrations(MIGRATION_25_26)
+                    .fallbackToDestructiveMigration() // Recrear la base de datos si la versión cambia (y no hay migración)
                     .addCallback(DatabaseCallback(context)) // Disparador para la primera ejecución
                     .build()
                 INSTANCE = instance
