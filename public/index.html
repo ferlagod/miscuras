@@ -155,7 +155,7 @@
 
     <div class="container">
         <h1>Mis Curas: Política de privacidad</h1>
-        <div class="meta">Última actualización: 7 de junio de 2026</div>
+        <div class="meta">Última actualización: 19 de junio de 2026</div>
 
         <p>La aplicación <strong>"Mis Curas"</strong> es una herramienta de apoyo a la toma de decisiones dirigida
             exclusivamente a profesionales de enfermería. El diseño de este software prioriza de forma absoluta la
@@ -170,12 +170,10 @@
             <li><strong>Preferencias:</strong> Los ajustes de la interfaz, como el idioma y el tema visual, se guardan
                 exclusivamente en el almacenamiento local del dispositivo mediante mecanismos nativos del sistema
                 operativo.</li>
-            <li><strong>Uso de la cámara (Regla Virtual):</strong> La aplicación solicita el permiso de cámara
-                exclusivamente para la función de medición de heridas en tiempo real mediante realidad aumentada. El
-                flujo de vídeo se procesa de forma efímera en la memoria volátil del dispositivo para calcular
-                distancias físicas. No se realiza ninguna captura fotográfica o de vídeo, no se almacena en el
-                dispositivo y no se transmite ninguna imagen a servidores externos, garantizando una privacidad clínica
-                total.</li>
+            <li><strong>Uso de la cámara (Regla Virtual y Fotografía Clínica):</strong> La aplicación solicita el permiso de cámara
+                para la medición de heridas mediante realidad aumentada y para la captura fotográfica opcional del estado de la lesión. 
+                Tanto el flujo de vídeo efímero de la medición como las fotografías capturadas para el seguimiento evolutivo se procesan y almacenan exclusivamente 
+                en el directorio privado del dispositivo. No se transmite ninguna imagen a servidores externos ni a servicios en la nube, garantizando una privacidad clínica total.</li>
             <li><strong>Formulario de sugerencias:</strong> La aplicación incluye un formulario opcional para proponer
                 la adición de nuevos productos. La información introducida se transmite a través del proveedor de
                 servicios externo Formspree, encargado de procesar la petición y redirigirla a <a
@@ -188,10 +186,11 @@
                 del lecho de la herida, estado del exudado y directriz teórica de curas). Bajo ninguna circunstancia se
                 capturan, transmiten o almacenan nombres, datos de salud, historias clínicas ni imágenes reales de
                 pacientes. La consulta viaja de forma cifrada y segura hacia los servicios de Google AI.</li>
-            <li><strong>Privacidad del paciente:</strong> El código de la aplicación ha sido diseñado para no recopilar
-                información personal ni datos identificativos de pacientes. Las selecciones de evaluación de heridas se
-                mantienen únicamente en la memoria temporal durante el uso de la pantalla correspondiente y se destruyen
-                al cerrarla.</li>
+            <li><strong>Privacidad del paciente e Historial evolutivo:</strong> El código de la aplicación ha sido diseñado priorizando la seguridad y la confidencialidad. 
+                Toda la información introducida, incluyendo perfiles de pacientes, características de las evaluaciones, productos seleccionados y fotografías clínicas, 
+                se guarda y persiste de forma estrictamente local en una base de datos interna del dispositivo del profesional (SQLite/Room). 
+                Estos datos sensibles jamás abandonan el dispositivo, no se sincronizan con la nube ni se comparten con terceros. 
+                El profesional sanitario es el único responsable de aplicar medidas de seguridad físicas y lógicas en su propio dispositivo para proteger dicha información.</li>
         </ul>
 
         <h2>2. Permisos, Telemetría y servicios de terceros</h2>
