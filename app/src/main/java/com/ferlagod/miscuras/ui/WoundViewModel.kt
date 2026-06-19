@@ -42,6 +42,9 @@ data class WoundUiState(
     val selectedInfeccion: Boolean = false,
     val woundLength: String = "",
     val woundWidth: String = "",
+    val woundDepth: String = "",
+    val hasCavitation: Boolean = false,
+    val cavitationDetails: String = "",
     val specialLocation: String = "Ninguno",
     val infectionGerm: String = "Desconocido",
     val selectedBordes: String = "Sanos/Íntegros",
@@ -215,6 +218,18 @@ class WoundViewModel(
         _uiState.update { it.copy(woundWidth = width) }
     }
 
+    fun onWoundDepthChanged(depth: String) {
+        _uiState.update { it.copy(woundDepth = depth) }
+    }
+
+    fun onHasCavitationChanged(hasCavitation: Boolean) {
+        _uiState.update { it.copy(hasCavitation = hasCavitation) }
+    }
+
+    fun onCavitationDetailsChanged(details: String) {
+        _uiState.update { it.copy(cavitationDetails = details) }
+    }
+
     fun onSpecialLocationChanged(location: String) {
         _uiState.update { it.copy(specialLocation = location) }
     }
@@ -286,7 +301,8 @@ class WoundViewModel(
         val state = uiState.value
         val infText = if (state.selectedInfeccion) String.format(strings.repInfYesFormat, state.infectionGerm) else strings.no
         val tamaño = if (state.woundLength.isNotEmpty() && state.woundWidth.isNotEmpty()) {
-            "${state.woundLength} x ${state.woundWidth} cm"
+            val depthStr = if (state.woundDepth.isNotEmpty()) " x ${state.woundDepth}" else ""
+            "${state.woundLength} x ${state.woundWidth}$depthStr cm"
         } else {
             strings.repUnspecified
         }
@@ -315,7 +331,7 @@ class WoundViewModel(
             ${strings.repMoisture}${state.selectedExudado} (${state.selectedExudateType})
             ${String.format(strings.repEdgesFormat, state.selectedBordes, state.selectedPerilesional)}
             ${String.format(strings.repPainFormat, state.painLevel.toInt())}
-            ${String.format(strings.repSizeFormat, tamaño)}
+            ${String.format(strings.repSizeFormat, tamaño)}${if (state.hasCavitation) "\n            - Cavitaciones: ${if (state.cavitationDetails.isNotEmpty()) state.cavitationDetails else "Sí"}" else ""}
             ${String.format(strings.repLocationFormat, state.specialLocation)}$bradenText
 
             ${strings.repPlanTitle}
@@ -357,6 +373,9 @@ class WoundViewModel(
         }
         if (state.painLevel >= 4f) {
             alerts.add("Aviso: Dolor significativo (${state.painLevel.toInt()}/10). Priorizar apósitos atraumáticos (bordes de silicona suave, hidrogeles) y evitar gasas adherentes.")
+        }
+        if (state.woundDepth.isNotEmpty() || state.hasCavitation) {
+            alerts.add("Aviso: Herida cavitada o con profundidad. Considere apósitos de relleno (cintas de alginato/hidrofibra) para el lecho de la herida antes de aplicar el apósito secundario para evitar espacios muertos.")
         }
         
         _uiState.update { it.copy(isLoading = true, noMatchFound = false, safetyAlerts = alerts) }
@@ -495,7 +514,7 @@ class WoundViewModel(
                 }
 
                 viewModelScope.launch(Dispatchers.IO) {
-                    val cacheKey = "${state.selectedLecho}|${state.selectedExudado}|${state.selectedExudateType}|${state.selectedInfeccion}|${state.infectionGerm}|${state.woundLength}|${state.woundWidth}|${state.selectedBordes}|${state.selectedPerilesional}|${familiaFormateada}|${state.painLevel.toInt()}|${state.specialLocation}"
+                    val cacheKey = "${state.selectedLecho}|${state.selectedExudado}|${state.selectedExudateType}|${state.selectedInfeccion}|${state.infectionGerm}|${state.woundLength}|${state.woundWidth}|${state.woundDepth}|${state.hasCavitation}|${state.cavitationDetails}|${state.selectedBordes}|${state.selectedPerilesional}|${familiaFormateada}|${state.painLevel.toInt()}|${state.specialLocation}"
                     val cachedResponse = repository.getCachedAiResponse(cacheKey)
 
                     if (cachedResponse != null) {
@@ -510,6 +529,9 @@ class WoundViewModel(
                             germen = state.infectionGerm,
                             tamanoLargo = state.woundLength,
                             tamanoAncho = state.woundWidth,
+                            tamanoProfundidad = state.woundDepth,
+                            tieneCavitacion = state.hasCavitation,
+                            detallesCavitacion = state.cavitationDetails,
                             bordes = state.selectedBordes,
                             zonaEspecial = state.specialLocation,
                             pielPerilesional = state.selectedPerilesional,

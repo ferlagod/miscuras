@@ -77,6 +77,9 @@ class AsistenteIA {
         germen: String,
         tamanoLargo: String,
         tamanoAncho: String,
+        tamanoProfundidad: String,
+        tieneCavitacion: Boolean,
+        detallesCavitacion: String,
         bordes: String,
         zonaEspecial: String,
         pielPerilesional: String,
@@ -84,7 +87,9 @@ class AsistenteIA {
         dolor: Int
     ): String {
         val infText = if (infeccion) "Sí (Germen: $germen)" else "No"
-        val tamText = if (tamanoLargo.isNotEmpty() && tamanoAncho.isNotEmpty()) "${tamanoLargo}x${tamanoAncho} cm" else "No especificado"
+        val depthStr = if (tamanoProfundidad.isNotEmpty()) " x $tamanoProfundidad" else ""
+        val tamText = if (tamanoLargo.isNotEmpty() && tamanoAncho.isNotEmpty()) "${tamanoLargo}x${tamanoAncho}$depthStr cm" else "No especificado"
+        val cavitacionText = if (tieneCavitacion) "Sí (${if (detallesCavitacion.isNotEmpty()) detallesCavitacion else "Sin detalles"})" else "No"
         
         val promptUsuario = """
             Datos clínicos de la evaluación:
@@ -94,13 +99,14 @@ class AsistenteIA {
             - Bordes y Piel: Bordes $bordes, Piel perilesional $pielPerilesional
             - Infección: $infText
             - Sensibilidad/Dolor (S): $dolor/10
-            - Tamaño (Largo x Ancho): $tamText
+            - Tamaño (Largo x Ancho x Profundidad): $tamText
+            - Cavitaciones/Tunelizaciones: $cavitacionText
             - Ubicación especial / Zona anatómica: $zonaEspecial
             - Tratamiento recomendado por el sistema: $recomendacionBD
             
             Instrucciones:
             Basándote en estos valores y el acrónimo TIMERS, justifica brevemente por qué el tratamiento ($recomendacionBD) es adecuado.
-            Asegúrate de justificar el tratamiento en base a TODO el cuadro clínico, en especial prestando atención al tipo de exudado ($tipoExudado), el estado de la piel perilesional ($pielPerilesional) para recomendar protección si es necesario, la presencia de infección, el germen ($germen) y el nivel de dolor ($dolor/10). Presta atención si la ubicación es en zonas especiales como talón o sacro ($zonaEspecial) para recomendar apósitos específicos de descarga. Si el dolor es elevado (>= 4), destaca la importancia de terapias atraumáticas.
+            Asegúrate de justificar el tratamiento en base a TODO el cuadro clínico, en especial prestando atención al tipo de exudado ($tipoExudado), el estado de la piel perilesional ($pielPerilesional) para recomendar protección si es necesario, la presencia de infección, el germen ($germen) y el nivel de dolor ($dolor/10). Presta atención si la ubicación es en zonas especiales como talón o sacro ($zonaEspecial) para recomendar apósitos específicos de descarga. Si hay cavitación o profundidad ($cavitacionText), destaca la necesidad de rellenar el espacio muerto. Si el dolor es elevado (>= 4), destaca la importancia de terapias atraumáticas.
             Devuelve un JSON estrictamente con los campos objetivo_time, justificacion_aposito, consejo_clinico.
         """.trimIndent()
 

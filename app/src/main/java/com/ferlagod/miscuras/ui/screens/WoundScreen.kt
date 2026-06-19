@@ -165,6 +165,9 @@ fun WoundScreen(viewModel: WoundViewModel) {
                     onPainLevelChanged = { viewModel.onPainLevelChanged(it) },
                     onWoundLengthChanged = { viewModel.onWoundLengthChanged(it) },
                     onWoundWidthChanged = { viewModel.onWoundWidthChanged(it) },
+                    onWoundDepthChanged = { viewModel.onWoundDepthChanged(it) },
+                    onHasCavitationChanged = { viewModel.onHasCavitationChanged(it) },
+                    onCavitationDetailsChanged = { viewModel.onCavitationDetailsChanged(it) },
                     onSpecialLocationChanged = { viewModel.onSpecialLocationChanged(it) },
                     onFindApositoClick = { viewModel.buscarAposito() },
                     onNextStep = { viewModel.nextStep() },
@@ -345,6 +348,9 @@ fun SelectionContent(
     onPainLevelChanged: (Float) -> Unit,
     onWoundLengthChanged: (String) -> Unit,
     onWoundWidthChanged: (String) -> Unit,
+    onWoundDepthChanged: (String) -> Unit,
+    onHasCavitationChanged: (Boolean) -> Unit,
+    onCavitationDetailsChanged: (String) -> Unit,
     onSpecialLocationChanged: (String) -> Unit,
     onFindApositoClick: () -> Unit,
     onNextStep: () -> Unit,
@@ -548,8 +554,14 @@ fun SelectionContent(
                     SizeInputCard(
                         lengthValue = uiState.woundLength,
                         widthValue = uiState.woundWidth,
+                        depthValue = uiState.woundDepth,
+                        hasCavitation = uiState.hasCavitation,
+                        cavitationDetails = uiState.cavitationDetails,
                         onLengthChange = onWoundLengthChanged,
                         onWidthChange = onWoundWidthChanged,
+                        onDepthChange = onWoundDepthChanged,
+                        onCavitationChange = onHasCavitationChanged,
+                        onCavitationDetailsChange = onCavitationDetailsChanged,
                         locationSelected = currentLocationTrans,
                         locationOptions = locationOptionsTrans,
                         onLocationChange = { transLoc ->
@@ -2283,8 +2295,14 @@ private fun SuggestProductDialog(
 private fun SizeInputCard(
     lengthValue: String,
     widthValue: String,
+    depthValue: String,
+    hasCavitation: Boolean,
+    cavitationDetails: String,
     onLengthChange: (String) -> Unit,
     onWidthChange: (String) -> Unit,
+    onDepthChange: (String) -> Unit,
+    onCavitationChange: (Boolean) -> Unit,
+    onCavitationDetailsChange: (String) -> Unit,
     locationSelected: String,
     locationOptions: List<String>,
     onLocationChange: (String) -> Unit,
@@ -2366,6 +2384,23 @@ private fun SizeInputCard(
                     shape = RoundedCornerShape(12.dp),
                     singleLine = true
                 )
+                OutlinedTextField(
+                    value = depthValue,
+                    onValueChange = { 
+                        if (it.isEmpty() || it.matches(Regex("^\\d*[,.]?\\d*\$"))) onDepthChange(it) 
+                    },
+                    label = { Text(strings.woundDepthLabel) },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                        focusedContainerColor = MaterialTheme.colorScheme.surface,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    singleLine = true
+                )
                 IconButton(
                     onClick = onArMeasureClick,
                     modifier = Modifier
@@ -2381,6 +2416,54 @@ private fun SizeInputCard(
                 }
             }
             
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth().clickable { onCavitationChange(!hasCavitation) },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = strings.cavitationLabel,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = strings.cavitationDesc,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Switch(
+                    checked = hasCavitation,
+                    onCheckedChange = onCavitationChange,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = MaterialTheme.colorScheme.primary,
+                        checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                )
+            }
+
+            androidx.compose.animation.AnimatedVisibility(visible = hasCavitation) {
+                Column {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = cavitationDetails,
+                        onValueChange = onCavitationDetailsChange,
+                        label = { Text(strings.cavitationDetailsLabel) },
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                            focusedContainerColor = MaterialTheme.colorScheme.surface,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(

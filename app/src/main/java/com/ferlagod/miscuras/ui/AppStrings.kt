@@ -30,6 +30,10 @@ sealed interface AppStrings {
     val woundSizeDesc: String
     val woundLengthLabel: String
     val woundWidthLabel: String
+    val woundDepthLabel: String
+    val cavitationLabel: String
+    val cavitationDesc: String
+    val cavitationDetailsLabel: String
     val specialLocationLabel: String
     val specialLocationDesc: String
     val locationNone: String
@@ -425,6 +429,10 @@ object EsStrings : AppStrings {
     override val woundSizeDesc = "Introduce las medidas para filtrar los apósitos"
     override val woundLengthLabel = "Largo (cm)"
     override val woundWidthLabel = "Ancho (cm)"
+    override val woundDepthLabel = "Prof. (cm)"
+    override val cavitationLabel = "¿Cavitaciones o Tunelizaciones?"
+    override val cavitationDesc = "Presencia de fístulas, túneles o socavamientos."
+    override val cavitationDetailsLabel = "Detalles (ej. Túnel a las 12h de 3cm)"
     override val specialLocationLabel = "Ubicación especial"
     override val specialLocationDesc = "¿Se encuentra en una zona anatómica específica?"
     override val locationNone = "Ninguna"
@@ -664,6 +672,10 @@ object EnStrings : AppStrings {
     override val woundSizeDesc = "Enter dimensions to filter dressings"
     override val woundLengthLabel = "Length (cm)"
     override val woundWidthLabel = "Width (cm)"
+    override val woundDepthLabel = "Depth (cm)"
+    override val cavitationLabel = "Cavitation or Tunneling?"
+    override val cavitationDesc = "Presence of fistulas, tunnels, or undermining."
+    override val cavitationDetailsLabel = "Details (e.g., Tunnel at 12 o'clock, 3cm)"
     override val specialLocationLabel = "Special location"
     override val specialLocationDesc = "Is it located in a specific anatomical area?"
     override val locationNone = "None"
@@ -903,6 +915,10 @@ object PtStrings : AppStrings {
     override val woundSizeDesc = "Insira as dimensões para filtrar os curativos"
     override val woundLengthLabel = "Comprimento (cm)"
     override val woundWidthLabel = "Largura (cm)"
+    override val woundDepthLabel = "Profund. (cm)"
+    override val cavitationLabel = "Cavitações ou Tunelizações?"
+    override val cavitationDesc = "Presença de fístulas, túneis ou descolamentos."
+    override val cavitationDetailsLabel = "Detalhes (ex. Túnel às 12h, 3cm)"
     override val specialLocationLabel = "Localização especial"
     override val specialLocationDesc = "Está localizada em uma área anatômica específica?"
     override val locationNone = "Nenhuma"
