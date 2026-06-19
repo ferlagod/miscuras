@@ -1297,6 +1297,16 @@ private fun ResultsContent(
                     )
                 }
 
+                // Frecuencia de Cura
+                if (uiState.cureFrequency != null) {
+                    item {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        FrequencyCard(
+                            frequency = uiState.cureFrequency
+                        )
+                    }
+                }
+
                 // Título de la sección de productos
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -1679,6 +1689,53 @@ private fun RecommendedFamilyCard(familia: String, strings: AppStrings) {
                     text = familia,
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FrequencyCard(frequency: String) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                modifier = Modifier.size(48.dp),
+                shape = CircleShape,
+                color = MaterialTheme.colorScheme.tertiary
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Icon(
+                        imageVector = Icons.Default.LocalHospital,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onTertiary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(
+                    text = "Pauta de Cura Recomendada",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                )
+                Text(
+                    text = frequency,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
             }
         }

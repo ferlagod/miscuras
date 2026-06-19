@@ -147,4 +147,26 @@ class RulesEngine {
             matchesSize && matchesLocation
         }
     }
+
+    /**
+     * Determina la frecuencia recomendada para el cambio de apósitos
+     * basándose en las directrices clínicas de exudado e infección.
+     */
+    fun determineCureFrequency(state: WoundUiState): String {
+        return if (state.selectedInfeccion && state.selectedExudado == "Alto") {
+            "Cada 24 horas (exudado alto e infección activa)."
+        } else if (state.selectedInfeccion) {
+            "Cada 24-48 horas (vigilar signos de infección local)."
+        } else if (state.selectedExudado == "Alto") {
+            "Cada 48 horas (riesgo de saturación y maceración)."
+        } else if (state.selectedLecho == "Piel Intacta (Prevención)") {
+            "Revisión por turno (8-12 horas) y reaplicación de ácidos grasos."
+        } else if (state.selectedLecho == "Epitelización" && state.selectedExudado == "Nulo") {
+            "Cada 5-7 días (favorecer reposo del tejido neoformado)."
+        } else if (state.selectedExudado == "Nulo" || state.selectedExudado == "Bajo") {
+            "Cada 3-4 días."
+        } else {
+            "Cada 48-72 horas (según saturación del apósito secundario)."
+        }
+    }
 }

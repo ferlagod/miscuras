@@ -71,11 +71,21 @@ class MainActivity : ComponentActivity() {
             aiCacheDao = database.aiCacheDao()
         )
 
+        // 2. Instanciar dependencias adicionales
+        val rulesEngine = com.ferlagod.miscuras.domain.rules.RulesEngine()
+        val evaluateWoundUseCase = com.ferlagod.miscuras.domain.usecase.EvaluateWoundUseCase(repository, rulesEngine)
+        val feedbackRepository = com.ferlagod.miscuras.data.repository.FeedbackRepository(com.ferlagod.miscuras.network.NetworkClient.formSubmitApi)
+
         // 3. Crear un "Factory" para el ViewModel
         val factory = object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 @Suppress("UNCHECKED_CAST")
-                return WoundViewModel(application, repository) as T
+                return WoundViewModel(
+                    application = application,
+                    repository = repository,
+                    evaluateWoundUseCase = evaluateWoundUseCase,
+                    feedbackRepository = feedbackRepository
+                ) as T
             }
         }
 

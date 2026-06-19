@@ -58,6 +58,7 @@ data class WoundUiState(
     val familiaRecomendada: String? = null,
     val productos: List<ApositoEntity> = emptyList(),
     val selectedTreatmentProducts: Set<String> = emptySet(),
+    val cureFrequency: String? = null,
     val showResults: Boolean = false,
     val isLoading: Boolean = false,
     val isSaved: Boolean = false,
@@ -87,12 +88,13 @@ data class WoundUiState(
  */
 class WoundViewModel(
     application: Application,
-    private val repository: ApositosRepository
+    private val repository: ApositosRepository,
+    private val evaluateWoundUseCase: com.ferlagod.miscuras.domain.usecase.EvaluateWoundUseCase,
+    private val feedbackRepository: com.ferlagod.miscuras.data.repository.FeedbackRepository
 ) : AndroidViewModel(application) {
 
     private val patientDao = AppDatabase.getDatabase(application).patientDao()
     private val sharedPrefs = application.getSharedPreferences("prefs", android.content.Context.MODE_PRIVATE)
-    private val rulesEngine = RulesEngine()
 
     private val _uiState = MutableStateFlow(WoundUiState())
     val uiState: StateFlow<WoundUiState> = _uiState.asStateFlow()
@@ -351,94 +353,37 @@ class WoundViewModel(
     fun buscarAposito() {
         val state = _uiState.value
         
-        val alerts = rulesEngine.generateSafetyAlerts(state)
-        
-        _uiState.update { it.copy(isLoading = true, noMatchFound = false, safetyAlerts = alerts) }
+        _uiState.update { it.copy(isLoading = true, noMatchFound = false) }
 
         viewModelScope.launch(Dispatchers.IO) {
-            val familia = repository.obtenerRecomendacion(
-                state.selectedLecho,
-                state.selectedExudado,
-                state.selectedInfeccion
-            )
+            val result = evaluateWoundUseCase.getClinicalRecommendation(state)
 
-            if (familia != null) {
-                // Aplicar anulaciones de microorganismos
-                val familiaModificada = rulesEngine.applyGermOverrides(
-                    baseFamilies = familia,
-                    isSuperficialInfection = state.selectedInfeccion,
-                    germ = state.infectionGerm
-                )
-
-                val productosBrutos = repository.obtenerProductosPorFamilias(familiaModificada)
-                    
-                val wLength = state.woundLength.replace(",", ".").toFloatOrNull()
-                val wWidth = state.woundWidth.replace(",", ".").toFloatOrNull()
-                
-                val productos = rulesEngine.filterProductsByDimensions(
-                    products = productosBrutos,
-                    woundLength = wLength,
-                    woundWidth = wWidth,
-                    specialLocation = state.specialLocation
-                ).sortedByDescending { producto ->
-                    val dimStr = producto.dimensiones.lowercase()
-                    val locStr = state.specialLocation.lowercase()
-                    if (state.specialLocation != "Ninguno" && ((locStr == "talón" && dimStr.contains("talón")) || (locStr == "sacro" && dimStr.contains("sacro")))) {
-                        1
-                    } else {
-                        0
-                    }
-                }
-
-                val familiaFormateada = familiaModificada.split("/").joinToString(" y ") { it.trim() }
+            if (result.familiaRecomendada != null) {
                 _uiState.update {
                     it.copy(
-                        familiaRecomendada = familiaFormateada,
-                        productos = productos,
+                        familiaRecomendada = result.familiaRecomendada,
+                        cureFrequency = result.cureFrequency,
+                        productos = result.productos,
+                        safetyAlerts = result.safetyAlerts,
                         showResults = true,
                         isLoading = false,
-                        noMatchFound = productos.isEmpty(),
+                        noMatchFound = result.productos.isEmpty(),
                         aiResponse = null,
                         isAiLoading = true
                     )
                 }
 
                 viewModelScope.launch(Dispatchers.IO) {
-                    val cacheKey = "${state.selectedLecho}|${state.selectedExudado}|${state.selectedExudateType}|${state.selectedInfeccion}|${state.infectionGerm}|${state.woundLength}|${state.woundWidth}|${state.woundDepth}|${state.hasCavitation}|${state.cavitationDetails}|${state.selectedBordes}|${state.selectedPerilesional}|${familiaFormateada}|${state.painLevel.toInt()}|${state.specialLocation}"
-                    val cachedResponse = repository.getCachedAiResponse(cacheKey)
-
-                    if (cachedResponse != null) {
-                        _uiState.update { it.copy(aiResponse = cachedResponse, isAiLoading = false) }
-                    } else {
-                        val respuesta = com.ferlagod.miscuras.network.AsistenteIA().obtenerExplicacionEducativa(
-                            etiologia = state.selectedEtiology,
-                            lecho = state.selectedLecho,
-                            exudado = state.selectedExudado,
-                            tipoExudado = state.selectedExudateType,
-                            infeccion = state.selectedInfeccion,
-                            germen = state.infectionGerm,
-                            tamanoLargo = state.woundLength,
-                            tamanoAncho = state.woundWidth,
-                            tamanoProfundidad = state.woundDepth,
-                            tieneCavitacion = state.hasCavitation,
-                            detallesCavitacion = state.cavitationDetails,
-                            bordes = state.selectedBordes,
-                            zonaEspecial = state.specialLocation,
-                            pielPerilesional = state.selectedPerilesional,
-                            recomendacionBD = familiaFormateada,
-                            dolor = state.painLevel.toInt()
-                        )
-                        if (respuesta != null) {
-                            repository.saveCachedAiResponse(cacheKey, respuesta)
-                        }
-                        _uiState.update { it.copy(aiResponse = respuesta, isAiLoading = false) }
-                    }
+                    val respuesta = evaluateWoundUseCase.getAiExplanation(state, result.familiaRecomendada)
+                    _uiState.update { it.copy(aiResponse = respuesta, isAiLoading = false) }
                 }
             } else {
                 _uiState.update {
                     it.copy(
                         familiaRecomendada = null,
+                        cureFrequency = null,
                         productos = emptyList(),
+                        safetyAlerts = result.safetyAlerts,
                         showResults = true,
                         isLoading = false,
                         noMatchFound = true
@@ -458,6 +403,7 @@ class WoundViewModel(
                 showResults = false,
                 currentWizardStep = WizardStep.ETIOLOGY,
                 familiaRecomendada = null,
+                cureFrequency = null,
                 productos = emptyList(),
                 noMatchFound = false
             )
@@ -515,48 +461,37 @@ class WoundViewModel(
         woundBed: String,
         exudateLevel: String,
         otherSuggestions: String,
-        strings: AppStrings
+        strings: com.ferlagod.miscuras.ui.AppStrings
     ) {
         _uiState.update { it.copy(isFormSubmitting = true, formResultMsg = null) }
         viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val payload = com.ferlagod.miscuras.network.FormPayload(
-                    name = name,
-                    is_health_professional = if (isHealthProfessional) "Sí" else "No",
-                    belongs_to_laboratory = if (belongsToLaboratory) "Sí" else "No",
-                    product_name = productName,
-                    wound_bed = woundBed,
-                    exudate_level = exudateLevel,
-                    other_suggestions = otherSuggestions
-                )
-                val response = com.ferlagod.miscuras.network.NetworkClient.formSubmitApi.submitForm(
-                    formId = "mykvarap",
-                    payload = payload
-                )
-                
-                if (response.isSuccessful) {
-                    _uiState.update {
-                        it.copy(
-                            isFormSubmitting = false,
-                            showAddProductDialog = false,
-                            formResultMsg = strings.formSuccessMsg,
-                            formSuccess = true
-                        )
-                    }
-                } else {
-                    _uiState.update {
-                        it.copy(
-                            isFormSubmitting = false,
-                            formResultMsg = "${strings.formErrorMsg}\nHTTP ${response.code()}: ${response.errorBody()?.string()}",
-                            formSuccess = false
-                        )
-                    }
-                }
-            } catch (e: Exception) {
+            val payload = com.ferlagod.miscuras.network.FormPayload(
+                name = name,
+                is_health_professional = if (isHealthProfessional) "Sí" else "No",
+                belongs_to_laboratory = if (belongsToLaboratory) "Sí" else "No",
+                product_name = productName,
+                wound_bed = woundBed,
+                exudate_level = exudateLevel,
+                other_suggestions = otherSuggestions
+            )
+            
+            val result = feedbackRepository.submitProductSuggestion(payload)
+            
+            if (result.isSuccess) {
                 _uiState.update {
                     it.copy(
                         isFormSubmitting = false,
-                        formResultMsg = "${strings.formErrorMsg}\nException: ${e.localizedMessage}",
+                        showAddProductDialog = false,
+                        formResultMsg = strings.formSuccessMsg,
+                        formSuccess = true
+                    )
+                }
+            } else {
+                val error = result.exceptionOrNull()
+                _uiState.update {
+                    it.copy(
+                        isFormSubmitting = false,
+                        formResultMsg = "${strings.formErrorMsg}\nException: ${error?.localizedMessage}",
                         formSuccess = false
                     )
                 }
@@ -583,7 +518,7 @@ class WoundViewModel(
                 painLevel = state.painLevel,
                 edges = state.selectedBordes,
                 perilesional = state.selectedPerilesional,
-                recommendedTreatment = state.familiaRecomendada ?: "",
+                recommendedTreatment = "${state.familiaRecomendada ?: ""}\n\nPauta recomendada: ${state.cureFrequency ?: ""}",
                 aiExplanation = state.aiResponse ?: "",
                 photoPath = state.photoPath,
                 selectedProducts = state.selectedTreatmentProducts.joinToString(",")
