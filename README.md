@@ -4,10 +4,10 @@
 
 <div align="center">
   <a href="https://play.google.com/store/apps/details?id=com.ferlagod.miscuras">
-    <img alt="Disponible en Google Play" src="https://play.google.com/intl/en_us/badges/static/images/badges/es_badge_web_generic.png" width="200">
-      <a href="obtainium://add/https://github.com/ferlagod/miscuras/releases">
-    <img src="assets/obtainium_badge.png" height="55" alt="Consíguelo en Obtainium"/>
+    <img alt="Disponible en Google Play" src="https://play.google.com/intl/en_us/badges/static/images/badges/es_badge_web_generic.png" height="85">
   </a>
+  <a href="obtainium://add/https://github.com/ferlagod/miscuras/releases">
+    <img src="https://raw.githubusercontent.com/ImranR98/Obtainium/main/assets/graphics/badge_obtainium.png" height="65" alt="Consíguelo en Obtainium"/>
   </a>
 </div>
 
