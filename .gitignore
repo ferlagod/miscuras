@@ -72,3 +72,7 @@ task.md
 implementation_plan.md
 walkthrough.md
 scratch/
+app/release/output-metadata.json
+.gitignore
+app/release/baselineProfiles/1/app-release.dm
+app/release/baselineProfiles/0/app-release.dm
