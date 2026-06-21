@@ -5,17 +5,53 @@
 # For more details, see
 #   http://developer.android.com/guide/developing/tools/proguard.html
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# Preserve line numbers for debugging stack traces
+-keepattributes SourceFile,LineNumberTable
+-renamesourcefileattribute SourceFile
 
-# Uncomment this to preserve the line number information for
-# debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+# ── Retrofit ──
+-dontwarn retrofit2.**
+-keep class retrofit2.** { *; }
+-keepattributes Signature
+-keepattributes Exceptions
+-keepclasseswithmembers class * {
+    @retrofit2.http.* <methods>;
+}
 
-# If you keep the line number information, uncomment this to
-# hide the original source file name.
-#-renamesourcefileattribute SourceFile
+# ── Gson ──
+-keepattributes *Annotation*
+-keep class com.google.gson.** { *; }
+-keep class * implements com.google.gson.TypeAdapterFactory
+-keep class * implements com.google.gson.JsonSerializer
+-keep class * implements com.google.gson.JsonDeserializer
+# Keep network data classes used by Gson/Retrofit
+-keep class com.ferlagod.miscuras.network.FormPayload { *; }
+
+# ── Room ──
+-keep class * extends androidx.room.RoomDatabase
+-keep @androidx.room.Entity class *
+-keep @androidx.room.Dao interface *
+
+# ── SQLCipher ──
+-keep class net.sqlcipher.** { *; }
+-dontwarn net.sqlcipher.**
+
+# ── Google Generative AI (Gemini) ──
+-keep class com.google.ai.client.generativeai.** { *; }
+-dontwarn com.google.ai.client.generativeai.**
+
+# ── ARCore / Sceneview ──
+-keep class com.google.ar.** { *; }
+-dontwarn com.google.ar.**
+-keep class io.github.sceneview.** { *; }
+-dontwarn io.github.sceneview.**
+
+# ── Vico Charts ──
+-keep class com.patrykandpatrick.vico.** { *; }
+-dontwarn com.patrykandpatrick.vico.**
+
+# ── Coil ──
+-dontwarn coil.**
+
+# ── Data classes / Entities (prevent field stripping) ──
+-keep class com.ferlagod.miscuras.data.entities.** { *; }

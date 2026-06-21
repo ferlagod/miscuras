@@ -7,6 +7,7 @@ import com.ferlagod.miscuras.network.AsistenteIA
 import com.ferlagod.miscuras.ui.WoundUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.security.MessageDigest
 
 data class EvaluationResult(
     val familiaRecomendada: String?,
@@ -75,15 +76,21 @@ class EvaluateWoundUseCase(
         }
     }
 
+    private fun String.sha256(): String {
+        val bytes = MessageDigest.getInstance("SHA-256").digest(this.toByteArray())
+        return bytes.joinToString("") { "%02x".format(it) }
+    }
+
     suspend fun getAiExplanation(state: WoundUiState, familiaFormateada: String): String? = withContext(Dispatchers.IO) {
-        val cacheKey = "${state.selectedLecho}|${state.selectedExudado}|${state.selectedExudateType}|${state.selectedInfeccion}|${state.infectionGerm}|${state.woundLength}|${state.woundWidth}|${state.woundDepth}|${state.hasCavitation}|${state.cavitationDetails}|${state.selectedBordes}|${state.selectedPerilesional}|${familiaFormateada}|${state.painLevel.toInt()}|${state.specialLocation}"
+        val rawKey = "${state.selectedLecho}|${state.selectedExudado}|${state.selectedExudateType}|${state.selectedInfeccion}|${state.infectionGerm}|${state.woundLength}|${state.woundWidth}|${state.woundDepth}|${state.hasCavitation}|${state.cavitationDetails}|${state.selectedBordes}|${state.selectedPerilesional}|${familiaFormateada}|${state.painLevel.toInt()}|${state.specialLocation}"
+        val cacheKey = rawKey.sha256()
         val cachedResponse = repository.getCachedAiResponse(cacheKey)
 
         if (cachedResponse != null) {
             return@withContext cachedResponse
         }
 
-        val respuesta = AsistenteIA().obtenerExplicacionEducativa(
+        val respuesta = AsistenteIA.obtenerExplicacionEducativa(
             etiologia = state.selectedEtiology,
             lecho = state.selectedLecho,
             exudado = state.selectedExudado,

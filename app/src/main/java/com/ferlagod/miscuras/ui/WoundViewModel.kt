@@ -210,7 +210,7 @@ class WoundViewModel(
         _uiState.update { 
             it.copy(
                 selectedInfeccion = infeccion,
-                infectionGerm = if (infeccion) "Desconocido" else it.infectionGerm
+                infectionGerm = if (!infeccion) "Desconocido" else it.infectionGerm
             )
         }
     }
@@ -239,9 +239,7 @@ class WoundViewModel(
         _uiState.update { it.copy(specialLocation = location) }
     }
 
-    fun setSpecialLocation(location: String) {
-        _uiState.update { it.copy(specialLocation = location) }
-    }
+
 
     fun showGlossary() {
         _uiState.update { it.copy(showGlossary = true) }
@@ -558,37 +556,5 @@ class WoundViewModel(
         }
     }
 
-    fun guardarEvaluacion(woundId: Long) {
-        val state = _uiState.value
-        viewModelScope.launch(Dispatchers.IO) {
-            val db = com.ferlagod.miscuras.data.database.AppDatabase.getDatabase(getApplication())
-            val patientDao = db.patientDao()
-            
-            val evaluation = com.ferlagod.miscuras.data.entities.EvaluationEntity(
-                woundId = woundId,
-                length = state.woundLength,
-                width = state.woundWidth,
-                depth = state.woundDepth,
-                hasCavitation = state.hasCavitation,
-                cavitationDetails = state.cavitationDetails,
-                etiology = state.selectedEtiology,
-                bedState = state.selectedLecho,
-                exudateLevel = state.selectedExudado,
-                exudateType = state.selectedExudateType,
-                infection = state.selectedInfeccion,
-                infectionGerm = state.infectionGerm,
-                painLevel = state.painLevel,
-                edges = state.selectedBordes,
-                perilesional = state.selectedPerilesional,
-                recommendedTreatment = state.familiaRecomendada ?: "",
-                aiExplanation = state.aiResponse ?: "",
-                photoPath = state.photoPath,
-                selectedProducts = state.selectedTreatmentProducts.joinToString(",")
-            )
-            patientDao.insertEvaluation(evaluation)
-            
-            // Notificar a la UI que se ha guardado correctamente
-            _uiState.update { it.copy(isSaved = true) }
-        }
-    }
+
 }

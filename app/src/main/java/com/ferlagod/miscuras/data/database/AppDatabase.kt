@@ -36,7 +36,9 @@ import com.ferlagod.miscuras.data.security.CryptoManager
 import net.sqlcipher.database.SupportFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import android.util.Log
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
@@ -138,15 +140,27 @@ abstract class AppDatabase : RoomDatabase() {
             super.onOpen(db)
 
             // Ejecutar la lectura de los CSV en un hilo secundario si las tablas están vacías
-            CoroutineScope(Dispatchers.IO).launch {
+            GlobalScope.launch(Dispatchers.IO) {
                 val database = getDatabase(context)
+                
+                // B2: Limpiar la caché de IA con más de 7 días (TTL)
+                val sevenDaysInMillis = 7L * 24 * 60 * 60 * 1000
+                val threshold = System.currentTimeMillis() - sevenDaysInMillis
+                database.aiCacheDao().deleteOldCacheEntries(threshold)
+
                 val dao = database.apositoDao()
 
-                if (dao.obtenerCantidadReglas() == 0) {
-                    cargarReglasClinicas(context, dao)
-                }
-                if (dao.obtenerCantidadProductos() == 0) {
-                    cargarProductosApositos(context, dao)
+                if (dao.obtenerCantidadReglas() == 0 || dao.obtenerCantidadProductos() == 0) {
+                    database.runInTransaction {
+                        kotlinx.coroutines.runBlocking {
+                            if (dao.obtenerCantidadReglas() == 0) {
+                                cargarReglasClinicas(context, dao)
+                            }
+                            if (dao.obtenerCantidadProductos() == 0) {
+                                cargarProductosApositos(context, dao)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -173,6 +187,8 @@ abstract class AppDatabase : RoomDatabase() {
                                 familiaBuscada = columnas[3].trim()
                             )
                         )
+                    } else {
+                        Log.w("AppDatabase", "Línea descartada en reglas_clinicas.csv: $line")
                     }
                 }
             }

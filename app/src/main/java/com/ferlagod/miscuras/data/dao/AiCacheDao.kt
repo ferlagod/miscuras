@@ -16,4 +16,7 @@ interface AiCacheDao {
     
     @Query("DELETE FROM ai_cache")
     fun clearCache()
+
+    @Query("DELETE FROM ai_cache WHERE timestamp < :threshold")
+    fun deleteOldCacheEntries(threshold: Long)
 }

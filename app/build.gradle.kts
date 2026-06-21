@@ -26,20 +26,23 @@ android {
         applicationId = "com.ferlagod.miscuras"
         minSdk = 26
         targetSdk = 36
-        versionCode = 202606202
-        versionName = "1.0.0"
+        versionCode = 202606211
+        versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
-        // 3. Crear la variable para el código
+        // 3. Crear las variables para el código
         val apiKey = properties.getProperty("GEMINI_API_KEY") ?: ""
         buildConfigField("String", "GEMINI_API_KEY", "\"$apiKey\"")
+        
+        val formspreeId = properties.getProperty("FORMSPREE_ID") ?: ""
+        buildConfigField("String", "FORMSPREE_ID", "\"$formspreeId\"")
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
-            isShrinkResources = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -96,31 +99,25 @@ dependencies {
     implementation("com.squareup.retrofit2:retrofit:$retrofitVersion")
     implementation(libs.converter.gson)
 
-        // Librería oficial para usar Gemini en Android
-        implementation(libs.generativeai)
+    // Librería oficial para usar Gemini en Android
+    implementation(libs.generativeai)
 
-        // ARCore Sceneview para Realidad Aumentada
-        implementation("io.github.sceneview:arsceneview:0.10.1")
+    // ARCore Sceneview para Realidad Aumentada
+    implementation("io.github.sceneview:arsceneview:0.10.1")
 
-        // Google Fonts para Compose
-        implementation("androidx.compose.ui:ui-text-google-fonts:1.6.7")
+    // Google Fonts para Compose
+    implementation("androidx.compose.ui:ui-text-google-fonts:1.6.7")
 
-        // Navigation Compose
-        implementation("androidx.navigation:navigation-compose:2.7.7")
+    // Navigation Compose
+    implementation("androidx.navigation:navigation-compose:2.7.7")
 
-        // Base de datos cifrada (SQLCipher + Security Crypto)
-        implementation("net.zetetic:android-database-sqlcipher:4.5.4")
-        implementation("androidx.security:security-crypto:1.1.0-alpha06")
+    // Base de datos cifrada (SQLCipher + Security Crypto)
+    implementation("net.zetetic:android-database-sqlcipher:4.5.4")
+    implementation("androidx.sqlite:sqlite-ktx:2.4.0")
+    implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
-        // Vico Charts (Gráficas)
-        val vicoVersion = "1.15.0"
-        implementation("com.patrykandpatrick.vico:compose-m3:$vicoVersion")
-        implementation("com.patrykandpatrick.vico:core:$vicoVersion")
-
-        // SQLCipher para cifrado de Room
-        implementation("net.zetetic:android-database-sqlcipher:4.5.4")
-        implementation("androidx.sqlite:sqlite-ktx:2.4.0")
-
-        // Coil para carga de imágenes asíncronas
-        implementation("io.coil-kt:coil-compose:2.6.0")
+    // Vico Charts (Gráficas)
+    val vicoVersion = "1.15.0"
+    implementation("com.patrykandpatrick.vico:compose-m3:$vicoVersion")
+    implementation("com.patrykandpatrick.vico:core:$vicoVersion")
 }

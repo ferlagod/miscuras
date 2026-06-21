@@ -31,14 +31,14 @@ import org.json.JSONObject
  * Servicio encargado de la integración con el modelo de lenguaje de IA de Google (Gemini).
  * Formatea el contexto clínico y obtiene respuestas educativas alineadas con TIME y GNEAUPP.
  */
-class AsistenteIA {
+object AsistenteIA {
 
     // Se instancia el modelo usando la clave API inyectada de forma segura desde BuildConfig
     private val generativeModel = GenerativeModel(
         modelName = "gemini-2.5-flash",
         apiKey = BuildConfig.GEMINI_API_KEY,
         safetySettings = listOf(
-            SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.NONE),
+            SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.LOW_AND_ABOVE),
             SafetySetting(HarmCategory.HARASSMENT, BlockThreshold.NONE),
             SafetySetting(HarmCategory.HATE_SPEECH, BlockThreshold.NONE),
             SafetySetting(HarmCategory.SEXUALLY_EXPLICIT, BlockThreshold.NONE)

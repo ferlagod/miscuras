@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 class PatientViewModel(application: Application) : AndroidViewModel(application) {
@@ -39,8 +40,12 @@ class PatientViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
+    private var woundsJob: Job? = null
+    private var evaluationsJob: Job? = null
+
     fun loadWoundsForPatient(patientId: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
+        woundsJob?.cancel()
+        woundsJob = viewModelScope.launch(Dispatchers.IO) {
             patientDao.getWoundsForPatient(patientId)
                 .catch { e -> e.printStackTrace() }
                 .collect { list ->
@@ -50,7 +55,8 @@ class PatientViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun loadEvaluationsForWound(woundId: Long) {
-        viewModelScope.launch(Dispatchers.IO) {
+        evaluationsJob?.cancel()
+        evaluationsJob = viewModelScope.launch(Dispatchers.IO) {
             _currentWound.value = patientDao.getWoundById(woundId)
             patientDao.getEvaluationsForWound(woundId)
                 .catch { e -> e.printStackTrace() }
