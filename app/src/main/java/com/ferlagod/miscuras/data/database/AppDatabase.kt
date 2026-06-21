@@ -33,7 +33,7 @@ import com.ferlagod.miscuras.data.entities.WoundEntity
 import com.ferlagod.miscuras.data.entities.EvaluationEntity
 import com.ferlagod.miscuras.data.dao.PatientDao
 import com.ferlagod.miscuras.data.security.CryptoManager
-import net.sqlcipher.database.SupportFactory
+import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -114,7 +114,8 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
 
-                val factory = SupportFactory(CryptoManager.getDatabasePassphrase(context))
+                System.loadLibrary("sqlcipher")
+                val factory = SupportOpenHelperFactory(CryptoManager.getDatabasePassphrase(context))
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,

@@ -28,13 +28,15 @@
 -keep class com.ferlagod.miscuras.network.FormPayload { *; }
 
 # ── Room ──
--keep class * extends androidx.room.RoomDatabase
+-keep class * extends androidx.room.RoomDatabase { *; }
 -keep @androidx.room.Entity class *
 -keep @androidx.room.Dao interface *
 
 # ── SQLCipher ──
 -keep class net.sqlcipher.** { *; }
 -dontwarn net.sqlcipher.**
+-keep class net.zetetic.database.sqlcipher.** { *; }
+-dontwarn net.zetetic.database.sqlcipher.**
 
 # ── Google Generative AI (Gemini) ──
 -keep class com.google.ai.client.generativeai.** { *; }

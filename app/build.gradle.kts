@@ -26,7 +26,7 @@ android {
         applicationId = "com.ferlagod.miscuras"
         minSdk = 26
         targetSdk = 36
-        versionCode = 202606211
+        versionCode = 202606214
         versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -62,7 +62,7 @@ android {
     }
     packaging {
         jniLibs {
-            useLegacyPackaging = false
+            useLegacyPackaging = true
         }
     }
 }
@@ -112,7 +112,7 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.7.7")
 
     // Base de datos cifrada (SQLCipher + Security Crypto)
-    implementation("net.zetetic:android-database-sqlcipher:4.5.4")
+    implementation("net.zetetic:sqlcipher-android:4.6.1")
     implementation("androidx.sqlite:sqlite-ktx:2.4.0")
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 

@@ -76,3 +76,5 @@ app/release/output-metadata.json
 .gitignore
 app/release/baselineProfiles/1/app-release.dm
 app/release/baselineProfiles/0/app-release.dm
+app/src/main/res/raw/keep.xml
+app/proguard-rules.pro
