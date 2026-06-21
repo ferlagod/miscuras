@@ -8,12 +8,17 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ferlagod.miscuras.ui.viewmodels.PatientViewModel
 import com.ferlagod.miscuras.ui.AppStrings
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import com.ferlagod.miscuras.R
 import java.text.SimpleDateFormat
 import java.util.*
 import com.patrykandpatrick.vico.compose.axis.horizontal.rememberBottomAxis
@@ -27,6 +32,7 @@ import coil.compose.AsyncImage
 import java.io.File
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -67,7 +73,19 @@ fun WoundDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(wound?.name ?: strings.woundDetailTitleFallback) },
+                title = { 
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(id = R.drawable.logo_symbol),
+                            contentDescription = "Logo Mis Curas",
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(wound?.name ?: strings.woundDetailTitleFallback) 
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Volver")

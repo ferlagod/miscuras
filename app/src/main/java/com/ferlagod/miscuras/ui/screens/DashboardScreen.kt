@@ -5,6 +5,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.Image
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
+import com.ferlagod.miscuras.R
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ChevronRight
@@ -50,7 +54,19 @@ fun DashboardScreen(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             LargeTopAppBar(
-                title = { Text(strings.myPatientsTitle, fontWeight = FontWeight.Bold) },
+                title = { 
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(id = R.drawable.logo_symbol),
+                            contentDescription = "Logo Mis Curas",
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(strings.myPatientsTitle, fontWeight = FontWeight.Bold) 
+                    }
+                },
                 actions = {
                     IconButton(onClick = { 
                         woundViewModel.showBraden()

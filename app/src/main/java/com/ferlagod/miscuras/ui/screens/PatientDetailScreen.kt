@@ -17,6 +17,11 @@ import androidx.compose.ui.unit.dp
 import com.ferlagod.miscuras.ui.viewmodels.PatientViewModel
 import com.ferlagod.miscuras.ui.AppStrings
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.shape.CircleShape
+import com.ferlagod.miscuras.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,7 +46,19 @@ fun PatientDetailScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(strings.patientWoundsTitle) },
+                title = { 
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Image(
+                            painter = painterResource(id = R.drawable.logo_symbol),
+                            contentDescription = "Logo Mis Curas",
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(CircleShape)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(strings.patientWoundsTitle) 
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
