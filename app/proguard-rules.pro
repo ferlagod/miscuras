@@ -55,3 +55,6 @@
 
 # ── Data classes / Entities (prevent field stripping) ──
 -keep class com.ferlagod.miscuras.data.entities.** { *; }
+
+# ── Google ErrorProne Annotations (Tink/Security Crypto) ──
+-dontwarn com.google.errorprone.annotations.**
