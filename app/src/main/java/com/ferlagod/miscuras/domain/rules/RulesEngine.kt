@@ -94,6 +94,18 @@ class RulesEngine {
     }
 
     /**
+     * Agrega familias según la etiología seleccionada.
+     */
+    fun applyEtiologyOverrides(baseFamilies: String, etiology: String): String {
+        if (etiology == "Úlcera Venosa") {
+            val families = baseFamilies.split("/").map { it.trim() }.toMutableSet()
+            families.add("Compresión Bicomponente")
+            return families.joinToString(" / ")
+        }
+        return baseFamilies
+    }
+
+    /**
      * Filtra los productos brutos basándose en las dimensiones y la localización.
      */
     fun filterProductsByDimensions(
@@ -114,7 +126,7 @@ class RulesEngine {
             val isGeneric = dimStr.contains("pomada") || dimStr.contains("crema") || 
                 dimStr.contains("gel") || dimStr.contains("ml") || 
                 dimStr.contains("spray") || Regex("\\d+g").containsMatchIn(dimStr) ||
-                dimStr.contains("solucion") || dimStr.contains("venda")
+                dimStr.contains("solucion") || dimStr.contains("venda") || dimStr.contains("kit")
                 
             if (isGeneric) return@filter true
 

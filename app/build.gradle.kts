@@ -26,8 +26,8 @@ android {
         applicationId = "com.ferlagod.miscuras"
         minSdk = 26
         targetSdk = 36
-        versionCode = 202606214
-        versionName = "1.0.1"
+        versionCode = 202606241
+        versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         
@@ -62,7 +62,7 @@ android {
     }
     packaging {
         jniLibs {
-            useLegacyPackaging = true
+            useLegacyPackaging = false
         }
     }
 }

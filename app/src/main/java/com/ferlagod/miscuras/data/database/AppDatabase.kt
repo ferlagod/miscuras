@@ -57,7 +57,7 @@ import java.io.InputStreamReader
         WoundEntity::class,
         EvaluationEntity::class
     ],
-    version = 26,
+    version = 27,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

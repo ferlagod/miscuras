@@ -31,10 +31,14 @@ class EvaluateWoundUseCase(
         )
 
         if (familia != null) {
-            val familiaModificada = rulesEngine.applyGermOverrides(
+            val familiaConGermen = rulesEngine.applyGermOverrides(
                 baseFamilies = familia,
                 isSuperficialInfection = state.selectedInfeccion,
                 germ = state.infectionGerm
+            )
+            val familiaModificada = rulesEngine.applyEtiologyOverrides(
+                baseFamilies = familiaConGermen,
+                etiology = state.selectedEtiology
             )
 
             val productosBrutos = repository.obtenerProductosPorFamilias(familiaModificada)
