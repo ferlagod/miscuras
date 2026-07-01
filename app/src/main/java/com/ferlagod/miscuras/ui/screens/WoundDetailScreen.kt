@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ferlagod.miscuras.ui.viewmodels.PatientViewModel
-import com.ferlagod.miscuras.ui.AppStrings
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
@@ -34,6 +33,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,8 +51,7 @@ fun WoundDetailScreen(
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("prefs", android.content.Context.MODE_PRIVATE)
     val lang = prefs.getString("language", "es") ?: "es"
-    val strings = AppStrings.getStrings(lang)
-    
+        
     LaunchedEffect(woundId) {
         patientViewModel.loadEvaluationsForWound(woundId)
     }
@@ -83,7 +82,7 @@ fun WoundDetailScreen(
                                 .clip(CircleShape)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(wound?.name ?: strings.woundDetailTitleFallback) 
+                        Text(wound?.name ?: stringResource(R.string.wound_detail_title_fallback)) 
                     }
                 },
                 navigationIcon = {
@@ -101,7 +100,7 @@ fun WoundDetailScreen(
             ExtendedFloatingActionButton(
                 onClick = { onNewEvaluationClick(woundId) },
                 icon = { Icon(Icons.Default.Add, contentDescription = null) },
-                text = { Text(strings.evaluateBtn) }
+                text = { Text(stringResource(R.string.evaluate_btn)) }
             )
         }
     ) { paddingValues ->
@@ -113,7 +112,7 @@ fun WoundDetailScreen(
             if (evaluations.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = androidx.compose.ui.Alignment.Center) {
                     Text(
-                        strings.noEvaluationsMsg,
+                        stringResource(R.string.no_evaluations_msg),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -128,13 +127,14 @@ fun WoundDetailScreen(
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(strings.sizeEvolutionChartTitle, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.size_evolution_chart_title), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                         Spacer(modifier = Modifier.height(16.dp))
+                        val evalChartLabel = stringResource(R.string.eval_chart_label)
                         Chart(
                             chart = lineChart(),
                             chartModelProducer = modelProducer,
                             startAxis = rememberStartAxis(),
-                            bottomAxis = rememberBottomAxis(valueFormatter = { value, _ -> "${strings.evalChartLabel} ${value.toInt() + 1}" }),
+                            bottomAxis = rememberBottomAxis(valueFormatter = { value, _ -> "$evalChartLabel ${value.toInt() + 1}" }),
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(200.dp)
@@ -143,7 +143,7 @@ fun WoundDetailScreen(
                 }
 
                 Text(
-                    strings.evalHistoryTitle,
+                    stringResource(R.string.eval_history_title),
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleMedium
@@ -164,18 +164,18 @@ fun WoundDetailScreen(
                                 Text(date, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                                 Spacer(modifier = Modifier.height(4.dp))
                                 val sizeText = if (eval.length.isNotEmpty() && eval.width.isNotEmpty()) {
-                                    String.format(strings.evalSizeFormat, eval.length, eval.width, if(eval.depth.isNotEmpty()) "x ${eval.depth}" else "")
+                                    String.format(stringResource(R.string.eval_size_format), eval.length, eval.width, if(eval.depth.isNotEmpty()) "x ${eval.depth}" else "")
                                 } else {
                                     "Tamaño: No medido"
                                 }
                                 Text(sizeText)
-                                Text(String.format(strings.evalBedFormat, eval.bedState))
-                                Text(String.format(strings.evalExudateFormat, eval.exudateLevel, eval.exudateType))
+                                Text(String.format(stringResource(R.string.eval_bed_format), eval.bedState))
+                                Text(String.format(stringResource(R.string.eval_exudate_format), eval.exudateLevel, eval.exudateType))
                                 if (eval.infection) {
-                                    Text(String.format(strings.evalInfectionFormat, eval.infectionGerm), color = MaterialTheme.colorScheme.error)
+                                    Text(String.format(stringResource(R.string.eval_infection_format), eval.infectionGerm), color = MaterialTheme.colorScheme.error)
                                 }
                                 Spacer(modifier = Modifier.height(8.dp))
-                                Text(String.format(strings.evalTreatmentFormat, eval.recommendedTreatment), fontWeight = FontWeight.SemiBold)
+                                Text(String.format(stringResource(R.string.eval_treatment_format), eval.recommendedTreatment), fontWeight = FontWeight.SemiBold)
                                 
                                 if (!eval.selectedProducts.isNullOrEmpty()) {
                                     Spacer(modifier = Modifier.height(4.dp))
@@ -190,7 +190,7 @@ fun WoundDetailScreen(
                                     Spacer(modifier = Modifier.height(16.dp))
                                     AsyncImage(
                                         model = File(eval.photoPath),
-                                        contentDescription = strings.photoEvolutionDesc,
+                                        contentDescription = stringResource(R.string.photo_evolution_desc),
                                         modifier = Modifier
                                             .fillMaxWidth()
                                             .height(200.dp)

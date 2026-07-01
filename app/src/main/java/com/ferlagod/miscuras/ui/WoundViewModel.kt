@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.ferlagod.miscuras.R
 
 enum class WizardStep(val progress: Float) {
     ETIOLOGY(0.20f),
@@ -300,47 +301,47 @@ class WoundViewModel(
     /**
      * Genera un resumen clínico estructurado basado en los criterios TIME
      */
-    fun generarResumenEvolutivo(productoSeleccionado: String, strings: AppStrings): String {
+    fun generarResumenEvolutivo(productoSeleccionado: String, context: android.content.Context): String {
         val state = uiState.value
-        val infText = if (state.selectedInfeccion) String.format(strings.repInfYesFormat, state.infectionGerm) else strings.no
+        val infText = if (state.selectedInfeccion) String.format(context.getString(R.string.rep_inf_yes_format), state.infectionGerm) else context.getString(R.string.no)
         val tamaño = if (state.woundLength.isNotEmpty() && state.woundWidth.isNotEmpty()) {
             val depthStr = if (state.woundDepth.isNotEmpty()) " x ${state.woundDepth}" else ""
             "${state.woundLength} x ${state.woundWidth}$depthStr cm"
         } else {
-            strings.repUnspecified
+            context.getString(R.string.rep_unspecified)
         }
         
-        val aiPlan = state.aiResponse ?: strings.repPending
+        val aiPlan = state.aiResponse ?: context.getString(R.string.rep_pending)
 
         val bradenText = if (state.bradenScore != null) {
             val riskText = when {
-                state.bradenScore >= 15 -> strings.bradenRiskLow
-                state.bradenScore in 13..14 -> strings.bradenRiskModerate
-                state.bradenScore in 10..12 -> strings.bradenRiskHigh
-                else -> strings.bradenRiskVeryHigh
+                state.bradenScore >= 15 -> context.getString(R.string.braden_risk_low)
+                state.bradenScore in 13..14 -> context.getString(R.string.braden_risk_moderate)
+                state.bradenScore in 10..12 -> context.getString(R.string.braden_risk_high)
+                else -> context.getString(R.string.braden_risk_very_high)
             }
-            "\n            ${strings.repBradenTitle}\n            ${String.format(strings.repBradenScoreFormat, state.bradenScore, riskText)}\n"
+            "\n            ${context.getString(R.string.rep_braden_title)}\n            ${String.format(context.getString(R.string.rep_braden_score_format), state.bradenScore, riskText)}\n"
         } else ""
 
         val bradenPrevencion = if (state.bradenScore != null && state.bradenScore < 12) {
-            "\n            ${strings.repBradenPreventiveTitle}\n            ${strings.repBradenPreventiveText}\n"
+            "\n            ${context.getString(R.string.rep_braden_preventive_title)}\n            ${context.getString(R.string.rep_braden_preventive_text)}\n"
         } else ""
 
         return """
-            ${strings.repTimersTitle}
-            ${strings.etiologyLabel}: ${state.selectedEtiology}
-            ${strings.repTissue}${state.selectedLecho}
-            ${strings.repInfection}$infText
-            ${strings.repMoisture}${state.selectedExudado} (${state.selectedExudateType})
-            ${String.format(strings.repEdgesFormat, state.selectedBordes, state.selectedPerilesional)}
-            ${String.format(strings.repPainFormat, state.painLevel.toInt())}
-            ${String.format(strings.repSizeFormat, tamaño)}${if (state.hasCavitation) "\n            - Cavitaciones: ${if (state.cavitationDetails.isNotEmpty()) state.cavitationDetails else "Sí"}" else ""}
-            ${String.format(strings.repLocationFormat, state.specialLocation)}$bradenText
+            ${context.getString(R.string.rep_timers_title)}
+            ${context.getString(R.string.etiology_label)}: ${state.selectedEtiology}
+            ${context.getString(R.string.rep_tissue)}${state.selectedLecho}
+            ${context.getString(R.string.rep_infection)}$infText
+            ${context.getString(R.string.rep_moisture)}${state.selectedExudado} (${state.selectedExudateType})
+            ${String.format(context.getString(R.string.rep_edges_format), state.selectedBordes, state.selectedPerilesional)}
+            ${String.format(context.getString(R.string.rep_pain_format), state.painLevel.toInt())}
+            ${String.format(context.getString(R.string.rep_size_format), tamaño)}${if (state.hasCavitation) "\n            - Cavitaciones: ${if (state.cavitationDetails.isNotEmpty()) state.cavitationDetails else "Sí"}" else ""}
+            ${String.format(context.getString(R.string.rep_location_format), state.specialLocation)}$bradenText
 
-            ${strings.repPlanTitle}
+            ${context.getString(R.string.rep_plan_title)}
             $aiPlan$bradenPrevencion
 
-            ${strings.repProductTitle}
+            ${context.getString(R.string.rep_product_title)}
             - $productoSeleccionado
         """.trimIndent()
     }
@@ -415,6 +416,7 @@ class WoundViewModel(
     fun changeLanguage(lang: String) {
         sharedPrefs.edit().putString("language", lang).apply()
         _uiState.update { it.copy(currentLanguage = lang) }
+        androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(androidx.core.os.LocaleListCompat.forLanguageTags(lang))
     }
 
     /**
@@ -459,7 +461,7 @@ class WoundViewModel(
         woundBed: String,
         exudateLevel: String,
         otherSuggestions: String,
-        strings: com.ferlagod.miscuras.ui.AppStrings
+        context: android.content.Context
     ) {
         _uiState.update { it.copy(isFormSubmitting = true, formResultMsg = null) }
         viewModelScope.launch(Dispatchers.IO) {
@@ -480,7 +482,7 @@ class WoundViewModel(
                     it.copy(
                         isFormSubmitting = false,
                         showAddProductDialog = false,
-                        formResultMsg = strings.formSuccessMsg,
+                        formResultMsg = context.getString(R.string.form_success_msg),
                         formSuccess = true
                     )
                 }
@@ -489,7 +491,7 @@ class WoundViewModel(
                 _uiState.update {
                     it.copy(
                         isFormSubmitting = false,
-                        formResultMsg = "${strings.formErrorMsg}\nException: ${error?.localizedMessage}",
+                        formResultMsg = "${context.getString(R.string.form_error_msg)}\nException: ${error?.localizedMessage}",
                         formSuccess = false
                     )
                 }

@@ -24,14 +24,14 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.foundation.magnifier
 import androidx.compose.ui.geometry.isSpecified
-import com.ferlagod.miscuras.ui.AppStrings
 import io.github.sceneview.ar.ArSceneView
 import kotlin.math.sqrt
+import androidx.compose.ui.res.stringResource
+import com.ferlagod.miscuras.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ARMeasureScreen(
-    strings: AppStrings,
     onBackClick: () -> Unit,
     onMeasured: (Float, Float) -> Unit
 ) {
@@ -48,20 +48,20 @@ fun ARMeasureScreen(
     var showMagnifier by remember { mutableStateOf(false) }
 
     val instructionText = when (points.size) {
-        0 -> strings.arInstructionStartLength
-        1 -> strings.arInstructionEndLength
-        2 -> String.format(java.util.Locale.US, strings.arInstructionStartWidth, String.format(java.util.Locale.US, "%.1f", lengthCm))
-        3 -> strings.arInstructionEndWidth
-        else -> String.format(java.util.Locale.US, strings.arInstructionConfirm, String.format(java.util.Locale.US, "%.1f", lengthCm), String.format(java.util.Locale.US, "%.1f", widthCm))
+        0 -> stringResource(R.string.ar_instruction_start_length)
+        1 -> stringResource(R.string.ar_instruction_end_length)
+        2 -> String.format(java.util.Locale.US, stringResource(R.string.ar_instruction_start_width), String.format(java.util.Locale.US, "%.1f", lengthCm))
+        3 -> stringResource(R.string.ar_instruction_end_width)
+        else -> String.format(java.util.Locale.US, stringResource(R.string.ar_instruction_confirm), String.format(java.util.Locale.US, "%.1f", lengthCm), String.format(java.util.Locale.US, "%.1f", widthCm))
     }
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(strings.arRulerTitle) },
+                title = { Text(stringResource(R.string.ar_ruler_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.arCancelButton)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.ar_cancel_button))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -77,7 +77,7 @@ fun ARMeasureScreen(
                     onClick = { onMeasured(lengthCm, widthCm) },
                     containerColor = MaterialTheme.colorScheme.primary
                 ) {
-                    Icon(Icons.Default.Check, contentDescription = strings.confirmButton, tint = Color.White)
+                    Icon(Icons.Default.Check, contentDescription = stringResource(R.string.confirm_button), tint = Color.White)
                 }
             }
         },
@@ -180,7 +180,7 @@ fun ARMeasureScreen(
                         .padding(16.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text(strings.arRestartButton)
+                    Text(stringResource(R.string.ar_restart_button))
                 }
             }
         }

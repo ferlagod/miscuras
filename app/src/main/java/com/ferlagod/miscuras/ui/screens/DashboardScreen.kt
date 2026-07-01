@@ -25,10 +25,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ferlagod.miscuras.ui.viewmodels.PatientViewModel
-import com.ferlagod.miscuras.ui.AppStrings
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ferlagod.miscuras.ui.WoundViewModel
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -47,8 +47,7 @@ fun DashboardScreen(
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("prefs", android.content.Context.MODE_PRIVATE)
     val lang = prefs.getString("language", "es") ?: "es"
-    val strings = AppStrings.getStrings(lang)
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+        val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -64,7 +63,7 @@ fun DashboardScreen(
                                 .clip(CircleShape)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(strings.myPatientsTitle, fontWeight = FontWeight.Bold) 
+                        Text(stringResource(R.string.my_patients_title), fontWeight = FontWeight.Bold) 
                     }
                 },
                 actions = {
@@ -89,7 +88,7 @@ fun DashboardScreen(
                     IconButton(onClick = { showSettings = true }) {
                         Icon(
                             imageVector = Icons.Default.Settings,
-                            contentDescription = strings.settingsTitle
+                            contentDescription = stringResource(R.string.settings_title)
                         )
                     }
                 },
@@ -104,8 +103,8 @@ fun DashboardScreen(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { showAddDialog = true },
-                icon = { Icon(Icons.Default.Add, contentDescription = strings.addPatientDesc) },
-                text = { Text(strings.newPatientTitle) },
+                icon = { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_patient_desc)) },
+                text = { Text(stringResource(R.string.new_patient_title)) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             )
@@ -153,7 +152,7 @@ fun DashboardScreen(
                     Spacer(modifier = Modifier.width(16.dp))
                     Column {
                         Text(
-                            text = strings.quickEvaluationBtn,
+                            text = stringResource(R.string.quick_evaluation_btn),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
@@ -167,7 +166,7 @@ fun DashboardScreen(
             }
 
             Text(
-                text = strings.registeredPatientsLabel,
+                text = stringResource(R.string.registered_patients_label),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary
@@ -190,7 +189,7 @@ fun DashboardScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = strings.noPatientsMsg,
+                            text = stringResource(R.string.no_patients_msg),
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -262,20 +261,20 @@ fun DashboardScreen(
 
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
-            title = { Text(strings.newPatientTitle, fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.new_patient_title), fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
-                        label = { Text(strings.nameInitialsLabel) },
+                        label = { Text(stringResource(R.string.name_initials_label)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
                     OutlinedTextField(
                         value = room,
                         onValueChange = { room = it },
-                        label = { Text(strings.roomBedLabel) },
+                        label = { Text(stringResource(R.string.room_bed_label)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -291,12 +290,12 @@ fun DashboardScreen(
                     },
                     shape = MaterialTheme.shapes.medium
                 ) {
-                    Text(strings.saveButton)
+                    Text(stringResource(R.string.save_button))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showAddDialog = false }) {
-                    Text(strings.cancelButton)
+                    Text(stringResource(R.string.cancel_button))
                 }
             },
             shape = MaterialTheme.shapes.large

@@ -18,7 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.ferlagod.miscuras.ui.AppStrings
+import androidx.compose.ui.res.stringResource
+import com.ferlagod.miscuras.R
 
 data class GlossaryItem(
     val title: String,
@@ -37,8 +38,7 @@ fun GlossaryScreen(
     onBackClick: () -> Unit,
     currentLanguage: String
 ) {
-    val strings = AppStrings.getStrings(currentLanguage)
-
+    
     // Datos hardcodeados según indicaciones GNEAUPP (completos)
     val categories = listOf(
         GlossaryCategory(
@@ -126,12 +126,12 @@ fun GlossaryScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(strings.glossaryTitle) },
+                title = { Text(stringResource(R.string.glossary_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = strings.glossaryBack
+                            contentDescription = stringResource(R.string.glossary_back)
                         )
                     }
                 },
@@ -151,7 +151,7 @@ fun GlossaryScreen(
         ) {
             item {
                 Text(
-                    text = strings.glossaryDescription,
+                    text = stringResource(R.string.glossary_description),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 24.dp)
@@ -170,7 +170,7 @@ fun GlossaryScreen(
                 }
 
                 items(category.items) { item ->
-                    GlossaryAccordion(item = item, strings = strings)
+                    GlossaryAccordion(item = item, )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             }
@@ -179,7 +179,7 @@ fun GlossaryScreen(
 }
 
 @Composable
-fun GlossaryAccordion(item: GlossaryItem, strings: AppStrings) {
+fun GlossaryAccordion(item: GlossaryItem, ) {
     var expanded by remember { mutableStateOf(false) }
 
     Card(
@@ -217,7 +217,7 @@ fun GlossaryAccordion(item: GlossaryItem, strings: AppStrings) {
                 }
                 Icon(
                     imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = if (expanded) strings.glossaryCollapse else strings.glossaryExpand,
+                    contentDescription = if (expanded) stringResource(R.string.glossary_collapse) else stringResource(R.string.glossary_expand),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }

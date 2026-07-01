@@ -16,7 +16,7 @@ import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.ImageView
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -30,7 +30,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.ferlagod.miscuras.data.database.AppDatabase
 import com.ferlagod.miscuras.data.repository.ApositosRepository
-import com.ferlagod.miscuras.ui.AppStrings
 import com.ferlagod.miscuras.ui.WoundViewModel
 import com.ferlagod.miscuras.ui.screens.WoundScreen
 import com.ferlagod.miscuras.ui.theme.MisCurasTheme
@@ -57,7 +56,7 @@ import com.ferlagod.miscuras.ui.viewmodels.PatientViewModel
  * Configura la base de datos de Room en su primera ejecución y establece 
  * la raíz de navegación de Jetpack Compose invocando a [WoundScreen].
  */
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 

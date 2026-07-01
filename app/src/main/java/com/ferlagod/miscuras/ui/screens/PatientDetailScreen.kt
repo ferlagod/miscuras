@@ -15,13 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.ferlagod.miscuras.ui.viewmodels.PatientViewModel
-import com.ferlagod.miscuras.ui.AppStrings
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.CircleShape
 import com.ferlagod.miscuras.R
+import androidx.compose.ui.res.stringResource
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,8 +37,7 @@ fun PatientDetailScreen(
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("prefs", android.content.Context.MODE_PRIVATE)
     val lang = prefs.getString("language", "es") ?: "es"
-    val strings = AppStrings.getStrings(lang)
-
+    
     LaunchedEffect(patientId) {
         patientViewModel.loadWoundsForPatient(patientId)
     }
@@ -56,7 +55,7 @@ fun PatientDetailScreen(
                                 .clip(CircleShape)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(strings.patientWoundsTitle) 
+                        Text(stringResource(R.string.patient_wounds_title)) 
                     }
                 },
                 navigationIcon = {
@@ -72,7 +71,7 @@ fun PatientDetailScreen(
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = strings.addWoundDesc)
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_wound_desc))
             }
         }
     ) { paddingValues ->
@@ -85,7 +84,7 @@ fun PatientDetailScreen(
             if (wounds.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
-                        strings.noWoundsMsg,
+                        stringResource(R.string.no_wounds_msg),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
@@ -124,12 +123,12 @@ fun PatientDetailScreen(
         var woundName by remember { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { showAddDialog = false },
-            title = { Text(strings.newWoundTitle) },
+            title = { Text(stringResource(R.string.new_wound_title)) },
             text = {
                 OutlinedTextField(
                     value = woundName,
                     onValueChange = { woundName = it },
-                    label = { Text(strings.woundLocationNameLabel) },
+                    label = { Text(stringResource(R.string.wound_location_name_label)) },
                     singleLine = true
                 )
             },
@@ -142,12 +141,12 @@ fun PatientDetailScreen(
                         }
                     }
                 ) {
-                    Text(strings.saveButton)
+                    Text(stringResource(R.string.save_button))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showAddDialog = false }) {
-                    Text(strings.cancelButton)
+                    Text(stringResource(R.string.cancel_button))
                 }
             }
         )

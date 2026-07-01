@@ -20,16 +20,16 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.ferlagod.miscuras.ui.AppStrings
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.ferlagod.miscuras.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BradenScreen(
     onBackClick: () -> Unit,
     onScoreCalculated: (Int) -> Unit,
-    strings: AppStrings
-) {
+    ) {
     var percepcion by remember { mutableStateOf(4) }
     var humedad by remember { mutableStateOf(4) }
     var actividad by remember { mutableStateOf(4) }
@@ -44,10 +44,10 @@ fun BradenScreen(
     }
 
     val riskLevel = when {
-        totalScore >= 15 -> strings.bradenRiskLow
-        totalScore in 13..14 -> strings.bradenRiskModerate
-        totalScore in 10..12 -> strings.bradenRiskHigh
-        else -> strings.bradenRiskVeryHigh
+        totalScore >= 15 -> stringResource(R.string.braden_risk_low)
+        totalScore in 13..14 -> stringResource(R.string.braden_risk_moderate)
+        totalScore in 10..12 -> stringResource(R.string.braden_risk_high)
+        else -> stringResource(R.string.braden_risk_very_high)
     }
 
     val colorRisk = when {
@@ -57,10 +57,10 @@ fun BradenScreen(
     }
 
     val recommendations = when {
-        totalScore >= 15 -> strings.bradenRecLow
-        totalScore in 13..14 -> strings.bradenRecModerate
-        totalScore in 10..12 -> strings.bradenRecHigh
-        else -> strings.bradenRecVeryHigh
+        totalScore >= 15 -> stringResource(R.string.braden_rec_low)
+        totalScore in 13..14 -> stringResource(R.string.braden_rec_moderate)
+        totalScore in 10..12 -> stringResource(R.string.braden_rec_high)
+        else -> stringResource(R.string.braden_rec_very_high)
     }
 
     val clipboard = LocalClipboardManager.current
@@ -70,10 +70,10 @@ fun BradenScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(strings.bradenTitle) },
+                title = { Text(stringResource(R.string.braden_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = strings.bradenBack)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.braden_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -86,9 +86,9 @@ fun BradenScreen(
                 Snackbar(
                     modifier = Modifier.padding(16.dp),
                     action = {
-                        TextButton(onClick = { showSnackbar = false }) { Text(strings.bradenOk) }
+                        TextButton(onClick = { showSnackbar = false }) { Text(stringResource(R.string.braden_ok)) }
                     }
-                ) { Text(strings.bradenCopiedSnackbar) }
+                ) { Text(stringResource(R.string.braden_copied_snackbar)) }
             }
         }
     ) { padding ->
@@ -110,7 +110,7 @@ fun BradenScreen(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "$totalScore ${strings.bradenPoints}",
+                        text = "$totalScore ${stringResource(R.string.braden_points)}",
                         style = MaterialTheme.typography.displayMedium,
                         fontWeight = FontWeight.Bold,
                         color = colorRisk
@@ -125,38 +125,38 @@ fun BradenScreen(
 
             // Categorías
             BradenCategory(
-                title = strings.bradenSensory,
-                options = listOf(strings.bradenSensory1, strings.bradenSensory2, strings.bradenSensory3, strings.bradenSensory4),
+                title = stringResource(R.string.braden_sensory),
+                options = listOf(stringResource(R.string.braden_sensory1), stringResource(R.string.braden_sensory2), stringResource(R.string.braden_sensory3), stringResource(R.string.braden_sensory4)),
                 selectedValue = percepcion,
                 onSelected = { percepcion = it }
             )
             BradenCategory(
-                title = strings.bradenMoisture,
-                options = listOf(strings.bradenMoisture1, strings.bradenMoisture2, strings.bradenMoisture3, strings.bradenMoisture4),
+                title = stringResource(R.string.braden_moisture),
+                options = listOf(stringResource(R.string.braden_moisture1), stringResource(R.string.braden_moisture2), stringResource(R.string.braden_moisture3), stringResource(R.string.braden_moisture4)),
                 selectedValue = humedad,
                 onSelected = { humedad = it }
             )
             BradenCategory(
-                title = strings.bradenActivity,
-                options = listOf(strings.bradenActivity1, strings.bradenActivity2, strings.bradenActivity3, strings.bradenActivity4),
+                title = stringResource(R.string.braden_activity),
+                options = listOf(stringResource(R.string.braden_activity1), stringResource(R.string.braden_activity2), stringResource(R.string.braden_activity3), stringResource(R.string.braden_activity4)),
                 selectedValue = actividad,
                 onSelected = { actividad = it }
             )
             BradenCategory(
-                title = strings.bradenMobility,
-                options = listOf(strings.bradenMobility1, strings.bradenMobility2, strings.bradenMobility3, strings.bradenMobility4),
+                title = stringResource(R.string.braden_mobility),
+                options = listOf(stringResource(R.string.braden_mobility1), stringResource(R.string.braden_mobility2), stringResource(R.string.braden_mobility3), stringResource(R.string.braden_mobility4)),
                 selectedValue = movilidad,
                 onSelected = { movilidad = it }
             )
             BradenCategory(
-                title = strings.bradenNutrition,
-                options = listOf(strings.bradenNutrition1, strings.bradenNutrition2, strings.bradenNutrition3, strings.bradenNutrition4),
+                title = stringResource(R.string.braden_nutrition),
+                options = listOf(stringResource(R.string.braden_nutrition1), stringResource(R.string.braden_nutrition2), stringResource(R.string.braden_nutrition3), stringResource(R.string.braden_nutrition4)),
                 selectedValue = nutricion,
                 onSelected = { nutricion = it }
             )
             BradenCategory(
-                title = strings.bradenFriction,
-                options = listOf(strings.bradenFriction1, strings.bradenFriction2, strings.bradenFriction3),
+                title = stringResource(R.string.braden_friction),
+                options = listOf(stringResource(R.string.braden_friction1), stringResource(R.string.braden_friction2), stringResource(R.string.braden_friction3)),
                 selectedValue = roce,
                 onSelected = { roce = it }
             )
@@ -168,7 +168,7 @@ fun BradenScreen(
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(
-                        text = strings.bradenSuggestedPlan,
+                        text = stringResource(R.string.braden_suggested_plan),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -180,11 +180,14 @@ fun BradenScreen(
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Spacer(modifier = Modifier.height(16.dp))
+                    val repBradenTitle = stringResource(R.string.rep_braden_title)
+                    val repBradenScoreFormat = stringResource(R.string.rep_braden_score_format)
+                    val bradenSuggestedPlan = stringResource(R.string.braden_suggested_plan)
                     Button(
                         onClick = {
-                            val text = "${strings.repBradenTitle}\n" +
-                                       "${String.format(strings.repBradenScoreFormat, totalScore, riskLevel)}\n\n" +
-                                       "${strings.bradenSuggestedPlan}\n$recommendations"
+                            val text = "$repBradenTitle\n" +
+                                       "${String.format(repBradenScoreFormat, totalScore, riskLevel)}\n\n" +
+                                       "$bradenSuggestedPlan\n$recommendations"
                             coroutineScope.launch {
                                 clipboard?.setText(AnnotatedString(text))
                                 showSnackbar = true
@@ -197,7 +200,7 @@ fun BradenScreen(
                     ) {
                         Icon(Icons.Default.ContentCopy, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(strings.bradenCopyClipboard)
+                        Text(stringResource(R.string.braden_copy_clipboard))
                     }
                 }
             }

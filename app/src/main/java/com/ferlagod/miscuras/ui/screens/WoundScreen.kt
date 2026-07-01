@@ -57,7 +57,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.MenuBook
-import com.ferlagod.miscuras.ui.AppStrings
+import com.ferlagod.miscuras.ui.ClinicalTermMapper
 import com.ferlagod.miscuras.ui.screens.GlossaryScreen
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -92,6 +92,7 @@ import androidx.core.content.FileProvider
 import java.io.FileOutputStream
 import java.io.InputStream
 import com.ferlagod.miscuras.R
+import androidx.compose.ui.res.stringResource
 
 // ============================================================
 // PANTALLA PRINCIPAL — Router entre Selección y Resultados
@@ -117,12 +118,8 @@ fun WoundScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showSettings by remember { mutableStateOf(false) }
     val context = LocalContext.current
-
-    val strings = AppStrings.getStrings(uiState.currentLanguage)
-
-    if (!uiState.showSplash && !uiState.hasSeenDisclaimer) {
+        if (!uiState.showSplash && !uiState.hasSeenDisclaimer) {
         DisclaimerDialog(
-            strings = strings,
             onAccept = { viewModel.acceptDisclaimer() }
         )
     }
@@ -165,11 +162,10 @@ fun WoundScreen(
         label = "screen_transition"
     ) { screenState ->
         when (screenState) {
-            ScreenState.Splash -> SplashContent(strings = strings)
+            ScreenState.Splash -> SplashContent()
             ScreenState.Selection -> {
                 SelectionContent(
                     uiState = uiState,
-                    strings = strings,
                     onEtiologyChanged = { viewModel.onEtiologyChanged(it) },
                     onLechoChanged = { viewModel.onLechoChanged(it) },
                     onExudadoChanged = { viewModel.onExudadoChanged(it) },
@@ -197,7 +193,6 @@ fun WoundScreen(
             ScreenState.Results -> {
                 ResultsContent(
                     uiState = uiState,
-                    strings = strings,
                     onPreviousStep = { viewModel.previousStep() },
                     onStartOver = { 
                         viewModel.resetWizard()
@@ -207,7 +202,7 @@ fun WoundScreen(
                         { viewModel.saveEvaluation(woundIdForSave) }
                     } else null,
                     onSuggestProductClick = { viewModel.setAddProductDialogVisibility(true) },
-                    onCopyProductSummary = { productoNombre -> viewModel.generarResumenEvolutivo(productoNombre, strings) },
+                    onCopyProductSummary = { productoNombre -> viewModel.generarResumenEvolutivo(productoNombre, context) },
                     onToggleProductSelection = { codigoCn -> viewModel.toggleProductSelection(codigoCn) },
                     onPhotoPathChanged = { viewModel.setPhotoPath(it) },
                     context = context
@@ -223,12 +218,10 @@ fun WoundScreen(
                 com.ferlagod.miscuras.ui.screens.BradenScreen(
                     onBackClick = { viewModel.hideBraden() },
                     onScoreCalculated = { score -> viewModel.onBradenScoreUpdated(score) },
-                    strings = strings
-                )
+                    )
             }
             ScreenState.ArMeasure -> {
                 com.ferlagod.miscuras.ui.screens.ARMeasureScreen(
-                    strings = strings,
                     onBackClick = { viewModel.hideArMeasure() },
                     onMeasured = { length, width -> viewModel.onArMeasured(length, width) }
                 )
@@ -239,7 +232,6 @@ fun WoundScreen(
 
     if (uiState.showAddProductDialog) {
         SuggestProductDialog(
-            strings = strings,
             isSubmitting = uiState.isFormSubmitting,
             onDismiss = { viewModel.setAddProductDialogVisibility(false) },
             onSubmit = { name, isHealthPro, isLab, product, bed, exudate, other ->
@@ -251,8 +243,8 @@ fun WoundScreen(
                     woundBed = bed,
                     exudateLevel = exudate,
                     otherSuggestions = other,
-                    strings = strings
-                )
+                    context = context
+                    )
             }
         )
     }
@@ -260,11 +252,11 @@ fun WoundScreen(
     if (uiState.formResultMsg != null) {
         AlertDialog(
             onDismissRequest = { viewModel.clearFormResultMsg() },
-            title = { Text(strings.resultsTitle) },
+            title = { Text(stringResource(R.string.results_title)) },
             text = { Text(uiState.formResultMsg ?: "") },
             confirmButton = {
                 TextButton(onClick = { viewModel.clearFormResultMsg() }) {
-                    Text(strings.closeButton)
+                    Text(stringResource(R.string.close_button))
                 }
             }
         )
@@ -278,8 +270,9 @@ fun WoundScreen(
  * @param strings Textos localizados para el título y subtítulo.
  */
 @Composable
-private fun SplashContent(strings: AppStrings) {
-    var startAnimation by remember { mutableStateOf(false) }
+private fun SplashContent() {
+    val context = LocalContext.current
+        var startAnimation by remember { mutableStateOf(false) }
     val alphaAnim by animateFloatAsState(
         targetValue = if (startAnimation) 1f else 0f,
         animationSpec = tween(durationMillis = 1000),
@@ -319,7 +312,7 @@ private fun SplashContent(strings: AppStrings) {
             )
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = strings.appName,
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineLarge.copy(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -327,7 +320,7 @@ private fun SplashContent(strings: AppStrings) {
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = strings.splashSubtitle,
+                text = stringResource(R.string.splash_subtitle),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -358,7 +351,6 @@ private fun SplashContent(strings: AppStrings) {
 @Composable
 private fun SelectionContent(
     uiState: WoundUiState,
-    strings: AppStrings,
     onEtiologyChanged: (String) -> Unit,
     onLechoChanged: (String) -> Unit,
     onExudadoChanged: (String) -> Unit,
@@ -409,7 +401,7 @@ private fun SelectionContent(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = strings.selectionHeaderTitle,
+                                text = stringResource(R.string.selection_header_title),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
@@ -441,7 +433,7 @@ private fun SelectionContent(
                         IconButton(onClick = onSettingsClick) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
-                                contentDescription = strings.settingsTitle
+                                contentDescription = stringResource(R.string.settings_title)
                             )
                         }
                     },
@@ -481,8 +473,8 @@ private fun SelectionContent(
                 when (step) {
                     com.ferlagod.miscuras.ui.WizardStep.ETIOLOGY -> {
                         item {
-                val currentEtiologyTrans = AppStrings.translateClinicalTerm(uiState.selectedEtiology, uiState.currentLanguage)
-                val optionsEtiologyTrans = WoundViewModel.opcionesEtiologia.map { AppStrings.translateClinicalTerm(it, uiState.currentLanguage) }.sorted()
+                val currentEtiologyTrans = ClinicalTermMapper.translateClinicalTerm(uiState.selectedEtiology, context)
+                val optionsEtiologyTrans = WoundViewModel.opcionesEtiologia.map { ClinicalTermMapper.translateClinicalTerm(it, context) }.sorted()
                 
                 Card(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
@@ -492,14 +484,14 @@ private fun SelectionContent(
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Text(
-                            text = strings.welcomeTitle,
+                            text = stringResource(R.string.welcome_title),
                             style = MaterialTheme.typography.titleLarge,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
                             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = strings.welcomeDesc,
+                            text = stringResource(R.string.welcome_desc),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
@@ -507,25 +499,25 @@ private fun SelectionContent(
                 }
                 
                 ChipGroupCard(
-                    label = strings.etiologyLabel,
-                    description = strings.etiologyDesc,
+                    label = stringResource(R.string.etiology_label),
+                    description = stringResource(R.string.etiology_desc),
                     selectedOption = currentEtiologyTrans,
                     options = optionsEtiologyTrans,
                     onOptionSelected = { 
-                        onEtiologyChanged(AppStrings.mapToDbTerm(it))
+                        onEtiologyChanged(ClinicalTermMapper.mapToDbTerm(it, context))
                     },
                     chipType = "etiology"
                 )
             }
                         item {
-                val currentLechoTrans = AppStrings.translateClinicalTerm(uiState.selectedLecho, uiState.currentLanguage)
-                val optionsLechoTrans = WoundViewModel.opcionesLecho.map { AppStrings.translateClinicalTerm(it, uiState.currentLanguage) }
+                val currentLechoTrans = ClinicalTermMapper.translateClinicalTerm(uiState.selectedLecho, context)
+                val optionsLechoTrans = WoundViewModel.opcionesLecho.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
                 ChipGroupCard(
-                    label = strings.bedStateLabel,
-                    description = strings.bedStateDesc,
+                    label = stringResource(R.string.bed_state_label),
+                    description = stringResource(R.string.bed_state_desc),
                     selectedOption = currentLechoTrans,
                     options = optionsLechoTrans,
-                    onOptionSelected = { onLechoChanged(AppStrings.mapToDbTerm(it)) },
+                    onOptionSelected = { onLechoChanged(ClinicalTermMapper.mapToDbTerm(it, context)) },
                     chipType = "tissue"
                 )
             }
@@ -551,7 +543,7 @@ private fun SelectionContent(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = strings.searchButton,
+                                        text = stringResource(R.string.search_button),
                                         style = MaterialTheme.typography.labelLarge
                                     )
                                 } else {
@@ -563,14 +555,14 @@ private fun SelectionContent(
                     com.ferlagod.miscuras.ui.WizardStep.SIZE_AND_LOCATION -> {
                         item {
                     val locationOptionsTrans = listOf(
-                        strings.locationNone, 
-                        strings.locationHeel, 
-                        strings.locationSacrum
+                        stringResource(R.string.location_none), 
+                        context.getString(R.string.location_heel), 
+                        context.getString(R.string.location_sacrum)
                     )
                     val currentLocationTrans = when (uiState.specialLocation) {
-                        "Talón" -> strings.locationHeel
-                        "Sacro" -> strings.locationSacrum
-                        else -> strings.locationNone
+                        "Talón" -> context.getString(R.string.location_heel)
+                        "Sacro" -> context.getString(R.string.location_sacrum)
+                        else -> stringResource(R.string.location_none)
                     }
                     
                     SizeInputCard(
@@ -588,13 +580,12 @@ private fun SelectionContent(
                         locationOptions = locationOptionsTrans,
                         onLocationChange = { transLoc ->
                             val dbLoc = when(transLoc) {
-                                strings.locationHeel -> "Talón"
-                                strings.locationSacrum -> "Sacro"
+                                context.getString(R.string.location_heel) -> "Talón"
+                                context.getString(R.string.location_sacrum) -> "Sacro"
                                 else -> "Ninguno"
                             }
                             onSpecialLocationChanged(dbLoc)
                         },
-                        strings = strings,
                         onArMeasureClick = {
                             val permission = android.Manifest.permission.CAMERA
                             val isGranted = androidx.core.content.ContextCompat.checkSelfPermission(context, permission) == android.content.pm.PackageManager.PERMISSION_GRANTED
@@ -618,27 +609,27 @@ private fun SelectionContent(
                     }
                     com.ferlagod.miscuras.ui.WizardStep.EXUDATE -> {
                         item {
-                val currentExudadoTrans = AppStrings.translateClinicalTerm(uiState.selectedExudado, uiState.currentLanguage)
-                val optionsExudadoTrans = WoundViewModel.opcionesExudado.map { AppStrings.translateClinicalTerm(it, uiState.currentLanguage) }
+                val currentExudadoTrans = ClinicalTermMapper.translateClinicalTerm(uiState.selectedExudado, context)
+                val optionsExudadoTrans = WoundViewModel.opcionesExudado.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
                 ChipGroupCard(
-                    label = strings.exudateLevelLabel,
-                    description = strings.exudateLevelDesc,
+                    label = stringResource(R.string.exudate_level_label),
+                    description = stringResource(R.string.exudate_level_desc),
                     selectedOption = currentExudadoTrans,
                     options = optionsExudadoTrans,
-                    onOptionSelected = { onExudadoChanged(AppStrings.mapToDbTerm(it)) },
+                    onOptionSelected = { onExudadoChanged(ClinicalTermMapper.mapToDbTerm(it, context)) },
                     
                     chipType = "exudate"
                 )
             }
                         item {
-                    val currentExuTypeTrans = AppStrings.translateClinicalTerm(uiState.selectedExudateType, uiState.currentLanguage)
-                    val optionsExuTypeTrans = WoundViewModel.opcionesTipoExudado.map { AppStrings.translateClinicalTerm(it, uiState.currentLanguage) }
+                    val currentExuTypeTrans = ClinicalTermMapper.translateClinicalTerm(uiState.selectedExudateType, context)
+                    val optionsExuTypeTrans = WoundViewModel.opcionesTipoExudado.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
                     ChipGroupCard(
-                        label = strings.exudateTypeLabel,
-                        description = strings.exudateTypeDesc,
+                        label = stringResource(R.string.exudate_type_label),
+                        description = stringResource(R.string.exudate_type_desc),
                         selectedOption = currentExuTypeTrans,
                         options = optionsExuTypeTrans,
-                        onOptionSelected = { onExudateTypeChanged(AppStrings.mapToDbTerm(it)) },
+                        onOptionSelected = { onExudateTypeChanged(ClinicalTermMapper.mapToDbTerm(it, context)) },
                         enabled = uiState.selectedExudado != "Nulo",
                         chipType = "exudate"
                     )
@@ -658,8 +649,8 @@ private fun SelectionContent(
                 val currentBordes = uiState.selectedBordes
                 val optionsBordes = WoundViewModel.opcionesBordes
                 ChipGroupCard(
-                    label = strings.edgesLabel,
-                    description = strings.edgesDesc,
+                    label = stringResource(R.string.edges_label),
+                    description = stringResource(R.string.edges_desc),
                     selectedOption = currentBordes,
                     options = optionsBordes,
                     onOptionSelected = { onBordesChanged(it) },
@@ -668,14 +659,14 @@ private fun SelectionContent(
                 )
             }
                         item {
-                val currentPeriTrans = AppStrings.translateClinicalTerm(uiState.selectedPerilesional, uiState.currentLanguage)
-                val optionsPeriTrans = WoundViewModel.opcionesPerilesional.map { AppStrings.translateClinicalTerm(it, uiState.currentLanguage) }
+                val currentPeriTrans = ClinicalTermMapper.translateClinicalTerm(uiState.selectedPerilesional, context)
+                val optionsPeriTrans = WoundViewModel.opcionesPerilesional.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
                 ChipGroupCard(
-                    label = strings.perilesionalLabel,
-                    description = strings.perilesionalDesc,
+                    label = stringResource(R.string.perilesional_label),
+                    description = stringResource(R.string.perilesional_desc),
                     selectedOption = currentPeriTrans,
                     options = optionsPeriTrans,
-                    onOptionSelected = { onPerilesionalChanged(AppStrings.mapToDbTerm(it)) },
+                    onOptionSelected = { onPerilesionalChanged(ClinicalTermMapper.mapToDbTerm(it, context)) },
                     
                     chipType = "edge"
                 )
@@ -695,13 +686,12 @@ private fun SelectionContent(
                 InfectionCard(
                     checked = uiState.selectedInfeccion,
                     onCheckedChange = onInfeccionChanged,
-                    strings = strings,
                     enabled = true
                 )
             }
                         item {
                     Text(
-                        text = strings.infectionDisclaimer,
+                        text = stringResource(R.string.infection_disclaimer),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -709,21 +699,21 @@ private fun SelectionContent(
                     Spacer(modifier = Modifier.height(12.dp))
                     
                     val germOptionsTrans = listOf(
-                        strings.germNone,
-                        strings.germPseudomonas,
-                        strings.germMRSA,
-                        strings.germCandida,
-                        strings.germAcinetobacter,
-                        strings.germBiofilm
+                        stringResource(R.string.germ_none),
+                        context.getString(R.string.germ_pseudomonas),
+                        context.getString(R.string.germ_mrsa),
+                        context.getString(R.string.germ_candida),
+                        context.getString(R.string.germ_acinetobacter),
+                        context.getString(R.string.germ_biofilm)
                     )
                     
                     val currentGermTrans = when(uiState.infectionGerm) {
-                        "Pseudomonas aeruginosa" -> strings.germPseudomonas
-                        "MRSA" -> strings.germMRSA
-                        "Candida albicans" -> strings.germCandida
-                        "Acinetobacter" -> strings.germAcinetobacter
-                        "Biofilm complejo" -> strings.germBiofilm
-                        else -> strings.germNone
+                        "Pseudomonas aeruginosa" -> context.getString(R.string.germ_pseudomonas)
+                        "MRSA" -> context.getString(R.string.germ_mrsa)
+                        "Candida albicans" -> context.getString(R.string.germ_candida)
+                        "Acinetobacter" -> context.getString(R.string.germ_acinetobacter)
+                        "Biofilm complejo" -> context.getString(R.string.germ_biofilm)
+                        else -> stringResource(R.string.germ_none)
                     }
                     
                     GermSelectorCard(
@@ -731,17 +721,16 @@ private fun SelectionContent(
                         germOptions = germOptionsTrans,
                         onGermChange = { transGerm ->
                             val dbGerm = when(transGerm) {
-                                strings.germPseudomonas -> "Pseudomonas aeruginosa"
-                                strings.germMRSA -> "MRSA"
-                                strings.germCandida -> "Candida albicans"
-                                strings.germAcinetobacter -> "Acinetobacter"
-                                strings.germBiofilm -> "Biofilm complejo"
+                                context.getString(R.string.germ_pseudomonas) -> "Pseudomonas aeruginosa"
+                                context.getString(R.string.germ_mrsa) -> "MRSA"
+                                context.getString(R.string.germ_candida) -> "Candida albicans"
+                                context.getString(R.string.germ_acinetobacter) -> "Acinetobacter"
+                                context.getString(R.string.germ_biofilm) -> "Biofilm complejo"
                                 else -> "Desconocido"
                             }
                             onInfectionGermChanged(dbGerm)
                         },
-                        strings = strings
-                    )
+                        )
                 }
                         item {
                 PainCard(
@@ -778,7 +767,7 @@ private fun SelectionContent(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = strings.searchButton,
+                            text = stringResource(R.string.search_button),
                             style = MaterialTheme.typography.labelLarge
                         )
                     }
@@ -960,7 +949,6 @@ private fun PainCard(
 private fun InfectionCard(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
-    strings: AppStrings,
     enabled: Boolean = true
 ) {
     Card(
@@ -1003,7 +991,7 @@ private fun InfectionCard(
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = strings.infectionLabel,
+                    text = stringResource(R.string.infection_label),
                     style = MaterialTheme.typography.titleMedium,
                     color = if (!enabled) {
                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
@@ -1014,7 +1002,7 @@ private fun InfectionCard(
                     }
                 )
                 Text(
-                    text = if (checked) strings.infectionDetected else strings.noInfection,
+                    text = if (checked) stringResource(R.string.infection_detected) else stringResource(R.string.no_infection),
                     style = MaterialTheme.typography.bodyMedium,
                     color = if (!enabled) {
                         MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
@@ -1054,7 +1042,6 @@ private fun InfectionCard(
 @Composable
 private fun ResultsContent(
     uiState: WoundUiState,
-    strings: AppStrings,
     onPreviousStep: () -> Unit,
     onStartOver: () -> Unit,
     onSaveEvaluation: (() -> Unit)?,
@@ -1159,7 +1146,7 @@ private fun ResultsContent(
             TopAppBar(
                 title = {
                     Text(
-                        text = strings.resultsTitle,
+                        text = stringResource(R.string.results_title),
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
@@ -1186,8 +1173,7 @@ private fun ResultsContent(
                 lecho = uiState.selectedLecho,
                 exudado = uiState.selectedExudado,
                 infeccion = uiState.selectedInfeccion,
-                strings = strings
-            )
+                )
         } else {
             // — Con resultados —
             LazyColumn(
@@ -1252,7 +1238,7 @@ private fun ResultsContent(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = String.format(java.util.Locale.US, strings.bradenPreventiveAlert, uiState.bradenScore.toString()),
+                                        text = String.format(java.util.Locale.US, stringResource(R.string.braden_preventive_alert), uiState.bradenScore.toString()),
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onErrorContainer
@@ -1274,8 +1260,7 @@ private fun ResultsContent(
                     AiResponseCard(
                         isLoading = uiState.isAiLoading,
                         response = uiState.aiResponse,
-                        strings = strings
-                    )
+                        )
                 }
 
                 // Resumen de la evaluación
@@ -1284,7 +1269,6 @@ private fun ResultsContent(
                         lecho = uiState.selectedLecho,
                         exudado = uiState.selectedExudado,
                         infeccion = uiState.selectedInfeccion,
-                        strings = strings,
                         lang = uiState.currentLanguage
                     )
                 }
@@ -1293,8 +1277,7 @@ private fun ResultsContent(
                 item {
                     RecommendedFamilyCard(
                         familia = uiState.familiaRecomendada ?: "",
-                        strings = strings
-                    )
+                        )
                 }
 
                 // Frecuencia de Cura
@@ -1311,7 +1294,7 @@ private fun ResultsContent(
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = strings.primaryDressingCategory,
+                        text = stringResource(R.string.primary_dressing_category),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -1362,7 +1345,6 @@ private fun ResultsContent(
                         items(productosDeFamilia) { producto ->
                             ProductCard(
                                 producto = producto,
-                                strings = strings,
                                 isSelected = uiState.selectedTreatmentProducts.contains(producto.nombreComercial),
                                 onClick = {
                                     selectedProduct = producto
@@ -1370,7 +1352,7 @@ private fun ResultsContent(
                                 onCopyClick = {
                                     val resumen = onCopyProductSummary(producto.nombreComercial)
                                     clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(resumen))
-                                    android.widget.Toast.makeText(context, strings.copySummaryToast, android.widget.Toast.LENGTH_SHORT).show()
+                                    android.widget.Toast.makeText(context, context.getString(R.string.copy_summary_toast), android.widget.Toast.LENGTH_SHORT).show()
                                 },
                                 onSelectClick = {
                                     onToggleProductSelection(producto.nombreComercial)
@@ -1383,7 +1365,7 @@ private fun ResultsContent(
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = strings.secondaryDressingCategory,
+                        text = stringResource(R.string.secondary_dressing_category),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.secondary
                     )
@@ -1434,7 +1416,6 @@ private fun ResultsContent(
                         items(productosDeFamilia) { producto ->
                             ProductCard(
                                 producto = producto,
-                                strings = strings,
                                 isSelected = uiState.selectedTreatmentProducts.contains(producto.nombreComercial),
                                 onClick = {
                                     selectedProduct = producto
@@ -1442,7 +1423,7 @@ private fun ResultsContent(
                                 onCopyClick = {
                                     val resumen = onCopyProductSummary(producto.nombreComercial)
                                     clipboardManager.setText(androidx.compose.ui.text.AnnotatedString(resumen))
-                                    android.widget.Toast.makeText(context, strings.copySummaryToast, android.widget.Toast.LENGTH_SHORT).show()
+                                    android.widget.Toast.makeText(context, context.getString(R.string.copy_summary_toast), android.widget.Toast.LENGTH_SHORT).show()
                                 },
                                 onSelectClick = {
                                     onToggleProductSelection(producto.nombreComercial)
@@ -1536,7 +1517,7 @@ private fun ResultsContent(
                         onClick = onSuggestProductClick,
                         modifier = Modifier.fillMaxWidth().height(50.dp)
                     ) {
-                        Text(strings.suggestProductButton)
+                        Text(stringResource(R.string.suggest_product_button))
                     }
                 }
                 
@@ -1571,7 +1552,6 @@ private fun ResultsContent(
     if (selectedProduct != null) {
         ProductDetailDialog(
             producto = selectedProduct!!,
-            strings = strings,
             onDismiss = { selectedProduct = null }
         )
     }
@@ -1586,9 +1566,9 @@ private fun EvaluationSummaryCard(
     lecho: String,
     exudado: String,
     infeccion: Boolean,
-    strings: AppStrings,
     lang: String
 ) {
+    val context = LocalContext.current
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -1599,7 +1579,7 @@ private fun EvaluationSummaryCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = strings.evaluationDone,
+                text = stringResource(R.string.evaluation_done),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1607,11 +1587,11 @@ private fun EvaluationSummaryCard(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                SummaryChip(label = AppStrings.translateClinicalTerm(lecho, lang))
-                SummaryChip(label = AppStrings.translateClinicalTerm(exudado, lang))
+                SummaryChip(label = ClinicalTermMapper.translateClinicalTerm(lecho, context))
+                SummaryChip(label = ClinicalTermMapper.translateClinicalTerm(exudado, context))
                 if (infeccion) {
                     SummaryChip(
-                        label = strings.infectionChip,
+                        label = stringResource(R.string.infection_chip),
                         isError = true
                     )
                 }
@@ -1649,7 +1629,7 @@ private fun SummaryChip(label: String, isError: Boolean = false) {
 // ============================================================
 
 @Composable
-private fun RecommendedFamilyCard(familia: String, strings: AppStrings) {
+private fun RecommendedFamilyCard(familia: String, ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -1681,7 +1661,7 @@ private fun RecommendedFamilyCard(familia: String, strings: AppStrings) {
             Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(
-                    text = if (familia.contains(" y ") || familia.contains(" and ") || familia.contains(" e ")) strings.recommendedFamilyPlural else strings.recommendedFamilySingular,
+                    text = if (familia.contains(" y ") || familia.contains(" and ") || familia.contains(" e ")) stringResource(R.string.recommended_family_plural) else stringResource(R.string.recommended_family_singular),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
@@ -1749,7 +1729,6 @@ private fun FrequencyCard(frequency: String) {
 @Composable
 private fun ProductCard(
     producto: ApositoEntity,
-    strings: AppStrings,
     isSelected: Boolean = false,
     onClick: () -> Unit,
     onCopyClick: () -> Unit,
@@ -1782,7 +1761,7 @@ private fun ProductCard(
                 tonalElevation = 1.dp
             ) {
                 val context = LocalContext.current
-                val imageResId: Int = remember(producto.imagenUrl) {
+        val imageResId: Int = remember(producto.imagenUrl) {
                     val id = context.resources.getIdentifier(producto.imagenUrl, "drawable", context.packageName)
                     if (id != 0) id else R.drawable.logo
                 }
@@ -1880,7 +1859,7 @@ private fun ProductCard(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text(strings.copySummaryButton)
+                    Text(stringResource(R.string.copy_summary_button))
                 }
             }
         }
@@ -1898,7 +1877,6 @@ private fun ProductCard(
 @Composable
 private fun ProductDetailDialog(
     producto: ApositoEntity,
-    strings: AppStrings,
     onDismiss: () -> Unit
 ) {
     Dialog(onDismissRequest = onDismiss) {
@@ -1927,7 +1905,7 @@ private fun ProductDetailDialog(
                     color = MaterialTheme.colorScheme.surfaceVariant
                 ) {
                     val context = LocalContext.current
-                    val imageResId: Int = remember(producto.imagenUrl) {
+        val imageResId: Int = remember(producto.imagenUrl) {
                         val id = context.resources.getIdentifier(producto.imagenUrl, "drawable", context.packageName)
                         if (id != 0) id else R.drawable.logo
                     }
@@ -1951,8 +1929,8 @@ private fun ProductDetailDialog(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = if (strings.languageLabel == "Idioma") "Fabricante: ${producto.fabricante}" 
-                               else if (strings.languageLabel == "Language") "Manufacturer: ${producto.fabricante}"
+                        text = if (stringResource(R.string.language_label) == "Idioma") "Fabricante: ${producto.fabricante}" 
+                               else if (stringResource(R.string.language_label) == "Language") "Manufacturer: ${producto.fabricante}"
                                else "Fabricante: ${producto.fabricante}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1993,9 +1971,9 @@ private fun ProductDetailDialog(
                         color = MaterialTheme.colorScheme.secondaryContainer
                     ) {
                         val usageTrans = when (producto.usoPrimarioSecundario) {
-                            "Primario" -> strings.primaryUseLabel
-                            "Secundario" -> strings.secondaryUseLabel
-                            else -> "${strings.primaryUseLabel} / ${strings.secondaryUseLabel}"
+                            "Primario" -> stringResource(R.string.primary_use_label)
+                            "Secundario" -> stringResource(R.string.secondary_use_label)
+                            else -> "${stringResource(R.string.primary_use_label)} / ${stringResource(R.string.secondary_use_label)}"
                         }
                         Text(
                             text = usageTrans,
@@ -2009,7 +1987,7 @@ private fun ProductDetailDialog(
                 // Descripción
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = strings.clinicalMechanism,
+                        text = stringResource(R.string.clinical_mechanism),
                         style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -2042,7 +2020,7 @@ private fun ProductDetailDialog(
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
-                            text = strings.precautionsTitle,
+                            text = stringResource(R.string.precautions_title),
                             style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )
@@ -2060,7 +2038,7 @@ private fun ProductDetailDialog(
                     modifier = Modifier.align(Alignment.End)
                 ) {
                     Text(
-                        text = strings.closeButton,
+                        text = stringResource(R.string.close_button),
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -2080,8 +2058,8 @@ private fun NoMatchContent(
     lecho: String,
     exudado: String,
     infeccion: Boolean,
-    strings: AppStrings
-) {
+    ) {
+    val context = LocalContext.current
     Column(
         modifier = modifier.padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -2103,29 +2081,29 @@ private fun NoMatchContent(
         }
         Spacer(modifier = Modifier.height(24.dp))
         Text(
-            text = strings.noMatchTitle,
+            text = stringResource(R.string.no_match_title),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onSurface
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = strings.noMatchSubtitle,
+            text = stringResource(R.string.no_match_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(12.dp))
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            val lang = if (strings.languageLabel == "Idioma") "es" else if (strings.languageLabel == "Language") "en" else "pt"
-            SummaryChip(label = AppStrings.translateClinicalTerm(lecho, lang))
-            SummaryChip(label = AppStrings.translateClinicalTerm(exudado, lang))
+            val lang = if (stringResource(R.string.language_label) == "Idioma") "es" else if (stringResource(R.string.language_label) == "Language") "en" else "pt"
+            SummaryChip(label = ClinicalTermMapper.translateClinicalTerm(lecho, context))
+            SummaryChip(label = ClinicalTermMapper.translateClinicalTerm(exudado, context))
             if (infeccion) {
-                SummaryChip(label = strings.infectionChip, isError = true)
+                SummaryChip(label = stringResource(R.string.infection_chip), isError = true)
             }
         }
         Spacer(modifier = Modifier.height(20.dp))
         Text(
-            text = strings.noMatchSubtitle2,
+            text = stringResource(R.string.no_match_subtitle2),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.outline,
             textAlign = TextAlign.Center
@@ -2141,7 +2119,7 @@ private fun NoMatchContent(
  * @param onAccept Acción a ejecutar cuando el usuario acepta el descargo.
  */
 @Composable
-private fun DisclaimerDialog(strings: AppStrings, onAccept: () -> Unit) {
+private fun DisclaimerDialog(onAccept: () -> Unit) {
     AlertDialog(
         onDismissRequest = { /* No dismiss by clicking outside */ },
         confirmButton = {
@@ -2154,7 +2132,7 @@ private fun DisclaimerDialog(strings: AppStrings, onAccept: () -> Unit) {
                 )
             ) {
                 Text(
-                    text = strings.acceptButton,
+                    text = stringResource(R.string.accept_button),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     modifier = Modifier.padding(vertical = 4.dp)
                 )
@@ -2170,7 +2148,7 @@ private fun DisclaimerDialog(strings: AppStrings, onAccept: () -> Unit) {
         },
         title = {
             Text(
-                text = strings.disclaimerTitle,
+                text = stringResource(R.string.disclaimer_title),
                 style = MaterialTheme.typography.headlineSmall.copy(
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
@@ -2187,7 +2165,7 @@ private fun DisclaimerDialog(strings: AppStrings, onAccept: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    text = strings.disclaimerText,
+                    text = stringResource(R.string.disclaimer_text),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -2220,8 +2198,7 @@ fun SettingsDialog(
     onDismiss: () -> Unit,
     onSuggestProductClick: () -> Unit
 ) {
-    val strings = AppStrings.getStrings(currentLanguage)
-    val uriHandler = LocalUriHandler.current
+        val uriHandler = LocalUriHandler.current
     var showDeveloperInfo by remember { mutableStateOf(false) }
 
     androidx.compose.material3.ModalBottomSheet(
@@ -2237,7 +2214,7 @@ fun SettingsDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = strings.settingsTitle,
+                    text = stringResource(R.string.settings_title),
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -2247,14 +2224,14 @@ fun SettingsDialog(
                 // --- TEMA ---
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = strings.themeLabel,
+                        text = stringResource(R.string.theme_label),
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        listOf("light" to strings.themeLight, "dark" to strings.themeDark, "system" to strings.themeSystem).forEach { (mode, label) ->
+                        listOf("light" to stringResource(R.string.theme_light), "dark" to stringResource(R.string.theme_dark), "system" to stringResource(R.string.theme_system)).forEach { (mode, label) ->
                             val selected = currentTheme == mode
                             FilterChip(
                                 selected = selected,
@@ -2271,14 +2248,14 @@ fun SettingsDialog(
                 // --- IDIOMA ---
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = strings.languageLabel,
+                        text = stringResource(R.string.language_label),
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        listOf("es" to strings.languageEs, "en" to strings.languageEn, "pt" to strings.languagePt).forEach { (lang, label) ->
+                        listOf("es" to stringResource(R.string.language_es), "en" to stringResource(R.string.language_en), "pt" to stringResource(R.string.language_pt)).forEach { (lang, label) ->
                             val selected = currentLanguage == lang
                             FilterChip(
                                 selected = selected,
@@ -2295,11 +2272,11 @@ fun SettingsDialog(
                 // --- SUGERENCIAS ---
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = strings.settingsSuggestTitle,
+                        text = stringResource(R.string.settings_suggest_title),
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     Text(
-                        text = strings.settingsSuggestDesc,
+                        text = stringResource(R.string.settings_suggest_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -2313,7 +2290,7 @@ fun SettingsDialog(
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text(strings.suggestProductButton)
+                        Text(stringResource(R.string.suggest_product_button))
                     }
                 }
 
@@ -2326,7 +2303,7 @@ fun SettingsDialog(
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = strings.appVersionLabel,
+                            text = stringResource(R.string.app_version_label),
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                         )
                         Text(
@@ -2350,17 +2327,17 @@ fun SettingsDialog(
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text(strings.developerLabel)
+                        Text(stringResource(R.string.developer_label))
                     }
 
                     if (showDeveloperInfo) {
-                        DeveloperInfoDialog(strings = strings, onDismiss = { showDeveloperInfo = false })
+                        DeveloperInfoDialog(onDismiss = { showDeveloperInfo = false })
                     }
 
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = strings.donationsLabel,
+                        text = stringResource(R.string.donations_label),
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     Button(
@@ -2372,13 +2349,13 @@ fun SettingsDialog(
                         ),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text(strings.donationButtonText)
+                        Text(stringResource(R.string.donation_button_text))
                     }
 
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = strings.sourceCodeLabel,
+                        text = stringResource(R.string.source_code_label),
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     OutlinedButton(
@@ -2411,7 +2388,7 @@ fun SettingsDialog(
                     modifier = Modifier.align(Alignment.End)
                 ) {
                     Text(
-                        text = strings.closeButton,
+                        text = stringResource(R.string.close_button),
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -2426,7 +2403,6 @@ fun SettingsDialog(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SuggestProductDialog(
-    strings: AppStrings,
     isSubmitting: Boolean,
     onDismiss: () -> Unit,
     onSubmit: (String, Boolean, Boolean, String, String, String, String) -> Unit
@@ -2452,7 +2428,7 @@ private fun SuggestProductDialog(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    text = strings.suggestProductDialogTitle,
+                    text = stringResource(R.string.suggest_product_dialog_title),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -2460,7 +2436,7 @@ private fun SuggestProductDialog(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text(strings.nameFieldLabel) },
+                    label = { Text(stringResource(R.string.name_field_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -2470,7 +2446,7 @@ private fun SuggestProductDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Checkbox(checked = isHealthPro, onCheckedChange = { isHealthPro = it })
-                    Text(strings.isHealthProLabel, style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.is_health_pro_label), style = MaterialTheme.typography.bodyMedium)
                 }
 
                 Row(
@@ -2478,13 +2454,13 @@ private fun SuggestProductDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Checkbox(checked = isLab, onCheckedChange = { isLab = it })
-                    Text(strings.isLabLabel, style = MaterialTheme.typography.bodyMedium)
+                    Text(stringResource(R.string.is_lab_label), style = MaterialTheme.typography.bodyMedium)
                 }
 
                 OutlinedTextField(
                     value = productName,
                     onValueChange = { productName = it },
-                    label = { Text(strings.productNameLabel) },
+                    label = { Text(stringResource(R.string.product_name_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -2492,7 +2468,7 @@ private fun SuggestProductDialog(
                 OutlinedTextField(
                     value = woundBed,
                     onValueChange = { woundBed = it },
-                    label = { Text(strings.productBedLabel) },
+                    label = { Text(stringResource(R.string.product_bed_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -2500,7 +2476,7 @@ private fun SuggestProductDialog(
                 OutlinedTextField(
                     value = exudateLevel,
                     onValueChange = { exudateLevel = it },
-                    label = { Text(strings.productExudateLabel) },
+                    label = { Text(stringResource(R.string.product_exudate_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true
                 )
@@ -2508,7 +2484,7 @@ private fun SuggestProductDialog(
                 OutlinedTextField(
                     value = otherSuggestions,
                     onValueChange = { otherSuggestions = it },
-                    label = { Text(strings.otherSuggestionsLabel) },
+                    label = { Text(stringResource(R.string.other_suggestions_label)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = false,
                     maxLines = 3
@@ -2522,7 +2498,7 @@ private fun SuggestProductDialog(
                         onClick = onDismiss,
                         enabled = !isSubmitting
                     ) {
-                        Text(strings.cancelButton)
+                        Text(stringResource(R.string.cancel_button))
                     }
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
@@ -2538,9 +2514,9 @@ private fun SuggestProductDialog(
                                 color = MaterialTheme.colorScheme.onPrimary
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(strings.formSendingMsg)
+                            Text(stringResource(R.string.form_sending_msg))
                         } else {
-                            Text(strings.sendButton)
+                            Text(stringResource(R.string.send_button))
                         }
                     }
                 }
@@ -2569,7 +2545,6 @@ private fun SizeInputCard(
     locationSelected: String,
     locationOptions: List<String>,
     onLocationChange: (String) -> Unit,
-    strings: AppStrings,
     onArMeasureClick: () -> Unit
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
@@ -2595,12 +2570,12 @@ private fun SizeInputCard(
             ) {
                 Column {
                     Text(
-                        text = strings.woundSizeLabel,
+                        text = stringResource(R.string.wound_size_label),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = strings.woundSizeDesc,
+                        text = stringResource(R.string.wound_size_desc),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -2618,7 +2593,7 @@ private fun SizeInputCard(
                     onValueChange = { 
                         if (it.isEmpty() || it.matches(Regex("^\\d*[,.]?\\d*\$"))) onLengthChange(it) 
                     },
-                    label = { Text(strings.woundLengthLabel) },
+                    label = { Text(stringResource(R.string.wound_length_label)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -2635,7 +2610,7 @@ private fun SizeInputCard(
                     onValueChange = { 
                         if (it.isEmpty() || it.matches(Regex("^\\d*[,.]?\\d*\$"))) onWidthChange(it) 
                     },
-                    label = { Text(strings.woundWidthLabel) },
+                    label = { Text(stringResource(R.string.wound_width_label)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -2652,7 +2627,7 @@ private fun SizeInputCard(
                     onValueChange = { 
                         if (it.isEmpty() || it.matches(Regex("^\\d*[,.]?\\d*\$"))) onDepthChange(it) 
                     },
-                    label = { Text(strings.woundDepthLabel) },
+                    label = { Text(stringResource(R.string.wound_depth_label)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.weight(1f),
                     colors = OutlinedTextFieldDefaults.colors(
@@ -2688,12 +2663,12 @@ private fun SizeInputCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = strings.cavitationLabel,
+                        text = stringResource(R.string.cavitation_label),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = strings.cavitationDesc,
+                        text = stringResource(R.string.cavitation_desc),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -2714,7 +2689,7 @@ private fun SizeInputCard(
                     OutlinedTextField(
                         value = cavitationDetails,
                         onValueChange = onCavitationDetailsChange,
-                        label = { Text(strings.cavitationDetailsLabel) },
+                        label = { Text(stringResource(R.string.cavitation_details_label)) },
                         modifier = Modifier.fillMaxWidth(),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -2730,12 +2705,12 @@ private fun SizeInputCard(
             Spacer(modifier = Modifier.height(16.dp))
             
             Text(
-                text = strings.specialLocationLabel,
+                text = stringResource(R.string.special_location_label),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
             Text(
-                text = strings.specialLocationDesc,
+                text = stringResource(R.string.special_location_desc),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -2807,8 +2782,7 @@ private fun GermSelectorCard(
     germSelected: String,
     germOptions: List<String>,
     onGermChange: (String) -> Unit,
-    strings: AppStrings
-) {
+    ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -2819,12 +2793,12 @@ private fun GermSelectorCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = strings.germLabel,
+                text = stringResource(R.string.germ_label),
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onErrorContainer
             )
             Text(
-                text = strings.germDesc,
+                text = stringResource(R.string.germ_desc),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
             )
@@ -2935,7 +2909,7 @@ private fun SafetyAlertsCard(alerts: List<String>) {
 }
 
 @Composable
-private fun AiResponseCard(isLoading: Boolean, response: String?, strings: AppStrings) {
+private fun AiResponseCard(isLoading: Boolean, response: String?, ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
@@ -2962,7 +2936,7 @@ private fun AiResponseCard(isLoading: Boolean, response: String?, strings: AppSt
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = strings.aiAssistantTitle,
+                    text = stringResource(R.string.ai_assistant_title),
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
@@ -2980,7 +2954,7 @@ private fun AiResponseCard(isLoading: Boolean, response: String?, strings: AppSt
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = parseSimpleMarkdown(response ?: strings.aiResponseError),
+                        text = parseSimpleMarkdown(response ?: stringResource(R.string.ai_response_error)),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                         textAlign = TextAlign.Start,
@@ -3020,15 +2994,15 @@ private fun parseSimpleMarkdown(text: String): androidx.compose.ui.text.Annotate
 }
 
 @Composable
-fun DeveloperInfoDialog(strings: AppStrings, onDismiss: () -> Unit) {
+fun DeveloperInfoDialog(onDismiss: () -> Unit) {
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             androidx.compose.material3.TextButton(onClick = onDismiss) {
-                Text(strings.closeButton)
+                Text(stringResource(R.string.close_button))
             }
         },
-        title = { Text(strings.developerLabel) },
+        title = { Text(stringResource(R.string.developer_label)) },
         text = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
