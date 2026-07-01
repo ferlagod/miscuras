@@ -1,9 +1,8 @@
 package com.ferlagod.miscuras.ui.viewmodels
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.ferlagod.miscuras.data.database.AppDatabase
+import com.ferlagod.miscuras.data.dao.PatientDao
 import com.ferlagod.miscuras.data.entities.EvaluationEntity
 import com.ferlagod.miscuras.data.entities.PatientEntity
 import com.ferlagod.miscuras.data.entities.WoundEntity
@@ -15,8 +14,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-class PatientViewModel(application: Application) : AndroidViewModel(application) {
-    private val patientDao = AppDatabase.getDatabase(application).patientDao()
+class PatientViewModel(private val patientDao: PatientDao) : ViewModel() {
 
     private val _patients = MutableStateFlow<List<PatientEntity>>(emptyList())
     val patients: StateFlow<List<PatientEntity>> = _patients.asStateFlow()

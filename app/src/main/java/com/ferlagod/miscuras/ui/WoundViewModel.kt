@@ -9,9 +9,12 @@
  */
 package com.ferlagod.miscuras.ui
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
+import android.content.SharedPreferences
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ferlagod.miscuras.data.dao.PatientDao
+import com.ferlagod.miscuras.domain.usecase.EvaluateWoundUseCase
+import com.ferlagod.miscuras.data.repository.FeedbackRepository
 import com.ferlagod.miscuras.data.database.AppDatabase
 import com.ferlagod.miscuras.data.entities.ApositoEntity
 import com.ferlagod.miscuras.data.entities.EvaluationEntity
@@ -88,14 +91,12 @@ data class WoundUiState(
  * Gestiona el estado de la UI ([WoundUiState]), procesa la lógica de negocio, reglas clínicas y obtiene recomendaciones desde el repositorio.
  */
 class WoundViewModel(
-    application: Application,
+    private val patientDao: PatientDao,
+    private val sharedPrefs: SharedPreferences,
     private val repository: ApositosRepository,
-    private val evaluateWoundUseCase: com.ferlagod.miscuras.domain.usecase.EvaluateWoundUseCase,
-    private val feedbackRepository: com.ferlagod.miscuras.data.repository.FeedbackRepository
-) : AndroidViewModel(application) {
-
-    private val patientDao = AppDatabase.getDatabase(application).patientDao()
-    private val sharedPrefs = application.getSharedPreferences("prefs", android.content.Context.MODE_PRIVATE)
+    private val evaluateWoundUseCase: EvaluateWoundUseCase,
+    private val feedbackRepository: FeedbackRepository
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(WoundUiState())
     val uiState: StateFlow<WoundUiState> = _uiState.asStateFlow()

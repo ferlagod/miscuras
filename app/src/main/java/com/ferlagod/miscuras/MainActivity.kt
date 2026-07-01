@@ -51,6 +51,8 @@ import com.ferlagod.miscuras.ui.screens.PatientDetailScreen
 import com.ferlagod.miscuras.ui.screens.WoundDetailScreen
 import com.ferlagod.miscuras.ui.viewmodels.PatientViewModel
 
+import org.koin.androidx.compose.koinViewModel
+
 /**
  * Actividad principal y punto de entrada de la aplicación.
  * Configura la base de datos de Room en su primera ejecución y establece 
@@ -63,45 +65,11 @@ class MainActivity : AppCompatActivity() {
         // Diseño inmersivo (edge-to-edge)
         enableEdgeToEdge()
 
-        // 1. Instanciar la base de datos (La despensa)
-        val database = AppDatabase.getDatabase(this)
-        val repository = ApositosRepository(
-            apositoDao = database.apositoDao(),
-            aiCacheDao = database.aiCacheDao()
-        )
-
-        // 2. Instanciar dependencias adicionales
-        val rulesEngine = com.ferlagod.miscuras.domain.rules.RulesEngine()
-        val evaluateWoundUseCase = com.ferlagod.miscuras.domain.usecase.EvaluateWoundUseCase(repository, rulesEngine)
-        val feedbackRepository = com.ferlagod.miscuras.data.repository.FeedbackRepository(com.ferlagod.miscuras.network.NetworkClient.formSubmitApi)
-
-        // 3. Crear un "Factory" para el ViewModel
-        val factory = object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                @Suppress("UNCHECKED_CAST")
-                return WoundViewModel(
-                    application = application,
-                    repository = repository,
-                    evaluateWoundUseCase = evaluateWoundUseCase,
-                    feedbackRepository = feedbackRepository
-                ) as T
-            }
-        }
-
-        // 4. Obtener el ViewModel
-        val viewModel: WoundViewModel by viewModels { factory }
-
-        // ViewModel de Pacientes
-        val patientFactory = object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                @Suppress("UNCHECKED_CAST")
-                return PatientViewModel(application) as T
-            }
-        }
-        val patientViewModel: PatientViewModel by viewModels { patientFactory }
-
         // 5. Dibujar la pantalla con Navegación
         setContent {
+            val viewModel: WoundViewModel = koinViewModel()
+            val patientViewModel: PatientViewModel = koinViewModel()
+            
             val isDarkTheme = when (viewModel.uiState.collectAsState().value.currentTheme) {
                 "light" -> false
                 "dark" -> true

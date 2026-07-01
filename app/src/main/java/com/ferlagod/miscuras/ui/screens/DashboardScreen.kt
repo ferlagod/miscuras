@@ -45,8 +45,7 @@ fun DashboardScreen(
     var showAddDialog by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-    val prefs = context.getSharedPreferences("prefs", android.content.Context.MODE_PRIVATE)
-    val lang = prefs.getString("language", "es") ?: "es"
+    val lang = uiState.currentLanguage
         val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     Scaffold(

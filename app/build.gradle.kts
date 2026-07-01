@@ -122,4 +122,8 @@ dependencies {
     val vicoVersion = "1.15.0"
     implementation("com.patrykandpatrick.vico:compose-m3:$vicoVersion")
     implementation("com.patrykandpatrick.vico:core:$vicoVersion")
+
+    // Koin
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
 }

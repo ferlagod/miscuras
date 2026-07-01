@@ -6,7 +6,8 @@
     <uses-feature android:name="android.hardware.camera.ar" android:required="false" />
 
     <application
-        android:allowBackup="false"
+        android:name=".MisCurasApplication"
+        android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:extractNativeLibs="false"
         android:fullBackupContent="@xml/backup_rules"
