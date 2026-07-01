@@ -70,7 +70,7 @@ class MainActivity : AppCompatActivity() {
             val viewModel: WoundViewModel = koinViewModel()
             val patientViewModel: PatientViewModel = koinViewModel()
             
-            val isDarkTheme = when (viewModel.uiState.collectAsState().value.currentTheme) {
+            val isDarkTheme = when (viewModel.configState.collectAsState().value.currentTheme) {
                 "light" -> false
                 "dark" -> true
                 else -> androidx.compose.foundation.isSystemInDarkTheme()
@@ -126,11 +126,11 @@ class MainActivity : AppCompatActivity() {
                         composable("wound_eval/{woundId}") { backStackEntry ->
                             val woundId = backStackEntry.arguments?.getString("woundId")?.toLongOrNull() ?: -1L
                             
-                            val uiState by viewModel.uiState.collectAsState()
+                            val evaluationState by viewModel.evaluationState.collectAsState()
                             
                             // Si se ha guardado, volver a la pantalla anterior
-                            LaunchedEffect(uiState.isSaved) {
-                                if (uiState.isSaved) {
+                            LaunchedEffect(evaluationState.isSaved) {
+                                if (evaluationState.isSaved) {
                                     navController.popBackStack()
                                     viewModel.resetSavedState()
                                 }

@@ -40,12 +40,12 @@ fun DashboardScreen(
     onNavigateToWoundEval: () -> Unit
 ) {
     val patients by patientViewModel.patients.collectAsState()
-    val uiState by woundViewModel.uiState.collectAsStateWithLifecycle()
+    val configState by woundViewModel.configState.collectAsStateWithLifecycle()
     var showSettings by remember { mutableStateOf(false) }
     var showAddDialog by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-    val lang = uiState.currentLanguage
+    val lang = configState.currentLanguage
         val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     Scaffold(
@@ -156,7 +156,7 @@ fun DashboardScreen(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Valoración directa sin paciente",
+                            text = stringResource(R.string.quick_evaluation_desc),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                         )
@@ -236,7 +236,7 @@ fun DashboardScreen(
                                         style = MaterialTheme.typography.titleMedium
                                     )
                                     Text(
-                                        text = "Habitación: ${patient.roomNumber}", 
+                                        text = stringResource(R.string.patient_room, patient.roomNumber), 
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -303,9 +303,9 @@ fun DashboardScreen(
 
     if (showSettings) {
         SettingsDialog(
-            currentLanguage = uiState.currentLanguage,
+            currentLanguage = configState.currentLanguage,
             onLanguageChanged = { woundViewModel.changeLanguage(it) },
-            currentTheme = uiState.currentTheme,
+            currentTheme = configState.currentTheme,
             onThemeChanged = { woundViewModel.changeTheme(it) },
             onDismiss = { showSettings = false },
             onSuggestProductClick = { 

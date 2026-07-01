@@ -68,7 +68,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ferlagod.miscuras.data.entities.ApositoEntity
-import com.ferlagod.miscuras.ui.WoundUiState
+import com.ferlagod.miscuras.ui.WizardState
+import com.ferlagod.miscuras.ui.EvaluationState
+import com.ferlagod.miscuras.ui.ConfigState
 import com.ferlagod.miscuras.ui.WoundViewModel
 import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
@@ -115,10 +117,12 @@ fun WoundScreen(
     woundIdForSave: Long? = null,
     onBackToDashboard: () -> Unit = {}
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val wizardState by viewModel.wizardState.collectAsStateWithLifecycle()
+    val evaluationState by viewModel.evaluationState.collectAsStateWithLifecycle()
+    val configState by viewModel.configState.collectAsStateWithLifecycle()
     var showSettings by remember { mutableStateOf(false) }
     val context = LocalContext.current
-        if (!uiState.showSplash && !uiState.hasSeenDisclaimer) {
+        if (!configState.showSplash && !configState.hasSeenDisclaimer) {
         DisclaimerDialog(
             onAccept = { viewModel.acceptDisclaimer() }
         )
@@ -126,9 +130,9 @@ fun WoundScreen(
 
     if (showSettings) {
         SettingsDialog(
-            currentLanguage = uiState.currentLanguage,
+            currentLanguage = configState.currentLanguage,
             onLanguageChanged = { viewModel.changeLanguage(it) },
-            currentTheme = uiState.currentTheme,
+            currentTheme = configState.currentTheme,
             onThemeChanged = { viewModel.changeTheme(it) },
             onDismiss = { showSettings = false },
             onSuggestProductClick = { 
@@ -140,11 +144,11 @@ fun WoundScreen(
 
     AnimatedContent(
         targetState = when {
-            uiState.showSplash -> ScreenState.Splash
-            uiState.showBraden -> ScreenState.Braden
-            uiState.showGlossary -> ScreenState.Glossary
-            uiState.showArMeasure -> ScreenState.ArMeasure
-            uiState.showResults -> ScreenState.Results
+            configState.showSplash -> ScreenState.Splash
+            configState.showBraden -> ScreenState.Braden
+            configState.showGlossary -> ScreenState.Glossary
+            configState.showArMeasure -> ScreenState.ArMeasure
+            evaluationState.showResults -> ScreenState.Results
             else -> ScreenState.Selection
         },
         transitionSpec = {
@@ -165,7 +169,7 @@ fun WoundScreen(
             ScreenState.Splash -> SplashContent()
             ScreenState.Selection -> {
                 SelectionContent(
-                    uiState = uiState,
+                    wizardState = wizardState, evaluationState = evaluationState, configState = configState,
                     onEtiologyChanged = { viewModel.onEtiologyChanged(it) },
                     onLechoChanged = { viewModel.onLechoChanged(it) },
                     onExudadoChanged = { viewModel.onExudadoChanged(it) },
@@ -192,7 +196,7 @@ fun WoundScreen(
             }
             ScreenState.Results -> {
                 ResultsContent(
-                    uiState = uiState,
+                    wizardState = wizardState, evaluationState = evaluationState, configState = configState,
                     onPreviousStep = { viewModel.previousStep() },
                     onStartOver = { 
                         viewModel.resetWizard()
@@ -211,7 +215,7 @@ fun WoundScreen(
             ScreenState.Glossary -> {
                 GlossaryScreen(
                     onBackClick = { viewModel.hideGlossary() },
-                    currentLanguage = uiState.currentLanguage
+                    currentLanguage = configState.currentLanguage
                 )
             }
             ScreenState.Braden -> {
@@ -230,9 +234,9 @@ fun WoundScreen(
         }
     }
 
-    if (uiState.showAddProductDialog) {
+    if (configState.showAddProductDialog) {
         SuggestProductDialog(
-            isSubmitting = uiState.isFormSubmitting,
+            isSubmitting = configState.isFormSubmitting,
             onDismiss = { viewModel.setAddProductDialogVisibility(false) },
             onSubmit = { name, isHealthPro, isLab, product, bed, exudate, other ->
                 viewModel.submitProductSuggestion(
@@ -249,11 +253,11 @@ fun WoundScreen(
         )
     }
 
-    if (uiState.formResultMsg != null) {
+    if (configState.formResultMsg != null) {
         AlertDialog(
             onDismissRequest = { viewModel.clearFormResultMsg() },
             title = { Text(stringResource(R.string.results_title)) },
-            text = { Text(uiState.formResultMsg ?: "") },
+            text = { Text(configState.formResultMsg ?: "") },
             confirmButton = {
                 TextButton(onClick = { viewModel.clearFormResultMsg() }) {
                     Text(stringResource(R.string.close_button))
@@ -350,7 +354,7 @@ private fun SplashContent() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SelectionContent(
-    uiState: WoundUiState,
+    wizardState: WizardState, evaluationState: EvaluationState, configState: ConfigState,
     onEtiologyChanged: (String) -> Unit,
     onLechoChanged: (String) -> Unit,
     onExudadoChanged: (String) -> Unit,
@@ -408,7 +412,7 @@ private fun SelectionContent(
                         }
                     },
                     navigationIcon = {
-                        if (uiState.currentWizardStep != com.ferlagod.miscuras.ui.WizardStep.ETIOLOGY) {
+                        if (wizardState.currentWizardStep != com.ferlagod.miscuras.ui.WizardStep.ETIOLOGY) {
                             IconButton(onClick = onPreviousStep) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -442,7 +446,7 @@ private fun SelectionContent(
                     )
                 )
                 LinearProgressIndicator(
-                    progress = { uiState.currentWizardStep.progress },
+                    progress = { wizardState.currentWizardStep.progress },
                     modifier = Modifier.fillMaxWidth(),
                     color = MaterialTheme.colorScheme.primary,
                     trackColor = MaterialTheme.colorScheme.primaryContainer
@@ -450,9 +454,9 @@ private fun SelectionContent(
             }
         }
     ) { innerPadding ->
-        val isPielIntacta = uiState.selectedLecho == "Piel Intacta (Prevención)"
+        val isPielIntacta = wizardState.selectedLecho == "Piel Intacta (Prevención)"
         AnimatedContent(
-            targetState = uiState.currentWizardStep,
+            targetState = wizardState.currentWizardStep,
             transitionSpec = {
                 if (targetState.ordinal > initialState.ordinal) {
                     slideInHorizontally { width -> width } + fadeIn() togetherWith slideOutHorizontally { width -> -width } + fadeOut()
@@ -473,7 +477,7 @@ private fun SelectionContent(
                 when (step) {
                     com.ferlagod.miscuras.ui.WizardStep.ETIOLOGY -> {
                         item {
-                val currentEtiologyTrans = ClinicalTermMapper.translateClinicalTerm(uiState.selectedEtiology, context)
+                val currentEtiologyTrans = ClinicalTermMapper.translateClinicalTerm(wizardState.selectedEtiology, context)
                 val optionsEtiologyTrans = WoundViewModel.opcionesEtiologia.map { ClinicalTermMapper.translateClinicalTerm(it, context) }.sorted()
                 
                 Card(
@@ -510,7 +514,7 @@ private fun SelectionContent(
                 )
             }
                         item {
-                val currentLechoTrans = ClinicalTermMapper.translateClinicalTerm(uiState.selectedLecho, context)
+                val currentLechoTrans = ClinicalTermMapper.translateClinicalTerm(wizardState.selectedLecho, context)
                 val optionsLechoTrans = WoundViewModel.opcionesLecho.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
                 ChipGroupCard(
                     label = stringResource(R.string.bed_state_label),
@@ -526,10 +530,10 @@ private fun SelectionContent(
                                 onClick = onNextStep, 
                                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp).height(56.dp),
                                 shape = if (isPielIntacta) RoundedCornerShape(16.dp) else androidx.compose.foundation.shape.CircleShape,
-                                enabled = !uiState.isLoading,
+                                enabled = !evaluationState.isLoading,
                                 colors = if (isPielIntacta) ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary) else ButtonDefaults.buttonColors()
                             ) {
-                                if (isPielIntacta && uiState.isLoading) {
+                                if (isPielIntacta && evaluationState.isLoading) {
                                     CircularProgressIndicator(
                                         modifier = Modifier.size(24.dp),
                                         color = MaterialTheme.colorScheme.onPrimary,
@@ -559,18 +563,18 @@ private fun SelectionContent(
                         context.getString(R.string.location_heel), 
                         context.getString(R.string.location_sacrum)
                     )
-                    val currentLocationTrans = when (uiState.specialLocation) {
+                    val currentLocationTrans = when (wizardState.specialLocation) {
                         "Talón" -> context.getString(R.string.location_heel)
                         "Sacro" -> context.getString(R.string.location_sacrum)
                         else -> stringResource(R.string.location_none)
                     }
                     
                     SizeInputCard(
-                        lengthValue = uiState.woundLength,
-                        widthValue = uiState.woundWidth,
-                        depthValue = uiState.woundDepth,
-                        hasCavitation = uiState.hasCavitation,
-                        cavitationDetails = uiState.cavitationDetails,
+                        lengthValue = wizardState.woundLength,
+                        widthValue = wizardState.woundWidth,
+                        depthValue = wizardState.woundDepth,
+                        hasCavitation = wizardState.hasCavitation,
+                        cavitationDetails = wizardState.cavitationDetails,
                         onLengthChange = onWoundLengthChanged,
                         onWidthChange = onWoundWidthChanged,
                         onDepthChange = onWoundDepthChanged,
@@ -609,7 +613,7 @@ private fun SelectionContent(
                     }
                     com.ferlagod.miscuras.ui.WizardStep.EXUDATE -> {
                         item {
-                val currentExudadoTrans = ClinicalTermMapper.translateClinicalTerm(uiState.selectedExudado, context)
+                val currentExudadoTrans = ClinicalTermMapper.translateClinicalTerm(wizardState.selectedExudado, context)
                 val optionsExudadoTrans = WoundViewModel.opcionesExudado.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
                 ChipGroupCard(
                     label = stringResource(R.string.exudate_level_label),
@@ -622,7 +626,7 @@ private fun SelectionContent(
                 )
             }
                         item {
-                    val currentExuTypeTrans = ClinicalTermMapper.translateClinicalTerm(uiState.selectedExudateType, context)
+                    val currentExuTypeTrans = ClinicalTermMapper.translateClinicalTerm(wizardState.selectedExudateType, context)
                     val optionsExuTypeTrans = WoundViewModel.opcionesTipoExudado.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
                     ChipGroupCard(
                         label = stringResource(R.string.exudate_type_label),
@@ -630,7 +634,7 @@ private fun SelectionContent(
                         selectedOption = currentExuTypeTrans,
                         options = optionsExuTypeTrans,
                         onOptionSelected = { onExudateTypeChanged(ClinicalTermMapper.mapToDbTerm(it, context)) },
-                        enabled = uiState.selectedExudado != "Nulo",
+                        enabled = wizardState.selectedExudado != "Nulo",
                         chipType = "exudate"
                     )
                 }
@@ -646,7 +650,7 @@ private fun SelectionContent(
                     }
                     com.ferlagod.miscuras.ui.WizardStep.EDGES -> {
                         item {
-                val currentBordes = uiState.selectedBordes
+                val currentBordes = wizardState.selectedBordes
                 val optionsBordes = WoundViewModel.opcionesBordes
                 ChipGroupCard(
                     label = stringResource(R.string.edges_label),
@@ -659,7 +663,7 @@ private fun SelectionContent(
                 )
             }
                         item {
-                val currentPeriTrans = ClinicalTermMapper.translateClinicalTerm(uiState.selectedPerilesional, context)
+                val currentPeriTrans = ClinicalTermMapper.translateClinicalTerm(wizardState.selectedPerilesional, context)
                 val optionsPeriTrans = WoundViewModel.opcionesPerilesional.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
                 ChipGroupCard(
                     label = stringResource(R.string.perilesional_label),
@@ -684,7 +688,7 @@ private fun SelectionContent(
                     com.ferlagod.miscuras.ui.WizardStep.INFECTION -> {
                         item {
                 InfectionCard(
-                    checked = uiState.selectedInfeccion,
+                    checked = wizardState.selectedInfeccion,
                     onCheckedChange = onInfeccionChanged,
                     enabled = true
                 )
@@ -707,7 +711,7 @@ private fun SelectionContent(
                         context.getString(R.string.germ_biofilm)
                     )
                     
-                    val currentGermTrans = when(uiState.infectionGerm) {
+                    val currentGermTrans = when(wizardState.infectionGerm) {
                         "Pseudomonas aeruginosa" -> context.getString(R.string.germ_pseudomonas)
                         "MRSA" -> context.getString(R.string.germ_mrsa)
                         "Candida albicans" -> context.getString(R.string.germ_candida)
@@ -734,7 +738,7 @@ private fun SelectionContent(
                 }
                         item {
                 PainCard(
-                    painLevel = uiState.painLevel,
+                    painLevel = wizardState.painLevel,
                     onPainChange = onPainLevelChanged,
                     enabled = !isPielIntacta
                 )
@@ -748,12 +752,12 @@ private fun SelectionContent(
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(16.dp),
-                    enabled = !uiState.isLoading,
+                    enabled = !evaluationState.isLoading,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
-                    if (uiState.isLoading) {
+                    if (evaluationState.isLoading) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(24.dp),
                             color = MaterialTheme.colorScheme.onPrimary,
@@ -1041,7 +1045,7 @@ private fun InfectionCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ResultsContent(
-    uiState: WoundUiState,
+    wizardState: WizardState, evaluationState: EvaluationState, configState: ConfigState,
     onPreviousStep: () -> Unit,
     onStartOver: () -> Unit,
     onSaveEvaluation: (() -> Unit)?,
@@ -1104,12 +1108,12 @@ private fun ResultsContent(
     }
 
     // Listas de productos agrupados por uso
-    val productosPrimariosAgrupados = remember(uiState.productos) { 
-        uiState.productos.filter { it.usoPrimarioSecundario.contains("Primari", ignoreCase = true) || it.usoPrimarioSecundario.contains("Ambos", ignoreCase = true) }
+    val productosPrimariosAgrupados = remember(evaluationState.productos) { 
+        evaluationState.productos.filter { it.usoPrimarioSecundario.contains("Primari", ignoreCase = true) || it.usoPrimarioSecundario.contains("Ambos", ignoreCase = true) }
         .groupBy { it.familiaGenerica } 
     }
-    val productosSecundariosAgrupados = remember(uiState.productos) { 
-        uiState.productos.filter { it.usoPrimarioSecundario.contains("Secundari", ignoreCase = true) || it.usoPrimarioSecundario.contains("Ambos", ignoreCase = true) }
+    val productosSecundariosAgrupados = remember(evaluationState.productos) { 
+        evaluationState.productos.filter { it.usoPrimarioSecundario.contains("Secundari", ignoreCase = true) || it.usoPrimarioSecundario.contains("Ambos", ignoreCase = true) }
         .groupBy { it.familiaGenerica } 
     }
     
@@ -1164,15 +1168,15 @@ private fun ResultsContent(
             )
         }
     ) { innerPadding ->
-        if (uiState.noMatchFound) {
+        if (evaluationState.noMatchFound) {
             // — Sin resultados —
             NoMatchContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding),
-                lecho = uiState.selectedLecho,
-                exudado = uiState.selectedExudado,
-                infeccion = uiState.selectedInfeccion,
+                lecho = wizardState.selectedLecho,
+                exudado = wizardState.selectedExudado,
+                infeccion = wizardState.selectedInfeccion,
                 )
         } else {
             // — Con resultados —
@@ -1186,7 +1190,7 @@ private fun ResultsContent(
             ) {
                 // Imagen del lecho
                 item {
-                    val lechoImageResId = when(uiState.selectedLecho) {
+                    val lechoImageResId = when(wizardState.selectedLecho) {
                         "Necrosis" -> R.drawable.img_necrosis
                         "Esfacelo" -> R.drawable.img_esfacelo
                         "Granulación" -> R.drawable.img_granulacion
@@ -1202,7 +1206,7 @@ private fun ResultsContent(
                         ) {
                             Image(
                                 painter = painterResource(id = lechoImageResId),
-                                contentDescription = uiState.selectedLecho,
+                                contentDescription = wizardState.selectedLecho,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(16.dp)),
@@ -1213,14 +1217,14 @@ private fun ResultsContent(
                 }
                 
                 // Alertas de Seguridad
-                if (uiState.safetyAlerts.isNotEmpty()) {
+                if (evaluationState.safetyAlerts.isNotEmpty()) {
                     item {
-                        SafetyAlertsCard(alerts = uiState.safetyAlerts)
+                        SafetyAlertsCard(alerts = evaluationState.safetyAlerts)
                     }
                 }
 
                 // Alerta Preventiva Braden
-                if (uiState.bradenScore != null && uiState.bradenScore!! < 12) {
+                if (evaluationState.bradenScore != null && evaluationState.bradenScore!! < 12) {
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -1238,7 +1242,7 @@ private fun ResultsContent(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
-                                        text = String.format(java.util.Locale.US, stringResource(R.string.braden_preventive_alert), uiState.bradenScore.toString()),
+                                        text = String.format(java.util.Locale.US, stringResource(R.string.braden_preventive_alert), evaluationState.bradenScore.toString()),
                                         style = MaterialTheme.typography.titleMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onErrorContainer
@@ -1258,34 +1262,34 @@ private fun ResultsContent(
                 // AI Response
                 item {
                     AiResponseCard(
-                        isLoading = uiState.isAiLoading,
-                        response = uiState.aiResponse,
+                        isLoading = evaluationState.isAiLoading,
+                        response = evaluationState.aiResponse,
                         )
                 }
 
                 // Resumen de la evaluación
                 item {
                     EvaluationSummaryCard(
-                        lecho = uiState.selectedLecho,
-                        exudado = uiState.selectedExudado,
-                        infeccion = uiState.selectedInfeccion,
-                        lang = uiState.currentLanguage
+                        lecho = wizardState.selectedLecho,
+                        exudado = wizardState.selectedExudado,
+                        infeccion = wizardState.selectedInfeccion,
+                        lang = configState.currentLanguage
                     )
                 }
 
                 // Familia recomendada
                 item {
                     RecommendedFamilyCard(
-                        familia = uiState.familiaRecomendada ?: "",
+                        familia = evaluationState.familiaRecomendada ?: "",
                         )
                 }
 
                 // Frecuencia de Cura
-                if (uiState.cureFrequency != null) {
+                if (evaluationState.cureFrequency != null) {
                     item {
                         Spacer(modifier = Modifier.height(8.dp))
                         FrequencyCard(
-                            frequency = uiState.cureFrequency
+                            frequency = evaluationState.cureFrequency
                         )
                     }
                 }
@@ -1345,7 +1349,7 @@ private fun ResultsContent(
                         items(productosDeFamilia) { producto ->
                             ProductCard(
                                 producto = producto,
-                                isSelected = uiState.selectedTreatmentProducts.contains(producto.nombreComercial),
+                                isSelected = evaluationState.selectedTreatmentProducts.contains(producto.nombreComercial),
                                 onClick = {
                                     selectedProduct = producto
                                 },
@@ -1416,7 +1420,7 @@ private fun ResultsContent(
                         items(productosDeFamilia) { producto ->
                             ProductCard(
                                 producto = producto,
-                                isSelected = uiState.selectedTreatmentProducts.contains(producto.nombreComercial),
+                                isSelected = evaluationState.selectedTreatmentProducts.contains(producto.nombreComercial),
                                 onClick = {
                                     selectedProduct = producto
                                 },
@@ -1454,9 +1458,9 @@ private fun ResultsContent(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             
-                            if (uiState.photoPath != null) {
+                            if (wizardState.photoPath != null) {
                                 AsyncImage(
-                                    model = File(uiState.photoPath),
+                                    model = File(wizardState.photoPath),
                                     contentDescription = "Foto de la herida",
                                     modifier = Modifier
                                         .fillMaxWidth()

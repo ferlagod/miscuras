@@ -1,7 +1,7 @@
 package com.ferlagod.miscuras.domain.rules
 
 import com.ferlagod.miscuras.data.entities.ApositoEntity
-import com.ferlagod.miscuras.ui.WoundUiState
+import com.ferlagod.miscuras.ui.WizardState
 
 /**
  * Motor de reglas clínicas desacoplado del ViewModel.
@@ -12,7 +12,7 @@ class RulesEngine {
     /**
      * Genera la lista de alertas de seguridad basadas en el estado clínico de la herida.
      */
-    fun generateSafetyAlerts(state: WoundUiState): List<String> {
+    fun generateSafetyAlerts(state: WizardState): List<String> {
         val alerts = mutableListOf<String>()
         
         if (state.selectedEtiology == "Úlcera Arterial") {
@@ -164,7 +164,7 @@ class RulesEngine {
      * Determina la frecuencia recomendada para el cambio de apósitos
      * basándose en las directrices clínicas de exudado e infección.
      */
-    fun determineCureFrequency(state: WoundUiState): String {
+    fun determineCureFrequency(state: WizardState): String {
         return if (state.selectedInfeccion && state.selectedExudado == "Alto") {
             "Cada 24 horas (exudado alto e infección activa)."
         } else if (state.selectedInfeccion) {

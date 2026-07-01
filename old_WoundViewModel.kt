@@ -42,8 +42,7 @@ enum class WizardStep(val progress: Float) {
  * Toda la información necesaria para renderizar la pantalla vive aquí
  * de forma inmutable.
  */
-
-data class WizardState(
+data class WoundUiState(
     val currentWizardStep: WizardStep = WizardStep.ETIOLOGY,
     val selectedEtiology: String = "Indeterminada",
     val selectedLecho: String = "Piel Intacta (Prevención)",
@@ -59,11 +58,6 @@ data class WizardState(
     val infectionGerm: String = "Desconocido",
     val selectedBordes: String = "Sanos/Íntegros",
     val selectedPerilesional: String = "Sana",
-    val painLevel: Float = 0f,
-    val photoPath: String? = null
-)
-
-data class EvaluationState(
     val bradenScore: Int? = null,
     val familiaRecomendada: String? = null,
     val productos: List<ApositoEntity> = emptyList(),
@@ -74,23 +68,24 @@ data class EvaluationState(
     val isSaved: Boolean = false,
     val noMatchFound: Boolean = false,
     val safetyAlerts: List<String> = emptyList(),
-    val aiResponse: String? = null,
-    val isAiLoading: Boolean = false
-)
-
-data class ConfigState(
     val showSplash: Boolean = true,
     val showArMeasure: Boolean = false,
     val showBraden: Boolean = false,
+    val painLevel: Float = 0f,
+    val aiResponse: String? = null,
+    val isAiLoading: Boolean = false,
     val showGlossary: Boolean = false,
     val currentLanguage: String = "es",
-    val currentTheme: String = "system",
+    val currentTheme: String = "system", // system, light, dark
+    val photoPath: String? = null,
+    // Estado del formulario de sugerencia
     val showAddProductDialog: Boolean = false,
     val isFormSubmitting: Boolean = false,
     val formResultMsg: String? = null,
     val formSuccess: Boolean = false,
     val hasSeenDisclaimer: Boolean = false
 )
+
 /**
  * ViewModel principal para el flujo de evaluación de heridas.
  * Gestiona el estado de la UI ([WoundUiState]), procesa la lógica de negocio, reglas clínicas y obtiene recomendaciones desde el repositorio.
@@ -103,23 +98,15 @@ class WoundViewModel(
     private val feedbackRepository: FeedbackRepository
 ) : ViewModel() {
 
-
-    private val _wizardState = MutableStateFlow(WizardState())
-    val wizardState: StateFlow<WizardState> = _wizardState.asStateFlow()
-
-    private val _evaluationState = MutableStateFlow(EvaluationState())
-    val evaluationState: StateFlow<EvaluationState> = _evaluationState.asStateFlow()
-
-    private val _configState = MutableStateFlow(ConfigState())
-    val configState: StateFlow<ConfigState> = _configState.asStateFlow()
-
+    private val _uiState = MutableStateFlow(WoundUiState())
+    val uiState: StateFlow<WoundUiState> = _uiState.asStateFlow()
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
             val savedLang = sharedPrefs.getString("language", "es") ?: "es"
             val savedTheme = sharedPrefs.getString("theme", "system") ?: "system"
             val disclaimerSeen = sharedPrefs.getBoolean("has_seen_disclaimer", false)
-            _configState.update { 
+            _uiState.update { 
                 it.copy(
                     currentLanguage = savedLang, 
                     currentTheme = savedTheme,
@@ -131,7 +118,7 @@ class WoundViewModel(
             repository.preCargarBaseDeDatos()
             
             kotlinx.coroutines.delay(2000)
-            _configState.update { it.copy(showSplash = false) }
+            _uiState.update { it.copy(showSplash = false) }
         }
     }
 
@@ -148,51 +135,47 @@ class WoundViewModel(
      * Navegación del asistente (Wizard)
      */
     fun nextStep() {
-        val current = _wizardState.value.currentWizardStep
+        val current = _uiState.value.currentWizardStep
         val values = WizardStep.values()
         
         var nextOrdinal = current.ordinal + 1
         if (nextOrdinal >= values.size) return
         
         var nextStep = values[nextOrdinal]
-        val wizard = _wizardState.value
-        val eval = _evaluationState.value
-        val config = _configState.value
+        val state = _uiState.value
         
         // Branching logic
-        if (current == WizardStep.ETIOLOGY && wizard.selectedLecho == "Piel Intacta (Prevención)") {
+        if (current == WizardStep.ETIOLOGY && state.selectedLecho == "Piel Intacta (Prevención)") {
             buscarAposito()
             return
         }
         
-        _wizardState.update { it.copy(currentWizardStep = nextStep) }
+        _uiState.update { it.copy(currentWizardStep = nextStep) }
     }
 
     fun previousStep() {
-        val current = _wizardState.value.currentWizardStep
+        val current = _uiState.value.currentWizardStep
         val values = WizardStep.values()
         
         var prevOrdinal = current.ordinal - 1
         if (prevOrdinal < 0) return
         
         var prevStep = values[prevOrdinal]
-        val wizard = _wizardState.value
-        val eval = _evaluationState.value
-        val config = _configState.value
+        val state = _uiState.value
         
         // Reverse branching logic
-        if (current == WizardStep.INFECTION && wizard.selectedLecho == "Piel Intacta (Prevención)") {
+        if (current == WizardStep.INFECTION && state.selectedLecho == "Piel Intacta (Prevención)") {
             prevStep = WizardStep.ETIOLOGY
         }
         
-        _wizardState.update { it.copy(currentWizardStep = prevStep) }
+        _uiState.update { it.copy(currentWizardStep = prevStep) }
     }
 
     /**
      * Actualiza la etiología seleccionada.
      */
     fun onEtiologyChanged(etiology: String) {
-        _wizardState.update { it.copy(selectedEtiology = etiology) }
+        _uiState.update { it.copy(selectedEtiology = etiology) }
     }
 
     /**
@@ -200,7 +183,7 @@ class WoundViewModel(
      * @param lecho El nuevo estado del lecho.
      */
     fun onLechoChanged(lecho: String) {
-        _wizardState.update { 
+        _uiState.update { 
             if (lecho == "Piel Intacta (Prevención)") {
                 it.copy(selectedLecho = lecho, selectedExudado = "Nulo", selectedExudateType = "Seroso", selectedInfeccion = false)
             } else {
@@ -214,11 +197,11 @@ class WoundViewModel(
      * @param exudado El nuevo nivel de exudado.
      */
     fun onExudadoChanged(exudado: String) {
-        _wizardState.update { it.copy(selectedExudado = exudado) }
+        _uiState.update { it.copy(selectedExudado = exudado) }
     }
 
     fun onExudateTypeChanged(type: String) {
-        _wizardState.update { it.copy(selectedExudateType = type) }
+        _uiState.update { it.copy(selectedExudateType = type) }
     }
 
     /**
@@ -226,7 +209,7 @@ class WoundViewModel(
      * @param infeccion Verdadero si hay signos de infección, falso en caso contrario.
      */
     fun onInfeccionChanged(infeccion: Boolean) {
-        _wizardState.update { 
+        _uiState.update { 
             it.copy(
                 selectedInfeccion = infeccion,
                 infectionGerm = if (!infeccion) "Desconocido" else it.infectionGerm
@@ -235,127 +218,126 @@ class WoundViewModel(
     }
 
     fun onWoundLengthChanged(length: String) {
-        _wizardState.update { it.copy(woundLength = length) }
+        _uiState.update { it.copy(woundLength = length) }
     }
 
     fun onWoundWidthChanged(width: String) {
-        _wizardState.update { it.copy(woundWidth = width) }
+        _uiState.update { it.copy(woundWidth = width) }
     }
 
     fun onWoundDepthChanged(depth: String) {
-        _wizardState.update { it.copy(woundDepth = depth) }
+        _uiState.update { it.copy(woundDepth = depth) }
     }
 
     fun onHasCavitationChanged(hasCavitation: Boolean) {
-        _wizardState.update { it.copy(hasCavitation = hasCavitation) }
+        _uiState.update { it.copy(hasCavitation = hasCavitation) }
     }
 
     fun onCavitationDetailsChanged(details: String) {
-        _wizardState.update { it.copy(cavitationDetails = details) }
+        _uiState.update { it.copy(cavitationDetails = details) }
     }
 
     fun onSpecialLocationChanged(location: String) {
-        _wizardState.update { it.copy(specialLocation = location) }
+        _uiState.update { it.copy(specialLocation = location) }
     }
 
 
 
     fun showGlossary() {
-        _configState.update { it.copy(showGlossary = true) }
+        _uiState.update { it.copy(showGlossary = true) }
     }
 
     fun hideGlossary() {
-        _configState.update { it.copy(showGlossary = false) }
+        _uiState.update { it.copy(showGlossary = false) }
     }
 
     fun showArMeasure() {
-        _configState.update { it.copy(showArMeasure = true) }
+        _uiState.update { it.copy(showArMeasure = true) }
     }
 
     fun hideArMeasure() {
-        _configState.update { it.copy(showArMeasure = false) }
+        _uiState.update { it.copy(showArMeasure = false) }
     }
 
     fun showBraden() {
-        _configState.update { it.copy(showBraden = true) }
+        _uiState.update { it.copy(showBraden = true) }
     }
 
     fun hideBraden() {
-        _configState.update { it.copy(showBraden = false) }
+        _uiState.update { it.copy(showBraden = false) }
     }
 
     fun onPainLevelChanged(pain: Float) {
-        _wizardState.update { it.copy(painLevel = pain) }
+        _uiState.update { it.copy(painLevel = pain) }
     }
 
     fun onArMeasured(lengthCm: Float, widthCm: Float) {
         val lengthStr = String.format(java.util.Locale.US, "%.1f", lengthCm)
         val widthStr = String.format(java.util.Locale.US, "%.1f", widthCm)
-        _wizardState.update { 
+        _uiState.update { 
             it.copy(
                 woundLength = lengthStr, 
-                woundWidth = widthStr
+                woundWidth = widthStr,
+                showArMeasure = false
             ) 
         }
-        _configState.update { it.copy(showArMeasure = false) }
     }
 
     fun onInfectionGermChanged(germ: String) {
-        _wizardState.update { it.copy(infectionGerm = germ) }
+        _uiState.update { it.copy(infectionGerm = germ) }
     }
 
     fun onBordesChanged(bordes: String) {
-        _wizardState.update { it.copy(selectedBordes = bordes) }
+        _uiState.update { it.copy(selectedBordes = bordes) }
     }
 
     fun onPerilesionalChanged(peri: String) {
-        _wizardState.update { it.copy(selectedPerilesional = peri) }
+        _uiState.update { it.copy(selectedPerilesional = peri) }
     }
 
     fun onBradenScoreUpdated(score: Int) {
-        _evaluationState.update { it.copy(bradenScore = score) }
+        _uiState.update { it.copy(bradenScore = score) }
     }
 
     /**
      * Genera un resumen clínico estructurado basado en los criterios TIME
      */
     fun generarResumenEvolutivo(productoSeleccionado: String, context: android.content.Context): String {
-        val wizard = _wizardState.value
-        val eval = _evaluationState.value
-        val infText = if (wizard.selectedInfeccion) String.format(context.getString(R.string.rep_inf_yes_format), wizard.infectionGerm) else context.getString(R.string.no)
-        val tamaño = if (wizard.woundLength.isNotEmpty() && wizard.woundWidth.isNotEmpty()) {
-            val depthStr = if (wizard.woundDepth.isNotEmpty()) " x ${wizard.woundDepth}" else ""
-            "${wizard.woundLength} x ${wizard.woundWidth}$depthStr cm"
+        val state = uiState.value
+        val infText = if (state.selectedInfeccion) String.format(context.getString(R.string.rep_inf_yes_format), state.infectionGerm) else context.getString(R.string.no)
+        val tamaño = if (state.woundLength.isNotEmpty() && state.woundWidth.isNotEmpty()) {
+            val depthStr = if (state.woundDepth.isNotEmpty()) " x ${state.woundDepth}" else ""
+            "${state.woundLength} x ${state.woundWidth}$depthStr cm"
         } else {
             context.getString(R.string.rep_unspecified)
         }
         
-        val aiPlan = eval.aiResponse ?: context.getString(R.string.rep_pending)
+        val aiPlan = state.aiResponse ?: context.getString(R.string.rep_pending)
 
-        val bradenText = if (eval.bradenScore != null) {
+        val bradenText = if (state.bradenScore != null) {
             val riskText = when {
-                eval.bradenScore >= 15 -> context.getString(R.string.braden_risk_low)
-                eval.bradenScore in 13..14 -> context.getString(R.string.braden_risk_moderate)
-                eval.bradenScore in 10..12 -> context.getString(R.string.braden_risk_high)
+                state.bradenScore >= 15 -> context.getString(R.string.braden_risk_low)
+                state.bradenScore in 13..14 -> context.getString(R.string.braden_risk_moderate)
+                state.bradenScore in 10..12 -> context.getString(R.string.braden_risk_high)
                 else -> context.getString(R.string.braden_risk_very_high)
             }
-            "\n            ${context.getString(R.string.rep_braden_title)}\n            ${String.format(context.getString(R.string.rep_braden_score_format), eval.bradenScore, riskText)}\n"
+            "\n            ${context.getString(R.string.rep_braden_title)}\n            ${String.format(context.getString(R.string.rep_braden_score_format), state.bradenScore, riskText)}\n"
         } else ""
 
-        val bradenPrevencion = if (eval.bradenScore != null && eval.bradenScore < 12) {
+        val bradenPrevencion = if (state.bradenScore != null && state.bradenScore < 12) {
             "\n            ${context.getString(R.string.rep_braden_preventive_title)}\n            ${context.getString(R.string.rep_braden_preventive_text)}\n"
         } else ""
 
         return """
             ${context.getString(R.string.rep_timers_title)}
-            ${context.getString(R.string.etiology_label)}: ${wizard.selectedEtiology}
-            ${context.getString(R.string.rep_tissue)}${wizard.selectedLecho}
+            ${context.getString(R.string.etiology_label)}: ${state.selectedEtiology}
+            ${context.getString(R.string.rep_tissue)}${state.selectedLecho}
             ${context.getString(R.string.rep_infection)}$infText
-            ${context.getString(R.string.rep_moisture)}${wizard.selectedExudado} (${wizard.selectedExudateType})
-            ${String.format(context.getString(R.string.rep_edges_format), wizard.selectedBordes, wizard.selectedPerilesional)}
-            ${String.format(context.getString(R.string.rep_pain_format), wizard.painLevel.toInt())}
-            ${String.format(context.getString(R.string.rep_size_format), tamaño)}${if (wizard.hasCavitation) "\n            - Cavitaciones: ${if (wizard.cavitationDetails.isNotEmpty()) wizard.cavitationDetails else "Sí"}" else ""}
-            ${String.format(context.getString(R.string.rep_location_format), wizard.specialLocation)}$bradenText
+            ${context.getString(R.string.rep_moisture)}${state.selectedExudado} (${state.selectedExudateType})
+            ${String.format(context.getString(R.string.rep_edges_format), state.selectedBordes, state.selectedPerilesional)}
+            ${String.format(context.getString(R.string.rep_pain_format), state.painLevel.toInt())}
+            ${String.format(context.getString(R.string.rep_size_format), tamaño)}${if (state.hasCavitation) "\n            - Cavitaciones: ${if (state.cavitationDetails.isNotEmpty()) state.cavitationDetails else "Sí"}" else ""}
+            ${String.format(context.getString(R.string.rep_location_format), state.specialLocation)}$bradenText
 
             ${context.getString(R.string.rep_plan_title)}
             $aiPlan$bradenPrevencion
@@ -369,17 +351,15 @@ class WoundViewModel(
      * actuales almacenados en el estado de la UI.
      */
     fun buscarAposito() {
-        val wizard = _wizardState.value
-        val eval = _evaluationState.value
-        val config = _configState.value
+        val state = _uiState.value
         
-        _evaluationState.update { it.copy(isLoading = true, noMatchFound = false) }
+        _uiState.update { it.copy(isLoading = true, noMatchFound = false) }
 
         viewModelScope.launch(Dispatchers.IO) {
-            val result = evaluateWoundUseCase.getClinicalRecommendation(_wizardState.value)
+            val result = evaluateWoundUseCase.getClinicalRecommendation(state)
 
             if (result.familiaRecomendada != null) {
-                _evaluationState.update {
+                _uiState.update {
                     it.copy(
                         familiaRecomendada = result.familiaRecomendada,
                         cureFrequency = result.cureFrequency,
@@ -394,11 +374,11 @@ class WoundViewModel(
                 }
 
                 viewModelScope.launch(Dispatchers.IO) {
-                    val respuesta = evaluateWoundUseCase.getAiExplanation(_wizardState.value, result.familiaRecomendada)
-                    _evaluationState.update { it.copy(aiResponse = respuesta, isAiLoading = false) }
+                    val respuesta = evaluateWoundUseCase.getAiExplanation(state, result.familiaRecomendada)
+                    _uiState.update { it.copy(aiResponse = respuesta, isAiLoading = false) }
                 }
             } else {
-                _evaluationState.update {
+                _uiState.update {
                     it.copy(
                         familiaRecomendada = null,
                         cureFrequency = null,
@@ -418,12 +398,10 @@ class WoundViewModel(
      * a la vista de selección/evaluación.
      */
     fun volverASeleccion() {
-        _wizardState.update {
-            it.copy(currentWizardStep = WizardStep.ETIOLOGY)
-        }
-        _evaluationState.update {
+        _uiState.update {
             it.copy(
                 showResults = false,
+                currentWizardStep = WizardStep.ETIOLOGY,
                 familiaRecomendada = null,
                 cureFrequency = null,
                 productos = emptyList(),
@@ -438,7 +416,7 @@ class WoundViewModel(
      */
     fun changeLanguage(lang: String) {
         sharedPrefs.edit().putString("language", lang).apply()
-        _configState.update { it.copy(currentLanguage = lang) }
+        _uiState.update { it.copy(currentLanguage = lang) }
         androidx.appcompat.app.AppCompatDelegate.setApplicationLocales(androidx.core.os.LocaleListCompat.forLanguageTags(lang))
     }
 
@@ -448,7 +426,7 @@ class WoundViewModel(
      */
     fun changeTheme(theme: String) {
         sharedPrefs.edit().putString("theme", theme).apply()
-        _configState.update { it.copy(currentTheme = theme) }
+        _uiState.update { it.copy(currentTheme = theme) }
     }
 
     /**
@@ -456,21 +434,21 @@ class WoundViewModel(
      */
     fun acceptDisclaimer() {
         sharedPrefs.edit().putBoolean("has_seen_disclaimer", true).apply()
-        _configState.update { it.copy(hasSeenDisclaimer = true) }
+        _uiState.update { it.copy(hasSeenDisclaimer = true) }
     }
 
     /**
      * Muestra u oculta el diálogo para sugerir productos.
      */
     fun setAddProductDialogVisibility(show: Boolean) {
-        _configState.update { it.copy(showAddProductDialog = show) }
+        _uiState.update { it.copy(showAddProductDialog = show) }
     }
 
     /**
      * Limpia el mensaje de resultado del formulario (por ej. al cerrar el Snackbar).
      */
     fun clearFormResultMsg() {
-        _configState.update { it.copy(formResultMsg = null, formSuccess = false) }
+        _uiState.update { it.copy(formResultMsg = null, formSuccess = false) }
     }
 
     /**
@@ -486,7 +464,7 @@ class WoundViewModel(
         otherSuggestions: String,
         context: android.content.Context
     ) {
-        _configState.update { it.copy(isFormSubmitting = true, formResultMsg = null) }
+        _uiState.update { it.copy(isFormSubmitting = true, formResultMsg = null) }
         viewModelScope.launch(Dispatchers.IO) {
             val payload = com.ferlagod.miscuras.network.FormPayload(
                 name = name,
@@ -501,7 +479,7 @@ class WoundViewModel(
             val result = feedbackRepository.submitProductSuggestion(payload)
             
             if (result.isSuccess) {
-                _configState.update {
+                _uiState.update {
                     it.copy(
                         isFormSubmitting = false,
                         showAddProductDialog = false,
@@ -511,7 +489,7 @@ class WoundViewModel(
                 }
             } else {
                 val error = result.exceptionOrNull()
-                _configState.update {
+                _uiState.update {
                     it.copy(
                         isFormSubmitting = false,
                         formResultMsg = "${context.getString(R.string.form_error_msg)}\nException: ${error?.localizedMessage}",
@@ -523,61 +501,55 @@ class WoundViewModel(
     }
 
     fun saveEvaluation(woundId: Long) {
-        val wizard = _wizardState.value
-        val eval = _evaluationState.value
-        val config = _configState.value
+        val state = _uiState.value
         viewModelScope.launch(Dispatchers.IO) {
             val evaluation = EvaluationEntity(
                 woundId = woundId,
-                length = wizard.woundLength,
-                width = wizard.woundWidth,
-                depth = wizard.woundDepth,
-                hasCavitation = wizard.hasCavitation,
-                cavitationDetails = wizard.cavitationDetails,
-                etiology = wizard.selectedEtiology,
-                bedState = wizard.selectedLecho,
-                exudateLevel = wizard.selectedExudado,
-                exudateType = wizard.selectedExudateType,
-                infection = wizard.selectedInfeccion,
-                infectionGerm = wizard.infectionGerm,
-                painLevel = wizard.painLevel,
-                edges = wizard.selectedBordes,
-                perilesional = wizard.selectedPerilesional,
-                recommendedTreatment = "${eval.familiaRecomendada ?: ""}\n\nPauta recomendada: ${eval.cureFrequency ?: ""}",
-                aiExplanation = eval.aiResponse ?: "",
-                photoPath = wizard.photoPath,
-                selectedProducts = eval.selectedTreatmentProducts.joinToString(",")
+                length = state.woundLength,
+                width = state.woundWidth,
+                depth = state.woundDepth,
+                hasCavitation = state.hasCavitation,
+                cavitationDetails = state.cavitationDetails,
+                etiology = state.selectedEtiology,
+                bedState = state.selectedLecho,
+                exudateLevel = state.selectedExudado,
+                exudateType = state.selectedExudateType,
+                infection = state.selectedInfeccion,
+                infectionGerm = state.infectionGerm,
+                painLevel = state.painLevel,
+                edges = state.selectedBordes,
+                perilesional = state.selectedPerilesional,
+                recommendedTreatment = "${state.familiaRecomendada ?: ""}\n\nPauta recomendada: ${state.cureFrequency ?: ""}",
+                aiExplanation = state.aiResponse ?: "",
+                photoPath = state.photoPath,
+                selectedProducts = state.selectedTreatmentProducts.joinToString(",")
             )
             patientDao.insertEvaluation(evaluation)
-            _evaluationState.update { it.copy(isSaved = true) }
+            _uiState.update { it.copy(isSaved = true) }
         }
     }
 
     fun setPhotoPath(path: String) {
-        _wizardState.update { it.copy(photoPath = path) }
+        _uiState.update { it.copy(photoPath = path) }
     }
 
     fun resetWizard() {
-        val currentLang = _configState.value.currentLanguage
-        val currentTheme = _configState.value.currentTheme
-        val seenDisclaimer = _configState.value.hasSeenDisclaimer
-        
-        _wizardState.value = WizardState()
-        _evaluationState.value = EvaluationState()
-        _configState.value = ConfigState(
-            currentLanguage = currentLang,
-            currentTheme = currentTheme,
-            hasSeenDisclaimer = seenDisclaimer,
-            showSplash = false
-        )
+        _uiState.update { 
+            WoundUiState(
+                currentTheme = it.currentTheme, 
+                currentLanguage = it.currentLanguage,
+                hasSeenDisclaimer = it.hasSeenDisclaimer,
+                showSplash = false
+            ) 
+        }
     }
 
     fun resetSavedState() {
-        _evaluationState.update { it.copy(isSaved = false) }
+        _uiState.update { it.copy(isSaved = false) }
     }
 
     fun toggleProductSelection(codigoCn: String) {
-        _evaluationState.update { currentState ->
+        _uiState.update { currentState ->
             val newSelection = if (currentState.selectedTreatmentProducts.contains(codigoCn)) {
                 currentState.selectedTreatmentProducts - codigoCn
             } else {

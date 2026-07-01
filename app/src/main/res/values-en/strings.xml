@@ -248,4 +248,8 @@
     <string name="eval_infection_format">Infection: Yes (%1$s)</string>
     <string name="eval_treatment_format">Treatment: %1$s</string>
     <string name="photo_evolution_desc">Evolution photo</string>
+    
+    <!-- Dashboard Strings -->
+    <string name="quick_evaluation_desc">Direct evaluation without patient</string>
+    <string name="patient_room">Room: %1$s</string>
 </resources>

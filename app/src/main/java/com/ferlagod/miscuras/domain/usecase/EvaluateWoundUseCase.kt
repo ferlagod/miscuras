@@ -4,7 +4,7 @@ import com.ferlagod.miscuras.data.entities.ApositoEntity
 import com.ferlagod.miscuras.data.repository.ApositosRepository
 import com.ferlagod.miscuras.domain.rules.RulesEngine
 import com.ferlagod.miscuras.network.AsistenteIA
-import com.ferlagod.miscuras.ui.WoundUiState
+import com.ferlagod.miscuras.ui.WizardState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.security.MessageDigest
@@ -21,7 +21,7 @@ class EvaluateWoundUseCase(
     private val rulesEngine: RulesEngine
 ) {
 
-    suspend fun getClinicalRecommendation(state: WoundUiState): EvaluationResult = withContext(Dispatchers.IO) {
+    suspend fun getClinicalRecommendation(state: WizardState): EvaluationResult = withContext(Dispatchers.IO) {
         val alerts = rulesEngine.generateSafetyAlerts(state)
         
         val familia = repository.obtenerRecomendacion(
@@ -85,7 +85,7 @@ class EvaluateWoundUseCase(
         return bytes.joinToString("") { "%02x".format(it) }
     }
 
-    suspend fun getAiExplanation(state: WoundUiState, familiaFormateada: String): String? = withContext(Dispatchers.IO) {
+    suspend fun getAiExplanation(state: WizardState, familiaFormateada: String): String? = withContext(Dispatchers.IO) {
         val rawKey = "${state.selectedLecho}|${state.selectedExudado}|${state.selectedExudateType}|${state.selectedInfeccion}|${state.infectionGerm}|${state.woundLength}|${state.woundWidth}|${state.woundDepth}|${state.hasCavitation}|${state.cavitationDetails}|${state.selectedBordes}|${state.selectedPerilesional}|${familiaFormateada}|${state.painLevel.toInt()}|${state.specialLocation}"
         val cacheKey = rawKey.sha256()
         val cachedResponse = repository.getCachedAiResponse(cacheKey)
