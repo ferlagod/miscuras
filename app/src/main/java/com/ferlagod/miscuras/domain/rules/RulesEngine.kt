@@ -165,11 +165,13 @@ class RulesEngine {
             val matchesSize = if (hasSizeInfo && !isGeneric) {
                 val requiredL = woundLength!! + margin
                 val requiredW = woundWidth!! + margin
-                val match = Regex("(\\d+(?:\\.\\d+)?)\\s*x\\s*(\\d+(?:\\.\\d+)?)").find(dimStr)
-                if (match != null) {
-                    val pL = match.groupValues[1].toFloat()
-                    val pW = match.groupValues[2].toFloat()
-                    (pL >= requiredL && pW >= requiredW) || (pW >= requiredL && pL >= requiredW)
+                val matches = Regex("(\\d+(?:[,.]\\d+)?)\\s*x\\s*(\\d+(?:[,.]\\d+)?)").findAll(dimStr)
+                if (matches.any()) {
+                    matches.any { match ->
+                        val pL = match.groupValues[1].replace(",", ".").toFloat()
+                        val pW = match.groupValues[2].replace(",", ".").toFloat()
+                        (pL >= requiredL && pW >= requiredW) || (pW >= requiredL && pL >= requiredW)
+                    }
                 } else {
                     true // Fallback
                 }
