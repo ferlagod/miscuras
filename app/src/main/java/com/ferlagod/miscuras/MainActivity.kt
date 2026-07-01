@@ -117,7 +117,7 @@ class MainActivity : AppCompatActivity() {
                                 patientViewModel = patientViewModel,
                                 onBackClick = { navController.popBackStack() },
                                 onNewEvaluationClick = { wId ->
-                                    viewModel.resetWizard()
+                                    viewModel.resetWizard(wId)
                                     navController.navigate("wound_eval/$wId")
                                 }
                             )

@@ -31,4 +31,7 @@ interface PatientDao {
 
     @Query("SELECT * FROM evaluaciones WHERE woundId = :woundId ORDER BY timestamp ASC")
     fun getEvaluationsForWound(woundId: Long): Flow<List<EvaluationEntity>>
+
+    @Query("SELECT * FROM evaluaciones WHERE woundId = :woundId ORDER BY timestamp DESC LIMIT 1")
+    fun getLatestEvaluationForWound(woundId: Long): EvaluationEntity?
 }

@@ -857,7 +857,7 @@ private fun ChipGroupCard(
                         border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)),
                         shape = CircleShape,
                         enabled = enabled,
-                        modifier = Modifier.defaultMinSize(minHeight = 48.dp).scale(scale)
+                        modifier = Modifier.defaultMinSize(minWidth = 48.dp, minHeight = 48.dp).scale(scale)
                     )
                 }
             }
@@ -2241,7 +2241,7 @@ fun SettingsDialog(
                                 selected = selected,
                                 onClick = { onThemeChanged(mode) },
                                 label = { Text(label) },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f).defaultMinSize(minHeight = 48.dp)
                             )
                         }
                     }
@@ -2265,7 +2265,7 @@ fun SettingsDialog(
                                 selected = selected,
                                 onClick = { onLanguageChanged(lang) },
                                 label = { Text(label) },
-                                modifier = Modifier.weight(1f)
+                                modifier = Modifier.weight(1f).defaultMinSize(minHeight = 48.dp)
                             )
                         }
                     }

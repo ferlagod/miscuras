@@ -557,7 +557,7 @@ class WoundViewModel(
         _wizardState.update { it.copy(photoPath = path) }
     }
 
-    fun resetWizard() {
+    fun resetWizard(woundId: Long = -1L) {
         val currentLang = _configState.value.currentLanguage
         val currentTheme = _configState.value.currentTheme
         val seenDisclaimer = _configState.value.hasSeenDisclaimer
@@ -570,6 +570,32 @@ class WoundViewModel(
             hasSeenDisclaimer = seenDisclaimer,
             showSplash = false
         )
+
+        if (woundId != -1L) {
+            viewModelScope.launch(Dispatchers.IO) {
+                val latestEval = patientDao.getLatestEvaluationForWound(woundId)
+                if (latestEval != null) {
+                    _wizardState.update {
+                        it.copy(
+                            selectedEtiology = latestEval.etiology,
+                            selectedLecho = latestEval.bedState,
+                            selectedExudado = latestEval.exudateLevel,
+                            selectedExudateType = latestEval.exudateType,
+                            selectedInfeccion = latestEval.infection,
+                            infectionGerm = latestEval.infectionGerm,
+                            painLevel = latestEval.painLevel,
+                            selectedBordes = latestEval.edges,
+                            selectedPerilesional = latestEval.perilesional,
+                            woundLength = latestEval.length,
+                            woundWidth = latestEval.width,
+                            woundDepth = latestEval.depth,
+                            hasCavitation = latestEval.hasCavitation,
+                            cavitationDetails = latestEval.cavitationDetails
+                        )
+                    }
+                }
+            }
+        }
     }
 
     fun resetSavedState() {
