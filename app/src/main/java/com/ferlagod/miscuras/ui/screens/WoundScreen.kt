@@ -95,6 +95,9 @@ import java.io.FileOutputStream
 import java.io.InputStream
 import com.ferlagod.miscuras.R
 import androidx.compose.ui.res.stringResource
+import androidx.activity.compose.BackHandler
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 // ============================================================
 // PANTALLA PRINCIPAL — Router entre Selección y Resultados
@@ -378,6 +381,7 @@ private fun SelectionContent(
     onArMeasureClick: () -> Unit,
     onBradenClick: () -> Unit
 ) {
+    val coroutineScope = rememberCoroutineScope()
     // Gestor de permisos de cámara
     val cameraPermissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         contract = androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
@@ -389,6 +393,10 @@ private fun SelectionContent(
     
     
     val context = androidx.compose.ui.platform.LocalContext.current
+
+    BackHandler(enabled = wizardState.currentWizardStep != com.ferlagod.miscuras.ui.WizardStep.ETIOLOGY) {
+        onPreviousStep()
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         Scaffold(
@@ -521,37 +529,48 @@ private fun SelectionContent(
                     description = stringResource(R.string.bed_state_desc),
                     selectedOption = currentLechoTrans,
                     options = optionsLechoTrans,
-                    onOptionSelected = { onLechoChanged(ClinicalTermMapper.mapToDbTerm(it, context)) },
+                    onOptionSelected = { 
+                        onLechoChanged(ClinicalTermMapper.mapToDbTerm(it, context)) 
+                        coroutineScope.launch {
+                            kotlinx.coroutines.delay(600)
+                            onNextStep()
+                        }
+                    },
                     chipType = "tissue"
                 )
             }
-                        item {
-                            Button(
-                                onClick = onNextStep, 
-                                modifier = Modifier.fillMaxWidth().padding(top = 16.dp).height(56.dp),
-                                shape = if (isPielIntacta) RoundedCornerShape(16.dp) else androidx.compose.foundation.shape.CircleShape,
-                                enabled = !evaluationState.isLoading,
-                                colors = if (isPielIntacta) ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary) else ButtonDefaults.buttonColors()
-                            ) {
-                                if (isPielIntacta && evaluationState.isLoading) {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier.size(24.dp),
-                                        color = MaterialTheme.colorScheme.onPrimary,
-                                        strokeWidth = 2.dp
-                                    )
-                                } else if (isPielIntacta) {
-                                    Icon(
-                                        imageVector = Icons.Default.Search,
-                                        contentDescription = null,
-                                        modifier = Modifier.size(20.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(
-                                        text = stringResource(R.string.search_button),
-                                        style = MaterialTheme.typography.labelLarge
-                                    )
-                                } else {
-                                    Text("Siguiente")
+                        if (isPielIntacta) {
+                            item {
+                                Button(
+                                    onClick = onNextStep, 
+                                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp).height(56.dp),
+                                    shape = RoundedCornerShape(16.dp),
+                                    enabled = !evaluationState.isLoading,
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                                ) {
+                                    if (evaluationState.isLoading) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(24.dp),
+                                            color = MaterialTheme.colorScheme.onPrimary,
+                                            strokeWidth = 2.dp
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                            text = "Analizando prevención...",
+                                            style = MaterialTheme.typography.labelLarge
+                                        )
+                                    } else {
+                                        Icon(
+                                            imageVector = Icons.Default.Search,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = stringResource(R.string.search_button),
+                                            style = MaterialTheme.typography.labelLarge
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -620,7 +639,16 @@ private fun SelectionContent(
                     description = stringResource(R.string.exudate_level_desc),
                     selectedOption = currentExudadoTrans,
                     options = optionsExudadoTrans,
-                    onOptionSelected = { onExudadoChanged(ClinicalTermMapper.mapToDbTerm(it, context)) },
+                    onOptionSelected = { 
+                        val dbTerm = ClinicalTermMapper.mapToDbTerm(it, context)
+                        onExudadoChanged(dbTerm) 
+                        if (dbTerm == "Nulo") {
+                            coroutineScope.launch {
+                                kotlinx.coroutines.delay(600)
+                                onNextStep()
+                            }
+                        }
+                    },
                     
                     chipType = "exudate"
                 )
@@ -633,20 +661,17 @@ private fun SelectionContent(
                         description = stringResource(R.string.exudate_type_desc),
                         selectedOption = currentExuTypeTrans,
                         options = optionsExuTypeTrans,
-                        onOptionSelected = { onExudateTypeChanged(ClinicalTermMapper.mapToDbTerm(it, context)) },
+                        onOptionSelected = { 
+                            onExudateTypeChanged(ClinicalTermMapper.mapToDbTerm(it, context)) 
+                            coroutineScope.launch {
+                                kotlinx.coroutines.delay(600)
+                                onNextStep()
+                            }
+                        },
                         enabled = wizardState.selectedExudado != "Nulo",
                         chipType = "exudate"
                     )
                 }
-                        item {
-                            Button(
-                                onClick = onNextStep, 
-                                modifier = Modifier.fillMaxWidth().padding(top = 16.dp).height(56.dp),
-                                shape = androidx.compose.foundation.shape.CircleShape
-                            ) {
-                                Text("Siguiente")
-                            }
-                        }
                     }
                     com.ferlagod.miscuras.ui.WizardStep.EDGES -> {
                         item {
@@ -657,7 +682,9 @@ private fun SelectionContent(
                     description = stringResource(R.string.edges_desc),
                     selectedOption = currentBordes,
                     options = optionsBordes,
-                    onOptionSelected = { onBordesChanged(it) },
+                    onOptionSelected = { 
+                        onBordesChanged(it) 
+                    },
                     
                     chipType = "edge"
                 )
@@ -670,20 +697,17 @@ private fun SelectionContent(
                     description = stringResource(R.string.perilesional_desc),
                     selectedOption = currentPeriTrans,
                     options = optionsPeriTrans,
-                    onOptionSelected = { onPerilesionalChanged(ClinicalTermMapper.mapToDbTerm(it, context)) },
+                    onOptionSelected = { 
+                        onPerilesionalChanged(ClinicalTermMapper.mapToDbTerm(it, context)) 
+                        coroutineScope.launch {
+                            kotlinx.coroutines.delay(600)
+                            onNextStep()
+                        }
+                    },
                     
                     chipType = "edge"
                 )
             }
-                        item {
-                            Button(
-                                onClick = onNextStep, 
-                                modifier = Modifier.fillMaxWidth().padding(top = 16.dp).height(56.dp),
-                                shape = androidx.compose.foundation.shape.CircleShape
-                            ) {
-                                Text("Siguiente")
-                            }
-                        }
                     }
                     com.ferlagod.miscuras.ui.WizardStep.INFECTION -> {
                         item {
@@ -762,6 +786,11 @@ private fun SelectionContent(
                             modifier = Modifier.size(24.dp),
                             color = MaterialTheme.colorScheme.onPrimary,
                             strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Analizando lecho y exudado...",
+                            style = MaterialTheme.typography.labelLarge
                         )
                     } else {
                         Icon(
@@ -2947,10 +2976,20 @@ private fun AiResponseCard(isLoading: Boolean, response: String?, ) {
             }
             Spacer(modifier = Modifier.height(12.dp))
             if (isLoading) {
-                CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.onTertiaryContainer,
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(16.dp)
-                )
+                ) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Analizando lecho y exudado...",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                        color = MaterialTheme.colorScheme.onTertiaryContainer
+                    )
+                }
             } else {
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
