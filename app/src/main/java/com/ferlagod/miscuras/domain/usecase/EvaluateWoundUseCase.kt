@@ -22,7 +22,7 @@ class EvaluateWoundUseCase(
 ) {
 
     suspend fun getClinicalRecommendation(state: WizardState): EvaluationResult = withContext(Dispatchers.IO) {
-        val alerts = rulesEngine.generateSafetyAlerts(state)
+        val alerts = rulesEngine.generateSafetyAlerts(state).toMutableList()
         
         val familia = repository.obtenerRecomendacion(
             state.selectedLecho,
@@ -38,15 +38,18 @@ class EvaluateWoundUseCase(
             )
             val familiaModificada = rulesEngine.applyEtiologyOverrides(
                 baseFamilies = familiaConGermen,
-                etiology = state.selectedEtiology
+                etiology = state.selectedEtiology,
+                state = state
             )
+            
+            alerts.addAll(rulesEngine.generatePostRecommendationAlerts(state, familiaModificada))
 
             val productosBrutos = repository.obtenerProductosPorFamilias(familiaModificada)
                 
             val wLength = state.woundLength.replace(",", ".").toFloatOrNull()
             val wWidth = state.woundWidth.replace(",", ".").toFloatOrNull()
             
-            val productos = rulesEngine.filterProductsByDimensions(
+            var productos = rulesEngine.filterProductsByDimensions(
                 products = productosBrutos,
                 woundLength = wLength,
                 woundWidth = wWidth,
@@ -58,6 +61,24 @@ class EvaluateWoundUseCase(
                     1
                 } else {
                     0
+                }
+            }
+
+            // Fallback para heridas gigantes
+            if (productos.isEmpty() && productosBrutos.isNotEmpty() && wLength != null && wWidth != null) {
+                // Recuperar los apósitos más grandes disponibles que no sean genéricos
+                productos = productosBrutos.filter { p ->
+                    val d = p.dimensiones.lowercase()
+                    !(d.contains("pomada") || d.contains("crema") || d.contains("gel") || d.contains("ml") || 
+                      d.contains("spray") || Regex("\\d+g").containsMatchIn(d) || d.contains("solucion") || 
+                      d.contains("venda") || d.contains("kit"))
+                }.sortedByDescending { p ->
+                    val match = Regex("(\\d+(?:\\.\\d+)?)\\s*x\\s*(\\d+(?:\\.\\d+)?)").find(p.dimensiones.lowercase())
+                    if (match != null) match.groupValues[1].toFloat() * match.groupValues[2].toFloat() else 0f
+                }.take(3) // Tomar los 3 más grandes
+                
+                if (productos.isNotEmpty()) {
+                    alerts.add("Aviso: Las dimensiones de la herida superan el apósito máximo disponible. Considere utilizar múltiples apósitos solapados.")
                 }
             }
 

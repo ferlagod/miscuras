@@ -51,6 +51,21 @@ class RulesEngine {
         return alerts
     }
 
+    fun generatePostRecommendationAlerts(state: WizardState, recommendedFamilies: String): List<String> {
+        val alerts = mutableListOf<String>()
+        val families = recommendedFamilies.split("/").map { it.trim() }
+
+        if ((families.contains("Alginato") || families.contains("Hidrofibra")) && (state.selectedExudado == "Nulo" || state.selectedExudado == "Bajo")) {
+            alerts.add("Precaución: El uso de alginatos o hidrofibras en heridas con escaso exudado puede desecar el lecho y adherirse al tejido. Considere usar apósitos pre-hidratados o mallas de contacto.")
+        }
+
+        if (families.contains("Cadexómero Yodado") && state.selectedExudado == "Nulo") {
+            alerts.add("Precaución: El Cadexómero Yodado requiere humedad para activarse. Al tener exudado nulo, requiere combinarse con hidrogel o suero para activarse en la herida seca.")
+        }
+
+        return alerts
+    }
+
     /**
      * Modifica las familias de apósitos base según el germen infectante detectado.
      */
@@ -96,13 +111,29 @@ class RulesEngine {
     /**
      * Agrega familias según la etiología seleccionada.
      */
-    fun applyEtiologyOverrides(baseFamilies: String, etiology: String): String {
+    fun applyEtiologyOverrides(baseFamilies: String, etiology: String, state: WizardState): String {
+        val families = baseFamilies.split("/").map { it.trim() }.toMutableSet()
+        
         if (etiology == "Úlcera Venosa") {
-            val families = baseFamilies.split("/").map { it.trim() }.toMutableSet()
             families.add("Compresión Bicomponente")
-            return families.joinToString(" / ")
+        } else if (etiology == "Úlcera Arterial") {
+            families.remove("Compresión Bicomponente")
+            families.remove("Vendaje Compresivo")
         }
-        return baseFamilies
+        
+        // Reglas de cavitación
+        if (state.hasCavitation || state.woundDepth.isNotEmpty()) {
+            if (!families.contains("Hidrofibra") && !families.contains("Alginato")) {
+                families.add("Hidrofibra") // Añadimos por defecto hidrofibra para cavidades
+            }
+        }
+        
+        // Reglas de Cadexómero Yodado en necrosis seca
+        if (families.contains("Cadexómero Yodado") && (state.selectedExudado == "Nulo" || state.selectedExudado == "Bajo")) {
+            families.add("Hidrogel")
+        }
+        
+        return families.joinToString(" / ")
     }
 
     /**
@@ -144,20 +175,24 @@ class RulesEngine {
                 }
             } else true
 
-            // Filtro por localización
+            // Filtro por localización (Flexible)
             val matchesLocation = if (hasLocationInfo) {
-                when (specialLocation) {
+                val isAnatomic = when (specialLocation) {
                     "Talón" -> dimStr.contains("talon") || dimStr.contains("heel") || nomStr.contains("talon")
                     "Sacro" -> dimStr.contains("sacro") || dimStr.contains("sacrum") || nomStr.contains("sacro")
                     "Codos/Rodillas" -> dimStr.contains("multisite") || dimStr.contains("flex") || dimStr.contains("borde") || dimStr.contains("lite")
                     else -> true
                 }
+                // Permitimos los anatómicos O aquellos que no tienen reborde/silicona rígida (que puedan adaptarse)
+                // O si no, simplemente no excluimos drásticamente si no son anatómicos, pero priorizamos luego
+                true // No descartamos nada por localización de manera destructiva aquí, lo ordenamos después
             } else {
                 !(dimStr.contains("talon") || dimStr.contains("sacro") || dimStr.contains("heel") || dimStr.contains("sacrum"))
             }
 
             matchesSize && matchesLocation
         }
+
     }
 
     /**
