@@ -10,14 +10,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import com.ferlagod.miscuras.R
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.FlashOn
-import androidx.compose.material.icons.filled.Groups
-import androidx.compose.material.icons.filled.MenuBook
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.rounded.*
+import androidx.compose.material.icons.rounded.Add
+import androidx.compose.material.icons.rounded.ChevronRight
+import androidx.compose.material.icons.rounded.FlashOn
+import androidx.compose.material.icons.rounded.Groups
+import androidx.compose.material.icons.rounded.MenuBook
+import androidx.compose.material.icons.rounded.Person
+import androidx.compose.material.icons.rounded.Settings
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -71,7 +72,7 @@ fun DashboardScreen(
                         onNavigateToWoundEval()
                     }) {
                         Icon(
-                            imageVector = Icons.Default.Warning,
+                            imageVector = Icons.Rounded.Warning,
                             contentDescription = "Calculadora Braden"
                         )
                     }
@@ -80,13 +81,13 @@ fun DashboardScreen(
                         onNavigateToWoundEval()
                     }) {
                         Icon(
-                            imageVector = Icons.Default.MenuBook,
+                            imageVector = Icons.Rounded.MenuBook,
                             contentDescription = "Glosario / Biblioteca"
                         )
                     }
                     IconButton(onClick = { showSettings = true }) {
                         Icon(
-                            imageVector = Icons.Default.Settings,
+                            imageVector = Icons.Rounded.Settings,
                             contentDescription = stringResource(R.string.settings_title)
                         )
                     }
@@ -102,7 +103,7 @@ fun DashboardScreen(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { showAddDialog = true },
-                icon = { Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_patient_desc)) },
+                icon = { Icon(Icons.Rounded.Add, contentDescription = stringResource(R.string.add_patient_desc)) },
                 text = { Text(stringResource(R.string.new_patient_title)) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
@@ -143,7 +144,7 @@ fun DashboardScreen(
                         modifier = Modifier.size(56.dp)
                     ) {
                         Icon(
-                            Icons.Default.FlashOn,
+                            Icons.Rounded.FlashOn,
                             contentDescription = null,
                             modifier = Modifier.padding(16.dp)
                         )
@@ -181,7 +182,7 @@ fun DashboardScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(
-                            imageVector = Icons.Default.Groups,
+                            imageVector = Icons.Rounded.Groups,
                             contentDescription = null,
                             modifier = Modifier.size(80.dp),
                             tint = MaterialTheme.colorScheme.surfaceVariant
@@ -223,7 +224,7 @@ fun DashboardScreen(
                                     modifier = Modifier.size(48.dp)
                                 ) {
                                     Icon(
-                                        Icons.Default.Person,
+                                        Icons.Rounded.Person,
                                         contentDescription = null,
                                         modifier = Modifier.padding(12.dp)
                                     )
@@ -242,7 +243,7 @@ fun DashboardScreen(
                                     )
                                 }
                                 Icon(
-                                    imageVector = Icons.Default.ChevronRight,
+                                    imageVector = Icons.Rounded.ChevronRight,
                                     contentDescription = null,
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )

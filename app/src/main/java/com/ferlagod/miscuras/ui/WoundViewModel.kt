@@ -89,7 +89,8 @@ data class ConfigState(
     val isFormSubmitting: Boolean = false,
     val formResultMsg: String? = null,
     val formSuccess: Boolean = false,
-    val hasSeenDisclaimer: Boolean = false
+    val hasSeenDisclaimer: Boolean = false,
+    val isExpertMode: Boolean = false
 )
 /**
  * ViewModel principal para el flujo de evaluación de heridas.
@@ -169,6 +170,10 @@ class WoundViewModel(
     }
 
     fun previousStep() {
+        if (_evaluationState.value.showResults) {
+            _evaluationState.update { it.copy(showResults = false) }
+            return
+        }
         val current = _wizardState.value.currentWizardStep
         val values = WizardStep.values()
         
@@ -376,6 +381,7 @@ class WoundViewModel(
         _evaluationState.update { it.copy(isLoading = true, noMatchFound = false) }
 
         viewModelScope.launch(Dispatchers.IO) {
+            kotlinx.coroutines.delay(1200) // Artificial delay for UX
             val result = evaluateWoundUseCase.getClinicalRecommendation(_wizardState.value)
 
             if (result.familiaRecomendada != null) {
@@ -561,6 +567,7 @@ class WoundViewModel(
         val currentLang = _configState.value.currentLanguage
         val currentTheme = _configState.value.currentTheme
         val seenDisclaimer = _configState.value.hasSeenDisclaimer
+        val currentExpertMode = _configState.value.isExpertMode
         
         _wizardState.value = WizardState()
         _evaluationState.value = EvaluationState()
@@ -568,6 +575,7 @@ class WoundViewModel(
             currentLanguage = currentLang,
             currentTheme = currentTheme,
             hasSeenDisclaimer = seenDisclaimer,
+            isExpertMode = currentExpertMode,
             showSplash = false
         )
 
@@ -613,5 +621,8 @@ class WoundViewModel(
         }
     }
 
+    fun toggleExpertMode() {
+        _configState.update { it.copy(isExpertMode = !it.isExpertMode) }
+    }
 
 }
