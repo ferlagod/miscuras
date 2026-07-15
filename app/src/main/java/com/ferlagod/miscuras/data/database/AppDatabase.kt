@@ -95,13 +95,38 @@ abstract class AppDatabase : RoomDatabase() {
                         val headerString = String(header)
                         // Las bases de datos SQLite no encriptadas empiezan siempre por "SQLite format 3"
                         if (headerString.startsWith("SQLite format 3")) {
-                            // Es una base de datos antigua sin encriptar.
-                            // Como no contenía datos de usuarios (solo reglas CSV y caché),
-                            // la borramos para que Room la recree de forma cifrada sin dar error.
-                            dbFile.delete()
-                            context.getDatabasePath("$dbName-journal").delete()
-                            context.getDatabasePath("$dbName-shm").delete()
-                            context.getDatabasePath("$dbName-wal").delete()
+                            // Comprobar si la BD contiene datos de usuario antes de borrarla
+                            val hasUserData = try {
+                                val plainDb = android.database.sqlite.SQLiteDatabase.openDatabase(
+                                    dbFile.absolutePath, null,
+                                    android.database.sqlite.SQLiteDatabase.OPEN_READONLY
+                                )
+                                val hasTables = plainDb.rawQuery(
+                                    "SELECT name FROM sqlite_master WHERE type='table' AND name='pacientes'",
+                                    null
+                                ).use { cursor -> cursor.count > 0 }
+                                val hasPatients = if (hasTables) {
+                                    plainDb.rawQuery("SELECT COUNT(*) FROM pacientes", null).use { cursor ->
+                                        cursor.moveToFirst() && cursor.getInt(0) > 0
+                                    }
+                                } else false
+                                plainDb.close()
+                                hasPatients
+                            } catch (e: Exception) {
+                                false
+                            }
+
+                            if (hasUserData) {
+                                // La BD tiene datos de usuario: NO borrar. Registrar advertencia.
+                                Log.w("AppDatabase", "Base de datos sin cifrar con datos de usuario. No se puede migrar automáticamente.")
+                            } else {
+                                // Solo reglas CSV y caché: seguro borrar y recrear cifrada.
+                                Log.i("AppDatabase", "Migrando BD sin cifrar (sin datos de usuario) a cifrada.")
+                                dbFile.delete()
+                                context.getDatabasePath("$dbName-journal").delete()
+                                context.getDatabasePath("$dbName-shm").delete()
+                                context.getDatabasePath("$dbName-wal").delete()
+                            }
                         }
                     } catch (e: Exception) {
                         e.printStackTrace()
@@ -111,6 +136,14 @@ abstract class AppDatabase : RoomDatabase() {
                 val MIGRATION_25_26 = object : androidx.room.migration.Migration(25, 26) {
                     override fun migrate(db: SupportSQLiteDatabase) {
                         db.execSQL("ALTER TABLE evaluaciones ADD COLUMN selectedProducts TEXT")
+                    }
+                }
+
+                // Versión 27: solo cambió la librería SQLCipher (net.sqlcipher → net.zetetic),
+                // sin cambios de esquema SQL.
+                val MIGRATION_26_27 = object : androidx.room.migration.Migration(26, 27) {
+                    override fun migrate(db: SupportSQLiteDatabase) {
+                        // Sin cambios de esquema
                     }
                 }
 
@@ -145,8 +178,7 @@ abstract class AppDatabase : RoomDatabase() {
                     dbName
                 )
                     .openHelperFactory(factory)
-                    .addMigrations(MIGRATION_25_26, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30)
-                    .fallbackToDestructiveMigration() // Recrear la base de datos si la versión cambia (y no hay migración)
+                    .addMigrations(MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30)
                     .addCallback(DatabaseCallback(context)) // Disparador para la primera ejecución
                     .build()
                 INSTANCE = instance

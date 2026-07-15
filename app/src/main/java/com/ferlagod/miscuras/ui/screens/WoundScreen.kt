@@ -512,11 +512,13 @@ private fun SelectionContent(
             val showSearchButton = (wizardState.currentWizardStep == com.ferlagod.miscuras.ui.WizardStep.INFECTION) || 
                                    (isPielIntacta && wizardState.currentWizardStep == com.ferlagod.miscuras.ui.WizardStep.ETIOLOGY)
             val showNextButton = when (wizardState.currentWizardStep) {
+                com.ferlagod.miscuras.ui.WizardStep.ETIOLOGY -> true
                 com.ferlagod.miscuras.ui.WizardStep.SIZE_AND_LOCATION -> true
                 com.ferlagod.miscuras.ui.WizardStep.EXUDATE -> true
                 com.ferlagod.miscuras.ui.WizardStep.EDGES -> true
                 else -> false
             }
+            val isEtiologyStepComplete = wizardState.selectedEtiology.isNotEmpty() && wizardState.selectedLecho.isNotEmpty()
 
             if (!configState.isExpertMode && (showSearchButton || showNextButton)) {
                 Surface(
@@ -531,7 +533,8 @@ private fun SelectionContent(
                                 .fillMaxWidth()
                                 .height(56.dp),
                             shape = RoundedCornerShape(16.dp),
-                            enabled = !evaluationState.isLoading,
+                            enabled = !evaluationState.isLoading && 
+                                (wizardState.currentWizardStep != com.ferlagod.miscuras.ui.WizardStep.ETIOLOGY || isEtiologyStepComplete),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary
                             )
@@ -627,16 +630,12 @@ private fun SelectionContent(
                     options = optionsEtiologyTrans,
                     onOptionSelected = { 
                         onEtiologyChanged(ClinicalTermMapper.mapToDbTerm(it, context))
-                        coroutineScope.launch {
-                            kotlinx.coroutines.delay(800)
-                            onNextStep()
-                        }
                     },
                     chipType = "etiology"
                 )
             }
                         item {
-                val currentLechoTrans = ClinicalTermMapper.translateClinicalTerm(wizardState.selectedLecho, context)
+                val currentLechoTrans = if (wizardState.selectedLecho.isEmpty()) "" else ClinicalTermMapper.translateClinicalTerm(wizardState.selectedLecho, context)
                 val optionsLechoTrans = WoundViewModel.opcionesLecho.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
                 ChipGroupCard(
                     label = stringResource(R.string.bed_state_label),
@@ -645,10 +644,6 @@ private fun SelectionContent(
                     options = optionsLechoTrans,
                     onOptionSelected = { 
                         onLechoChanged(ClinicalTermMapper.mapToDbTerm(it, context)) 
-                        coroutineScope.launch {
-                            kotlinx.coroutines.delay(800)
-                            onNextStep()
-                        }
                     },
                     chipType = "tissue"
                 )

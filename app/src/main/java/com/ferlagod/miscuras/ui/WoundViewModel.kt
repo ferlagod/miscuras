@@ -45,8 +45,8 @@ enum class WizardStep(val progress: Float) {
 
 data class WizardState(
     val currentWizardStep: WizardStep = WizardStep.ETIOLOGY,
-    val selectedEtiology: String = "Indeterminada",
-    val selectedLecho: String = "Piel Intacta (Prevención)",
+    val selectedEtiology: String = "",
+    val selectedLecho: String = "",
     val selectedExudado: String = "Nulo",
     val selectedExudateType: String = "Seroso",
     val selectedInfeccion: Boolean = false,
