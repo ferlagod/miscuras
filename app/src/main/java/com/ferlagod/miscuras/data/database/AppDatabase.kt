@@ -87,6 +87,8 @@ abstract class AppDatabase : RoomDatabase() {
                 val dbName = "mis_curas_database"
                 val dbFile = context.getDatabasePath(dbName)
                 
+                var useEncryption = true
+                
                 // Si la base de datos existe, comprobamos si es texto plano (versiones anteriores)
                 if (dbFile.exists()) {
                     try {
@@ -102,23 +104,28 @@ abstract class AppDatabase : RoomDatabase() {
                                     android.database.sqlite.SQLiteDatabase.OPEN_READONLY
                                 )
                                 val hasTables = plainDb.rawQuery(
-                                    "SELECT name FROM sqlite_master WHERE type='table' AND name='pacientes'",
+                                    "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('pacientes', 'heridas', 'evaluaciones')",
                                     null
                                 ).use { cursor -> cursor.count > 0 }
-                                val hasPatients = if (hasTables) {
-                                    plainDb.rawQuery("SELECT COUNT(*) FROM pacientes", null).use { cursor ->
-                                        cursor.moveToFirst() && cursor.getInt(0) > 0
-                                    }
+                                
+                                val hasRecords = if (hasTables) {
+                                    var count = 0
+                                    try { plainDb.rawQuery("SELECT COUNT(*) FROM pacientes", null).use { c -> if (c.moveToFirst()) count += c.getInt(0) } } catch(e:Exception){}
+                                    try { plainDb.rawQuery("SELECT COUNT(*) FROM heridas", null).use { c -> if (c.moveToFirst()) count += c.getInt(0) } } catch(e:Exception){}
+                                    try { plainDb.rawQuery("SELECT COUNT(*) FROM evaluaciones", null).use { c -> if (c.moveToFirst()) count += c.getInt(0) } } catch(e:Exception){}
+                                    count > 0
                                 } else false
                                 plainDb.close()
-                                hasPatients
+                                hasRecords
                             } catch (e: Exception) {
-                                false
+                                // Ante cualquier error al leer, asumimos que tiene datos para evitar borrado accidental
+                                true
                             }
 
                             if (hasUserData) {
-                                // La BD tiene datos de usuario: NO borrar. Registrar advertencia.
-                                Log.w("AppDatabase", "Base de datos sin cifrar con datos de usuario. No se puede migrar automáticamente.")
+                                // La BD tiene datos de usuario: NO borrar. Desactivar cifrado para no perder datos.
+                                Log.w("AppDatabase", "Base de datos sin cifrar con datos de usuario. Desactivando cifrado para conservar los datos.")
+                                useEncryption = false
                             } else {
                                 // Solo reglas CSV y caché: seguro borrar y recrear cifrada.
                                 Log.i("AppDatabase", "Migrando BD sin cifrar (sin datos de usuario) a cifrada.")
@@ -170,17 +177,21 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
 
-                System.loadLibrary("sqlcipher")
-                val factory = SupportOpenHelperFactory(CryptoManager.getDatabasePassphrase(context))
-                val instance = Room.databaseBuilder(
+                val builder = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     dbName
                 )
-                    .openHelperFactory(factory)
                     .addMigrations(MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30)
                     .addCallback(DatabaseCallback(context)) // Disparador para la primera ejecución
-                    .build()
+                
+                if (useEncryption) {
+                    System.loadLibrary("sqlcipher")
+                    val factory = SupportOpenHelperFactory(CryptoManager.getDatabasePassphrase(context))
+                    builder.openHelperFactory(factory)
+                }
+
+                val instance = builder.build()
                 INSTANCE = instance
                 instance
             }

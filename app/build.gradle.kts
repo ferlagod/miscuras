@@ -26,7 +26,7 @@ android {
         applicationId = "com.ferlagod.miscuras"
         minSdk = 26
         targetSdk = 36
-        versionCode = 202607153
+        versionCode = 202607154
         versionName = "1.0.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -105,7 +105,7 @@ dependencies {
     implementation(libs.generativeai)
 
     // ARCore Sceneview para Realidad Aumentada
-    implementation("io.github.sceneview:arsceneview:0.10.1")
+    implementation("io.github.sceneview:arsceneview:4.16.8")
 
     // Google Fonts para Compose
     implementation("androidx.compose.ui:ui-text-google-fonts:1.6.7")

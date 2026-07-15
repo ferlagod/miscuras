@@ -2358,7 +2358,7 @@ fun SettingsDialog(
                             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                         )
                         Text(
-                            text = "1.0.0",
+                            text = com.ferlagod.miscuras.BuildConfig.VERSION_NAME,
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }

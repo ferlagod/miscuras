@@ -18,17 +18,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.google.ar.core.Pose
 import io.github.sceneview.ar.ARScene
-import io.github.sceneview.ar.node.ArNode
+import io.github.sceneview.ar.node.AnchorNode
 import kotlin.math.sqrt
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.foundation.magnifier
 import androidx.compose.ui.geometry.isSpecified
-import io.github.sceneview.ar.ArSceneView
-import kotlin.math.sqrt
 import androidx.compose.ui.res.stringResource
 import com.ferlagod.miscuras.R
+import com.google.ar.core.Frame
+import com.google.ar.core.Anchor
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -37,13 +37,12 @@ fun ARMeasureScreen(
     onMeasured: (Float, Float) -> Unit
 ) {
     val points = remember { mutableStateListOf<Pose>() }
-    val nodes = remember { mutableStateListOf<ArNode>() }
+    val anchors = remember { mutableStateListOf<Anchor>() }
 
     var lengthCm by remember { mutableStateOf(0f) }
     var widthCm by remember { mutableStateOf(0f) }
     
-    var engine by remember { mutableStateOf<com.google.android.filament.Engine?>(null) }
-    var arView by remember { mutableStateOf<ArSceneView?>(null) }
+    var frame by remember { mutableStateOf<Frame?>(null) }
     
     var magnifierCenter by remember { mutableStateOf(Offset.Unspecified) }
     var showMagnifier by remember { mutableStateOf(false) }
@@ -100,13 +99,12 @@ fun ARMeasureScreen(
                         },
                         onDragEnd = {
                             showMagnifier = false
-                            if (points.size < 4 && engine != null && magnifierCenter.isSpecified) {
-                                val hitResult = arView?.currentFrame?.hitTest(magnifierCenter.x, magnifierCenter.y)
-                                if (hitResult != null) {
-                                    val anchor = hitResult.createAnchor()
+                            if (points.size < 4 && frame != null && magnifierCenter.isSpecified) {
+                                val hitResult = frame?.hitTest(magnifierCenter.x, magnifierCenter.y)
+                                if (hitResult != null && hitResult.isNotEmpty()) {
+                                    val anchor = hitResult.first().createAnchor()
                                     points.add(anchor.pose)
-                                    val node = ArNode(engine!!, anchor)
-                                    nodes.add(node)
+                                    anchors.add(anchor)
             
                                     if (points.size == 2) {
                                         lengthCm = calculateDistanceCm(points[0], points[1])
@@ -135,16 +133,17 @@ fun ARMeasureScreen(
                     }
                 )
         ) {
-            ARScene(
+            io.github.sceneview.ar.ARSceneView(
                 modifier = Modifier.fillMaxSize(),
-                nodes = nodes,
                 planeRenderer = true,
-                onCreate = { arSceneView ->
-                    engine = arSceneView.engine
-                    arView = arSceneView
-                    arSceneView.lightEstimationMode = com.google.ar.core.Config.LightEstimationMode.DISABLED
+                onSessionUpdated = { _, updatedFrame ->
+                    frame = updatedFrame
                 }
-            )
+            ) {
+                anchors.forEach { anchor ->
+                    AnchorNode(anchor = anchor)
+                }
+            }
 
             // Overlay de instrucciones
             Box(
@@ -172,7 +171,7 @@ fun ARMeasureScreen(
                 Button(
                     onClick = {
                         points.clear()
-                        nodes.clear()
+                        anchors.clear()
                         lengthCm = 0f
                         widthCm = 0f
                     },
