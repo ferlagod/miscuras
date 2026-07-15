@@ -26,7 +26,7 @@ android {
         applicationId = "com.ferlagod.miscuras"
         minSdk = 26
         targetSdk = 36
-        versionCode = 202607151
+        versionCode = 202607153
         versionName = "1.0.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
