@@ -57,7 +57,7 @@ import java.io.InputStreamReader
         WoundEntity::class,
         EvaluationEntity::class
     ],
-    version = 29,
+    version = 30,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -128,6 +128,15 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
 
+                val MIGRATION_29_30 = object : androidx.room.migration.Migration(29, 30) {
+                    override fun migrate(db: SupportSQLiteDatabase) {
+                        // Limpiamos reglas y productos para que onOpen recargue los CSV actualizados
+                        // (nuevos productos, códigos CN corregidos, advertencias clínicas, nuevas familias)
+                        db.execSQL("DELETE FROM ReglasClinicas")
+                        db.execSQL("DELETE FROM Productos")
+                    }
+                }
+
                 System.loadLibrary("sqlcipher")
                 val factory = SupportOpenHelperFactory(CryptoManager.getDatabasePassphrase(context))
                 val instance = Room.databaseBuilder(
@@ -136,7 +145,7 @@ abstract class AppDatabase : RoomDatabase() {
                     dbName
                 )
                     .openHelperFactory(factory)
-                    .addMigrations(MIGRATION_25_26, MIGRATION_27_28, MIGRATION_28_29)
+                    .addMigrations(MIGRATION_25_26, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30)
                     .fallbackToDestructiveMigration() // Recrear la base de datos si la versión cambia (y no hay migración)
                     .addCallback(DatabaseCallback(context)) // Disparador para la primera ejecución
                     .build()
