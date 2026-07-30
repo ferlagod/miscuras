@@ -62,6 +62,17 @@ object CryptoManager {
         }
 
         // 3. Generar nueva passphrase (instalación nueva)
+        // Si la base de datos ya existe, significa que perdimos la clave (ej. por Auto Backup / Reinstalación).
+        // La base de datos es irrecuperable y causará un crash (code 26: file is not a database). Debemos borrarla.
+        val dbFile = context.getDatabasePath("mis_curas_database")
+        if (dbFile.exists()) {
+            Log.e(TAG, "Passphrase perdida (Keystore no disponible tras restore). Borrando base de datos inaccesible.")
+            dbFile.delete()
+            context.getDatabasePath("mis_curas_database-journal").delete()
+            context.getDatabasePath("mis_curas_database-shm").delete()
+            context.getDatabasePath("mis_curas_database-wal").delete()
+        }
+
         val newPassphrase = ByteArray(32)
         SecureRandom().nextBytes(newPassphrase)
         saveToNewStorage(prefs, newPassphrase)
