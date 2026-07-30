@@ -60,3 +60,13 @@
 
 # ── Google ErrorProne Annotations (Tink/Security Crypto) ──
 -dontwarn com.google.errorprone.annotations.**
+
+# ── Koin ──
+-keep class org.koin.** { *; }
+-dontwarn org.koin.**
+
+# Keep ViewModels and their constructors for Koin reflection
+-keep class * extends androidx.lifecycle.ViewModel {
+    <init>(...);
+}
+-keepnames class * extends androidx.lifecycle.ViewModel
