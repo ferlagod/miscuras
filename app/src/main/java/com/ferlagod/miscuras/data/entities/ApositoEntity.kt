@@ -1,6 +1,6 @@
 /*
  * Mis Curas
- * Copyright (C) 2026
+ * Copyright (C) Fernando Lago. 2026
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -24,6 +24,17 @@ import androidx.room.PrimaryKey
 /**
  * Representa un producto (apósito) en la base de datos local.
  * Contiene información clínica y comercial sobre cada apósito disponible.
+ *
+ * @property id Identificador único autogenerado.
+ * @property nombreComercial Nombre con el que se comercializa el producto.
+ * @property fabricante Empresa fabricante del apósito.
+ * @property familiaGenerica Familia a la que pertenece (ej. Espuma Poliuretano, Alginato).
+ * @property dimensiones Tamaño disponible o forma anatómica del apósito.
+ * @property imagenUrl Identificador del recurso de imagen local (ej. cn_123456).
+ * @property codigoCn Código o códigos nacionales asociados.
+ * @property descripcion Descripción clínica y uso indicado.
+ * @property interacciones Precauciones y compatibilidades con otros productos o principios activos.
+ * @property usoPrimarioSecundario Indica si es apósito primario, secundario o ambos.
  */
 @Entity(tableName = "ProductosApositos")
 data class ApositoEntity(

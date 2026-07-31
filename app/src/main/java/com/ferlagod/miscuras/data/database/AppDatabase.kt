@@ -1,6 +1,6 @@
 /*
  * Mis Curas
- * Copyright (C) 2026
+ * Copyright (C) Fernando Lago. 2026
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -57,7 +57,7 @@ import java.io.InputStreamReader
         WoundEntity::class,
         EvaluationEntity::class
     ],
-    version = 30,
+    version = 31,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -177,12 +177,19 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
 
+                val MIGRATION_30_31 = object : androidx.room.migration.Migration(30, 31) {
+                    override fun migrate(db: SupportSQLiteDatabase) {
+                        db.execSQL("DELETE FROM ReglasClinicas")
+                        db.execSQL("DELETE FROM ProductosApositos")
+                    }
+                }
+
                 val builder = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     dbName
                 )
-                    .addMigrations(MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30)
+                    .addMigrations(MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31)
                     .addCallback(DatabaseCallback(context)) // Disparador para la primera ejecución
                 
                 if (useEncryption) {
