@@ -547,7 +547,7 @@ private fun SelectionContent(
                                 )
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Text(
-                                    text = if (isPielIntacta) "Analizando prevención..." else "Analizando lecho y exudado...",
+                                    text = if (isPielIntacta) stringResource(R.string.analyzing_prevention) else stringResource(R.string.analyzing_wound),
                                     style = MaterialTheme.typography.labelLarge
                                 )
                             } else {
@@ -564,7 +564,7 @@ private fun SelectionContent(
                                     )
                                 } else {
                                     Text(
-                                        text = "Siguiente",
+                                        text = stringResource(R.string.next_button),
                                         style = MaterialTheme.typography.labelLarge
                                     )
                                 }
@@ -1498,7 +1498,7 @@ private fun ResultsContent(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "Registro Fotográfico (Opcional)",
+                                text = stringResource(R.string.photo_record_optional),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -1517,7 +1517,7 @@ private fun ResultsContent(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 TextButton(onClick = { onPhotoPathChanged("") }) { // TODO: borrar uri
-                                    Text("Eliminar foto", color = MaterialTheme.colorScheme.error)
+                                    Text(stringResource(R.string.delete_photo_button), color = MaterialTheme.colorScheme.error)
                                 }
                             } else {
                                 Row(
@@ -1543,7 +1543,7 @@ private fun ResultsContent(
                                     ) {
                                         Icon(Icons.Rounded.CameraAlt, contentDescription = "Cámara")
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Tomar Foto")
+                                        Text(stringResource(R.string.take_photo_button))
                                     }
                                     
                                     OutlinedButton(
@@ -1551,9 +1551,9 @@ private fun ResultsContent(
                                             pickMediaLauncher.launch(androidx.activity.result.PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                                         }
                                     ) {
-                                        Icon(Icons.Rounded.PhotoLibrary, contentDescription = "Galería")
+                                        Icon(Icons.Rounded.PhotoLibrary, contentDescription = stringResource(R.string.gallery_button))
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text("Galería")
+                                        Text(stringResource(R.string.gallery_button))
                                     }
                                 }
                             }
@@ -1589,7 +1589,7 @@ private fun ResultsContent(
                             Icon(androidx.compose.material.icons.Icons.Rounded.Save, contentDescription = "Guardar")
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                "Guardar Evaluación",
+                                stringResource(R.string.save_evaluation_button),
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                             )
                         }
@@ -1759,7 +1759,7 @@ private fun FrequencyCard(frequency: String) {
             Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(
-                    text = "Pauta de Cura Recomendada",
+                    text = stringResource(R.string.cure_frequency_label),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onTertiaryContainer
                 )
@@ -1895,7 +1895,7 @@ private fun ProductCard(
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(if (isSelected) "Añadido" else "Añadir")
+                        Text(if (isSelected) stringResource(R.string.added_button) else stringResource(R.string.add_button))
                     }
                 }
 
@@ -3003,7 +3003,7 @@ private fun AiResponseCard(isLoading: Boolean, response: String?, ) {
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Analizando lecho y exudado...",
+                        text = stringResource(R.string.analyzing_wound),
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
                         color = MaterialTheme.colorScheme.onTertiaryContainer
                     )

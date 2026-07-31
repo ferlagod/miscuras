@@ -252,4 +252,41 @@
     <!-- Dashboard Strings -->
     <string name="quick_evaluation_desc">Valoración directa sin paciente</string>
     <string name="patient_room">Habitación: %1$s</string>
+
+    <!-- Redesign: Empty States -->
+    <string name="empty_patients_title">Aún no hay pacientes</string>
+    <string name="empty_patients_subtitle">Registra tu primer paciente para comenzar a documentar sus heridas</string>
+    <string name="empty_patients_cta">Añadir primer paciente</string>
+    <string name="empty_wounds_title">Sin heridas registradas</string>
+    <string name="empty_wounds_subtitle">Añade una herida para comenzar a evaluar y documentar su evolución</string>
+    <string name="empty_wounds_cta">Añadir primera herida</string>
+    <string name="empty_evaluations_title">Sin evaluaciones</string>
+    <string name="empty_evaluations_subtitle">Evalúa esta herida para obtener recomendaciones de tratamiento</string>
+
+    <!-- Redesign: Bottom Sheet -->
+    <string name="patient_name_hint">Ej: J.G.M.</string>
+    <string name="room_bed_hint">Ej: 302-B</string>
+    <string name="wound_name_hint">Ej: Talón izquierdo</string>
+
+    <!-- Redesign: Patient Detail -->
+    <string name="wounds_count">%1$d heridas</string>
+    <string name="wounds_count_singular">1 herida</string>
+    <string name="registered_since">Registrado el %1$s</string>
+
+    <!-- Redesign: Wound Detail Timeline -->
+    <string name="latest_evaluation">Última evaluación</string>
+    <string name="area_label">Área: %1$s cm²</string>
+
+    <!-- Redesign: Misc -->
+    <string name="next_button">Siguiente</string>
+    <string name="analyzing_prevention">Analizando prevención…</string>
+    <string name="analyzing_wound">Analizando lecho y exudado…</string>
+    <string name="save_evaluation_button">Guardar Evaluación</string>
+    <string name="take_photo_button">Tomar Foto</string>
+    <string name="gallery_button">Galería</string>
+    <string name="delete_photo_button">Eliminar foto</string>
+    <string name="photo_record_optional">Registro Fotográfico (Opcional)</string>
+    <string name="added_button">Añadido</string>
+    <string name="add_button">Añadir</string>
+    <string name="cure_frequency_label">Pauta de Cura Recomendada</string>
 </resources>

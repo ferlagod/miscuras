@@ -252,4 +252,41 @@
     <!-- Dashboard Strings -->
     <string name="quick_evaluation_desc">Direct evaluation without patient</string>
     <string name="patient_room">Room: %1$s</string>
+
+    <!-- Redesign: Empty States -->
+    <string name="empty_patients_title">No patients yet</string>
+    <string name="empty_patients_subtitle">Register your first patient to start documenting their wounds</string>
+    <string name="empty_patients_cta">Add first patient</string>
+    <string name="empty_wounds_title">No wounds registered</string>
+    <string name="empty_wounds_subtitle">Add a wound to start evaluating and documenting its progress</string>
+    <string name="empty_wounds_cta">Add first wound</string>
+    <string name="empty_evaluations_title">No evaluations</string>
+    <string name="empty_evaluations_subtitle">Evaluate this wound to get treatment recommendations</string>
+
+    <!-- Redesign: Bottom Sheet -->
+    <string name="patient_name_hint">E.g.: J.S.D.</string>
+    <string name="room_bed_hint">E.g.: 302-B</string>
+    <string name="wound_name_hint">E.g.: Left heel</string>
+
+    <!-- Redesign: Patient Detail -->
+    <string name="wounds_count">%1$d wounds</string>
+    <string name="wounds_count_singular">1 wound</string>
+    <string name="registered_since">Registered on %1$s</string>
+
+    <!-- Redesign: Wound Detail Timeline -->
+    <string name="latest_evaluation">Latest evaluation</string>
+    <string name="area_label">Area: %1$s cm²</string>
+
+    <!-- Redesign: Misc -->
+    <string name="next_button">Next</string>
+    <string name="analyzing_prevention">Analyzing prevention…</string>
+    <string name="analyzing_wound">Analyzing wound bed and exudate…</string>
+    <string name="save_evaluation_button">Save Evaluation</string>
+    <string name="take_photo_button">Take Photo</string>
+    <string name="gallery_button">Gallery</string>
+    <string name="delete_photo_button">Delete photo</string>
+    <string name="photo_record_optional">Photo Record (Optional)</string>
+    <string name="added_button">Added</string>
+    <string name="add_button">Add</string>
+    <string name="cure_frequency_label">Recommended Cure Frequency</string>
 </resources>
