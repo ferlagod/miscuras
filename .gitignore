@@ -79,3 +79,11 @@ app/release/baselineProfiles/0/app-release.dm
 app/src/main/res/raw/keep.xml
 app/proguard-rules.pro
 *.patch
+
+# Other Temporary / Test files
+old_WoundViewModel.kt
+new_WoundViewModel.kt
+test_db.kt
+test_translations.kt
+test_avif.png
+test_webp.png
