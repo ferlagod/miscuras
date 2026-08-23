@@ -71,4 +71,18 @@ interface ApositoDao {
     /** Devuelve la cantidad total de reglas clínicas en la tabla. */
     @Query("SELECT COUNT(*) FROM ReglasClinicas")
     fun obtenerCantidadReglas(): Int
+
+    // --- Backup/Restore Methods ---
+
+    @Query("SELECT * FROM ProductosApositos")
+    suspend fun getAllApositosSync(): @JvmSuppressWildcards List<ApositoEntity>
+
+    @Query("SELECT * FROM ReglasClinicas")
+    suspend fun getAllReglasSync(): @JvmSuppressWildcards List<ReglaEntity>
+
+    @Query("DELETE FROM ProductosApositos")
+    suspend fun deleteAllApositos(): @JvmSuppressWildcards Int
+
+    @Query("DELETE FROM ReglasClinicas")
+    suspend fun deleteAllReglas(): @JvmSuppressWildcards Int
 }

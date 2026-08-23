@@ -45,6 +45,9 @@ import androidx.room.Index
     ],
     indices = [Index("patientId")]
 )
+/**
+ * Entidad de base de datos que representa una herida.
+ */
 data class WoundEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

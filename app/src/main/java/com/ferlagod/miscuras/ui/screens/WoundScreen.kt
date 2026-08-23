@@ -125,9 +125,19 @@ fun WoundScreen(
     val wizardState by viewModel.wizardState.collectAsStateWithLifecycle()
     val evaluationState by viewModel.evaluationState.collectAsStateWithLifecycle()
     val configState by viewModel.configState.collectAsStateWithLifecycle()
+    val backupState by viewModel.backupState.collectAsStateWithLifecycle()
     var showSettings by remember { mutableStateOf(false) }
-    val context = LocalContext.current
-        if (!configState.showSplash && !configState.hasSeenDisclaimer) {
+    var context = LocalContext.current
+
+    val createDocumentLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/zip")
+    ) { uri -> uri?.let { viewModel.createBackup(it) } }
+
+    val openDocumentLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri -> uri?.let { viewModel.restoreBackup(it) } }
+
+    if (!configState.showSplash && !configState.hasSeenDisclaimer) {
         DisclaimerDialog(
             onAccept = { viewModel.acceptDisclaimer() }
         )
@@ -159,8 +169,38 @@ fun WoundScreen(
             onSuggestProductClick = { 
                 showSettings = false
                 viewModel.setAddProductDialogVisibility(true)
+            },
+            onBackupClick = {
+                createDocumentLauncher.launch("miscuras_backup.zip")
+            },
+            onRestoreClick = {
+                openDocumentLauncher.launch(arrayOf("application/zip", "application/octet-stream", "application/x-zip-compressed", "multipart/x-zip"))
             }
         )
+    }
+
+    // Backup State handling
+    when (backupState) {
+        is com.ferlagod.miscuras.domain.BackupState.Loading -> {
+            androidx.compose.ui.window.Dialog(onDismissRequest = {}) {
+                Box(modifier = Modifier.size(100.dp).background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+        }
+        is com.ferlagod.miscuras.domain.BackupState.Success -> {
+            LaunchedEffect(Unit) {
+                android.widget.Toast.makeText(context, context.getString(R.string.backup_success), android.widget.Toast.LENGTH_SHORT).show()
+                viewModel.resetBackupState()
+            }
+        }
+        is com.ferlagod.miscuras.domain.BackupState.Error -> {
+            LaunchedEffect(Unit) {
+                android.widget.Toast.makeText(context, context.getString(R.string.backup_error_prefix, (backupState as com.ferlagod.miscuras.domain.BackupState.Error).message), android.widget.Toast.LENGTH_LONG).show()
+                viewModel.resetBackupState()
+            }
+        }
+        else -> {}
     }
 
     AnimatedContent(
@@ -2247,7 +2287,9 @@ fun SettingsDialog(
     currentTheme: String,
     onThemeChanged: (String) -> Unit,
     onDismiss: () -> Unit,
-    onSuggestProductClick: () -> Unit
+    onSuggestProductClick: () -> Unit,
+    onBackupClick: () -> Unit = {},
+    onRestoreClick: () -> Unit = {}
 ) {
         val uriHandler = LocalUriHandler.current
     var showDeveloperInfo by remember { mutableStateOf(false) }
@@ -2342,6 +2384,42 @@ fun SettingsDialog(
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text(stringResource(R.string.suggest_product_button))
+                    }
+                }
+
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+
+                // --- COPIAS DE SEGURIDAD ---
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        text = "Copias de Seguridad",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                    Text(
+                        text = "Guarda tus pacientes e imágenes localmente en un archivo para no perderlos.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
+                        Button(
+                            onClick = onBackupClick,
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(stringResource(R.string.settings_backup_export))
+                        }
+                        Button(
+                            onClick = onRestoreClick,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.errorContainer,
+                                contentColor = MaterialTheme.colorScheme.onErrorContainer
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(stringResource(R.string.settings_backup_restore))
+                        }
                     }
                 }
 

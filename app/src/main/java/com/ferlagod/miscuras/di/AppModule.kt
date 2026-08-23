@@ -24,6 +24,7 @@ import com.ferlagod.miscuras.data.repository.ApositosRepository
 import com.ferlagod.miscuras.data.repository.FeedbackRepository
 import com.ferlagod.miscuras.domain.rules.RulesEngine
 import com.ferlagod.miscuras.domain.usecase.EvaluateWoundUseCase
+import com.ferlagod.miscuras.domain.BackupService
 import com.ferlagod.miscuras.network.NetworkClient
 import com.ferlagod.miscuras.ui.WoundViewModel
 import com.ferlagod.miscuras.ui.viewmodels.PatientViewModel
@@ -59,6 +60,7 @@ val appModule = module {
     // Use Cases & Engines
     single { RulesEngine() }
     single { EvaluateWoundUseCase(get(), get()) }
+    single { BackupService(androidContext(), get()) }
 
     // ViewModels
     viewModelOf(::WoundViewModel)

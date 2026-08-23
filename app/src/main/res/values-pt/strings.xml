@@ -289,4 +289,10 @@
     <string name="added_button">Adicionado</string>
     <string name="add_button">Adicionar</string>
     <string name="cure_frequency_label">Frequência de Tratamento Recomendada</string>
+
+    <!-- Backup / Restore -->
+    <string name="settings_backup_export">Exportar</string>
+    <string name="settings_backup_restore">Restaurar</string>
+    <string name="backup_success">Operação concluída com sucesso</string>
+    <string name="backup_error_prefix">Erro: %1$s</string>
 </resources>

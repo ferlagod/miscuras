@@ -289,4 +289,10 @@
     <string name="added_button">Añadido</string>
     <string name="add_button">Añadir</string>
     <string name="cure_frequency_label">Pauta de Cura Recomendada</string>
+
+    <!-- Backup / Restore -->
+    <string name="settings_backup_export">Exportar</string>
+    <string name="settings_backup_restore">Restaurar</string>
+    <string name="backup_success">Operación completada con éxito</string>
+    <string name="backup_error_prefix">Error: %1$s</string>
 </resources>

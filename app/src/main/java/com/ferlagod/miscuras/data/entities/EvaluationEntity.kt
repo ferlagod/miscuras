@@ -62,6 +62,9 @@ import androidx.room.Index
     ],
     indices = [Index("woundId")]
 )
+/**
+ * Entidad de base de datos que representa una evaluación.
+ */
 data class EvaluationEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,

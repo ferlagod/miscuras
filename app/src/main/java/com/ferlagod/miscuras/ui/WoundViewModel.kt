@@ -20,6 +20,9 @@ import com.ferlagod.miscuras.data.entities.ApositoEntity
 import com.ferlagod.miscuras.data.entities.EvaluationEntity
 import com.ferlagod.miscuras.data.repository.ApositosRepository
 import com.ferlagod.miscuras.domain.rules.RulesEngine
+import com.ferlagod.miscuras.domain.BackupService
+import com.ferlagod.miscuras.domain.BackupState
+import android.net.Uri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +32,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.ferlagod.miscuras.R
 
+/**
+ * Enumera los pasos del asistente de evaluación de heridas.
+ */
 enum class WizardStep(val progress: Float) {
     ETIOLOGY(0.20f),
     SIZE_AND_LOCATION(0.40f),
@@ -63,6 +69,9 @@ data class WizardState(
     val photoPath: String? = null
 )
 
+/**
+ * Representa el estado actual de una evaluación de herida.
+ */
 data class EvaluationState(
     val bradenScore: Int? = null,
     val familiaRecomendada: String? = null,
@@ -78,6 +87,9 @@ data class EvaluationState(
     val isAiLoading: Boolean = false
 )
 
+/**
+ * Representa el estado de la configuración de la aplicación (idioma, tema, etc.).
+ */
 data class ConfigState(
     val showSplash: Boolean = true,
     val showArMeasure: Boolean = false,
@@ -101,7 +113,8 @@ class WoundViewModel(
     private val sharedPrefs: SharedPreferences,
     private val repository: ApositosRepository,
     private val evaluateWoundUseCase: EvaluateWoundUseCase,
-    private val feedbackRepository: FeedbackRepository
+    private val feedbackRepository: FeedbackRepository,
+    private val backupService: BackupService
 ) : ViewModel() {
 
 
@@ -114,6 +127,8 @@ class WoundViewModel(
     private val _configState = MutableStateFlow(ConfigState())
     val configState: StateFlow<ConfigState> = _configState.asStateFlow()
 
+    private val _backupState = MutableStateFlow<BackupState>(BackupState.Idle)
+    val backupState: StateFlow<BackupState> = _backupState.asStateFlow()
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -625,4 +640,28 @@ class WoundViewModel(
         _configState.update { it.copy(isExpertMode = !it.isExpertMode) }
     }
 
+    // --- Backup & Restore ---
+
+    fun createBackup(uri: Uri) {
+        viewModelScope.launch {
+            backupService.createBackup(uri).collect { state ->
+                _backupState.value = state
+            }
+        }
+    }
+
+    fun restoreBackup(uri: Uri) {
+        viewModelScope.launch {
+            backupService.restoreBackup(uri).collect { state ->
+                _backupState.value = state
+                if (state is BackupState.Success) {
+                    resetWizard() // Refresh UI state after restoring DB
+                }
+            }
+        }
+    }
+
+    fun resetBackupState() {
+        _backupState.value = BackupState.Idle
+    }
 }

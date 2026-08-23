@@ -1,3 +1,20 @@
+/*
+ * Mis Curas
+ * Copyright (C) Fernando Lago. 2026
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 package com.ferlagod.miscuras.ui.screens
 
 import androidx.compose.animation.AnimatedVisibility
@@ -77,8 +94,17 @@ fun DashboardScreen(
 ) {
     val patients by patientViewModel.patients.collectAsState()
     val configState by woundViewModel.configState.collectAsStateWithLifecycle()
+    val backupState by woundViewModel.backupState.collectAsStateWithLifecycle()
     var showSettings by remember { mutableStateOf(false) }
     var showAddSheet by remember { mutableStateOf(false) }
+
+    val createDocumentLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/zip")
+    ) { uri -> uri?.let { woundViewModel.createBackup(it) } }
+
+    val openDocumentLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
+    ) { uri -> uri?.let { woundViewModel.restoreBackup(it) } }
 
     val context = LocalContext.current
     val lang = configState.currentLanguage
@@ -379,8 +405,38 @@ fun DashboardScreen(
             onSuggestProductClick = { 
                 showSettings = false
                 woundViewModel.setAddProductDialogVisibility(true)
+            },
+            onBackupClick = {
+                createDocumentLauncher.launch("miscuras_backup.zip")
+            },
+            onRestoreClick = {
+                openDocumentLauncher.launch(arrayOf("application/zip", "application/octet-stream", "application/x-zip-compressed", "multipart/x-zip"))
             }
         )
+    }
+    
+    // Backup State handling
+    when (backupState) {
+        is com.ferlagod.miscuras.domain.BackupState.Loading -> {
+            androidx.compose.ui.window.Dialog(onDismissRequest = {}) {
+                Box(modifier = Modifier.size(100.dp).background(MaterialTheme.colorScheme.surface, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+        }
+        is com.ferlagod.miscuras.domain.BackupState.Success -> {
+            LaunchedEffect(Unit) {
+                android.widget.Toast.makeText(context, context.getString(R.string.backup_success), android.widget.Toast.LENGTH_SHORT).show()
+                woundViewModel.resetBackupState()
+            }
+        }
+        is com.ferlagod.miscuras.domain.BackupState.Error -> {
+            LaunchedEffect(Unit) {
+                android.widget.Toast.makeText(context, context.getString(R.string.backup_error_prefix, (backupState as com.ferlagod.miscuras.domain.BackupState.Error).message), android.widget.Toast.LENGTH_LONG).show()
+                woundViewModel.resetBackupState()
+            }
+        }
+        else -> {}
     }
 }
 

@@ -1,8 +1,28 @@
+/*
+ * Mis Curas
+ * Copyright (C) Fernando Lago. 2026
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 package com.ferlagod.miscuras.ui
 
 import android.content.Context
 import com.ferlagod.miscuras.R
 
+/**
+ * Mapea términos clínicos a cadenas de recursos para su internacionalización.
+ */
 object ClinicalTermMapper {
     fun translateClinicalTerm(term: String, context: Context): String {
         return when (term.trim()) {

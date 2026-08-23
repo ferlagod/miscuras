@@ -25,6 +25,9 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.Response
 
+/**
+ * Carga de datos para el envío de formularios de feedback.
+ */
 data class FormPayload(
     val name: String,
     val is_health_professional: String,
@@ -57,6 +60,9 @@ interface FormSubmitApi {
     ): Response<Any>
 }
 
+/**
+ * Cliente de red configurado con Retrofit para llamadas a la API.
+ */
 object NetworkClient {
     private const val BASE_URL = "https://formspree.io/"
 
