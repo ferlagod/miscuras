@@ -35,5 +35,9 @@ data class PatientEntity(
     val id: Long = 0,
     val anonymizedName: String,
     val roomNumber: String,
+    val allergies: String? = null,
+    val medication: String? = null,
+    val medicalHistory: String? = null,
+    val photoUri: String? = null,
     val createdAt: Long = System.currentTimeMillis()
 )

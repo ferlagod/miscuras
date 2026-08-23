@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">Minhas Curas</string>
     <string name="disclaimer_title">Aviso de Responsabilidade</string>
@@ -249,11 +249,11 @@
     <string name="eval_treatment_format">Tratamento: %1$s</string>
     <string name="photo_evolution_desc">Foto da evolução</string>
     
-    <!-- Dashboard Strings -->
+    
     <string name="quick_evaluation_desc">Avaliação direta sem paciente</string>
     <string name="patient_room">Quarto: %1$s</string>
 
-    <!-- Redesign: Empty States -->
+    
     <string name="empty_patients_title">Ainda sem pacientes</string>
     <string name="empty_patients_subtitle">Registe o seu primeiro paciente para começar a documentar as suas feridas</string>
     <string name="empty_patients_cta">Adicionar primeiro paciente</string>
@@ -263,21 +263,21 @@
     <string name="empty_evaluations_title">Sem avaliações</string>
     <string name="empty_evaluations_subtitle">Avalie esta ferida para obter recomendações de tratamento</string>
 
-    <!-- Redesign: Bottom Sheet -->
+    
     <string name="patient_name_hint">Ex: J.G.M.</string>
     <string name="room_bed_hint">Ex: 302-B</string>
     <string name="wound_name_hint">Ex: Calcanhar esquerdo</string>
 
-    <!-- Redesign: Patient Detail -->
+    
     <string name="wounds_count">%1$d feridas</string>
     <string name="wounds_count_singular">1 ferida</string>
     <string name="registered_since">Registado em %1$s</string>
 
-    <!-- Redesign: Wound Detail Timeline -->
+    
     <string name="latest_evaluation">Última avaliação</string>
     <string name="area_label">Área: %1$s cm²</string>
 
-    <!-- Redesign: Misc -->
+    
     <string name="next_button">Seguinte</string>
     <string name="analyzing_prevention">A analisar prevenção…</string>
     <string name="analyzing_wound">A analisar leito e exsudato…</string>
@@ -290,9 +290,9 @@
     <string name="add_button">Adicionar</string>
     <string name="cure_frequency_label">Frequência de Tratamento Recomendada</string>
 
-    <!-- Backup / Restore -->
+    
     <string name="settings_backup_export">Exportar</string>
     <string name="settings_backup_restore">Restaurar</string>
     <string name="backup_success">Operação concluída com sucesso</string>
     <string name="backup_error_prefix">Erro: %1$s</string>
-</resources>
+<string name="patient_allergies_label">Alergias: %1$s</string><string name="patient_medication_label">Medicação: %1$s</string><string name="patient_medical_history_label">Histórico Médico: %1$s</string><string name="wounds_active_title">Ativas</string><string name="wounds_discharged_title">Alta</string><string name="wound_discharged_date_format">Alta: %1$s</string><string name="action_discharge_wound">Dar alta</string><string name="content_desc_edit">Editar</string><string name="content_desc_patient_photo">Foto do paciente</string><string name="add_photo">Adicionar foto</string><string name="patient_allergies_hint">Alergias (opcional)</string><string name="patient_medication_hint">Medicação (opcional)</string><string name="patient_medical_history_hint">Histórico médico (opcional)</string><string name="save_changes">Salvar alterações</string><string name="edit_patient_title">Editar Ficha do Paciente</string></resources>

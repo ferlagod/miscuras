@@ -56,6 +56,13 @@ import com.airbnb.lottie.compose.*
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
+
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.ferlagod.miscuras.data.entities.PatientEntity
+
 import kotlin.math.abs
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -116,18 +123,31 @@ fun PatientDetailScreen(
                 .padding(paddingValues)
         ) {
             // === Patient Info Header Card ===
+            var showEditSheet by remember { mutableStateOf(false) }
             if (patient != null) {
                 PatientInfoHeader(
-                    name = patient.anonymizedName,
-                    room = patient.roomNumber,
+                    patient = patient,
                     woundCount = wounds.size,
-                    createdAt = patient.createdAt
+                    onEditClick = { showEditSheet = true }
                 )
+                if (showEditSheet) {
+                    EditPatientBottomSheet(
+                        patient = patient,
+                        onDismiss = { showEditSheet = false },
+                        onSave = { updatedPatient -> 
+                            patientViewModel.updatePatientDetails(updatedPatient)
+                            showEditSheet = false
+                        }
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            if (wounds.isEmpty()) {
+            val activeWounds = wounds.filter { !it.isDischarged }
+            val dischargedWounds = wounds.filter { it.isDischarged }
+            
+            if (activeWounds.isEmpty() && dischargedWounds.isEmpty()) {
                 // === Empty State ===
                 Box(
                     modifier = Modifier
@@ -184,29 +204,30 @@ fun PatientDetailScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp)
                 ) {
-                    itemsIndexed(wounds, key = { _, w -> w.id }) { index, wound ->
-                        var visible by remember { mutableStateOf(false) }
-                        LaunchedEffect(wound.id) {
-                            delay(index * 60L)
-                            visible = true
-                        }
-
-                        AnimatedVisibility(
-                            visible = visible,
-                            enter = fadeIn(animationSpec = tween(300)) +
-                                    slideInVertically(
-                                        initialOffsetY = { it / 3 },
-                                        animationSpec = spring(
-                                            dampingRatio = Spring.DampingRatioMediumBouncy,
-                                            stiffness = Spring.StiffnessLow
-                                        )
-                                    )
-                        ) {
-                            WoundCard(
-                                name = wound.name,
-                                createdAt = wound.createdAt,
-                                onClick = { onWoundClick(wound.id) }
+                    if (activeWounds.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.wounds_active_title),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(vertical = 8.dp)
                             )
+                        }
+                        itemsIndexed(activeWounds, key = { _, w -> "active_${w.id}" }) { index, wound ->
+                            WoundAnimatedItem(wound = wound, index = index, onWoundClick = onWoundClick)
+                        }
+                    }
+                    if (dischargedWounds.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.wounds_discharged_title),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
+                            )
+                        }
+                        itemsIndexed(dischargedWounds, key = { _, w -> "discharged_${w.id}" }) { index, wound ->
+                            WoundAnimatedItem(wound = wound, index = index, onWoundClick = onWoundClick, isDischarged = true)
                         }
                     }
                 }
@@ -232,11 +253,14 @@ fun PatientDetailScreen(
 
 @Composable
 private fun PatientInfoHeader(
-    name: String,
-    room: String,
+    patient: PatientEntity,
     woundCount: Int,
-    createdAt: Long
+    onEditClick: () -> Unit
 ) {
+    val name = patient.anonymizedName
+    val room = patient.roomNumber
+    val createdAt = patient.createdAt
+
     val avatarColor = remember(name) {
         val hue = (abs(name.hashCode()) % 360).toFloat()
         Color.hsl(hue, 0.45f, 0.55f)
@@ -275,14 +299,23 @@ private fun PatientInfoHeader(
                 modifier = Modifier.size(56.dp),
                 shadowElevation = 2.dp
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = initials,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        fontSize = 20.sp
+                if (patient.photoUri != null) {
+                    AsyncImage(
+                        model = patient.photoUri,
+                        contentDescription = "Foto",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
                     )
+                } else {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = initials,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            fontSize = 20.sp
+                        )
+                    }
                 }
             }
             Spacer(modifier = Modifier.width(16.dp))
@@ -326,15 +359,32 @@ private fun PatientInfoHeader(
                     )
                 }
                 Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = String.format(stringResource(R.string.registered_since), dateStr),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                )
+                    Text(
+                        text = String.format(stringResource(R.string.registered_since), dateStr),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
+                    
+                    if (!patient.allergies.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(stringResource(R.string.patient_allergies_label, patient.allergies), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+                    }
+                    if (!patient.medication.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(stringResource(R.string.patient_medication_label, patient.medication), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                    if (!patient.medicalHistory.isNullOrBlank()) {
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(stringResource(R.string.patient_medical_history_label, patient.medicalHistory), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+                IconButton(onClick = onEditClick) {
+                    Icon(androidx.compose.material.icons.Icons.Rounded.Edit, contentDescription = stringResource(R.string.content_desc_edit), tint = MaterialTheme.colorScheme.primary)
+                }
             }
         }
     }
-}
+
 
 // ============================================================
 // Wound Card — Premium
@@ -342,8 +392,7 @@ private fun PatientInfoHeader(
 
 @Composable
 private fun WoundCard(
-    name: String,
-    createdAt: Long,
+    wound: com.ferlagod.miscuras.data.entities.WoundEntity,
     onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -353,9 +402,14 @@ private fun WoundCard(
         animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy),
         label = "wound_card_press"
     )
-    val dateStr = remember(createdAt) {
-        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(createdAt))
+    val dateStr = remember(wound.createdAt) {
+        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(wound.createdAt))
     }
+    val formattedDischargedDate = remember(wound.dischargedAt) {
+        wound.dischargedAt?.let { SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date(it)) }
+    }
+    val dischargedDateStr = formattedDischargedDate?.let { stringResource(R.string.wound_discharged_date_format, it) }
+    val isDischarged = wound.isDischarged
 
     Card(
         modifier = Modifier
@@ -363,10 +417,10 @@ private fun WoundCard(
             .scale(scale)
             .clickable(interactionSource = interactionSource, indication = null) { onClick() },
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = if (isDischarged) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 1.dp,
+            defaultElevation = if (isDischarged) 0.dp else 2.dp,
             pressedElevation = 0.dp
         ),
         shape = RoundedCornerShape(16.dp)
@@ -379,14 +433,14 @@ private fun WoundCard(
         ) {
             Surface(
                 shape = RoundedCornerShape(14.dp),
-                color = MaterialTheme.colorScheme.secondaryContainer,
+                color = if (isDischarged) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.secondaryContainer,
                 modifier = Modifier.size(44.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
                     Icon(
-                        Icons.Rounded.LocalHospital,
+                        if (isDischarged) Icons.Rounded.CheckCircle else Icons.Rounded.LocalHospital,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        tint = if (isDischarged) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSecondaryContainer,
                         modifier = Modifier.size(22.dp)
                     )
                 }
@@ -394,7 +448,7 @@ private fun WoundCard(
             Spacer(modifier = Modifier.width(14.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = name,
+                    text = wound.name,
                     fontWeight = FontWeight.SemiBold,
                     style = MaterialTheme.typography.titleMedium,
                     maxLines = 1,
@@ -402,7 +456,7 @@ private fun WoundCard(
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = dateStr,
+                    text = if (isDischarged && dischargedDateStr != null) dischargedDateStr else dateStr,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -550,6 +604,164 @@ private fun AddWoundBottomSheet(
                     text = stringResource(R.string.cancel_button),
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun WoundAnimatedItem(wound: com.ferlagod.miscuras.data.entities.WoundEntity, index: Int, onWoundClick: (Long) -> Unit, isDischarged: Boolean = false) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(wound.id) {
+        delay(index * 60L)
+        visible = true
+    }
+
+    AnimatedVisibility(
+        visible = visible,
+        enter = fadeIn(animationSpec = tween(300)) +
+                slideInVertically(
+                    initialOffsetY = { it / 3 },
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                )
+    ) {
+        WoundCard(
+            wound = wound,
+            onClick = { onWoundClick(wound.id) }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditPatientBottomSheet(
+    patient: PatientEntity,
+    onDismiss: () -> Unit,
+    onSave: (PatientEntity) -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    var photoUri by remember { mutableStateOf(patient.photoUri) }
+    var allergies by remember { mutableStateOf(patient.allergies ?: "") }
+    var medication by remember { mutableStateOf(patient.medication ?: "") }
+    var medicalHistory by remember { mutableStateOf(patient.medicalHistory ?: "") }
+    
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val photoPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia()
+    ) { uri ->
+        if (uri != null) {
+            try {
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val fileName = "patient_photo_${System.currentTimeMillis()}.jpg"
+                val file = java.io.File(context.filesDir, fileName)
+                val outputStream = java.io.FileOutputStream(file)
+                inputStream?.copyTo(outputStream)
+                inputStream?.close()
+                outputStream.close()
+                photoUri = file.toURI().toString()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                photoUri = uri.toString()
+            }
+        }
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        containerColor = MaterialTheme.colorScheme.surface
+    ) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            item {
+                Text(stringResource(R.string.edit_patient_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            
+            item {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                    Surface(
+                        shape = CircleShape,
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        modifier = Modifier.size(64.dp)
+                    ) {
+                        if (photoUri != null) {
+                            AsyncImage(
+                                model = photoUri,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        } else {
+                            Icon(Icons.Rounded.Person, contentDescription = null, modifier = Modifier.padding(16.dp))
+                        }
+                    }
+                    Spacer(modifier = Modifier.width(16.dp))
+                    OutlinedButton(onClick = { 
+                        photoPickerLauncher.launch(androidx.activity.result.PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) 
+                    }) {
+                        Text(stringResource(R.string.add_photo))
+                    }
+                }
+            }
+            
+            item {
+                OutlinedTextField(
+                    value = allergies,
+                    onValueChange = { allergies = it },
+                    label = { Text(stringResource(R.string.patient_allergies_hint)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+            
+            item {
+                OutlinedTextField(
+                    value = medication,
+                    onValueChange = { medication = it },
+                    label = { Text(stringResource(R.string.patient_medication_hint)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    minLines = 2
+                )
+            }
+            
+            item {
+                OutlinedTextField(
+                    value = medicalHistory,
+                    onValueChange = { medicalHistory = it },
+                    label = { Text(stringResource(R.string.patient_medical_history_hint)) },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    minLines = 3
+                )
+            }
+            
+            item {
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = {
+                        onSave(patient.copy(
+                            photoUri = photoUri,
+                            allergies = allergies.ifBlank { null },
+                            medication = medication.ifBlank { null },
+                            medicalHistory = medicalHistory.ifBlank { null }
+                        ))
+                    },
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text(stringResource(R.string.save_changes), fontWeight = FontWeight.Bold)
+                }
             }
         }
     }

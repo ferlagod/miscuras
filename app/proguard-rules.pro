@@ -70,3 +70,11 @@
     <init>(...);
 }
 -keepnames class * extends androidx.lifecycle.ViewModel
+# ── Kotlin Metadata (Needed for Room and Koin reflection) ──
+-keep class kotlin.Metadata { *; }
+
+# ── Backup Models ──
+-keep class com.ferlagod.miscuras.data.models.** { *; }
+
+# ── Jetpack Navigation Compose ──
+-keep class androidx.navigation.** { *; }

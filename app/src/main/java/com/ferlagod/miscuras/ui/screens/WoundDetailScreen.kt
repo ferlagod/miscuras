@@ -112,18 +112,32 @@ fun WoundDetailScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     titleContentColor = MaterialTheme.colorScheme.primary
-                )
+                ),
+                actions = {
+                    if (wound?.isDischarged == false) {
+                        TextButton(onClick = { 
+                            wound?.id?.let { patientViewModel.dischargeWound(it) }
+                            onBackClick()
+                        }) {
+                            Icon(Icons.Rounded.CheckCircle, contentDescription = null)
+                            Spacer(Modifier.width(4.dp))
+                            Text(stringResource(R.string.action_discharge_wound))
+                        }
+                    }
+                }
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = { onNewEvaluationClick(woundId) },
-                icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
-                text = { Text(stringResource(R.string.evaluate_btn)) },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = RoundedCornerShape(20.dp)
-            )
+            if (wound?.isDischarged == false) {
+                ExtendedFloatingActionButton(
+                    onClick = { onNewEvaluationClick(woundId) },
+                    icon = { Icon(Icons.Rounded.Add, contentDescription = null) },
+                    text = { Text(stringResource(R.string.evaluate_btn)) },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = RoundedCornerShape(20.dp)
+                )
+            }
         }
     ) { paddingValues ->
         if (evaluations.isEmpty()) {

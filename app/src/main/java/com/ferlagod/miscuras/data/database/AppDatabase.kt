@@ -57,7 +57,7 @@ import java.io.InputStreamReader
         WoundEntity::class,
         EvaluationEntity::class
     ],
-    version = 31,
+    version = 33,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -184,12 +184,28 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
 
+                val MIGRATION_31_32 = object : androidx.room.migration.Migration(31, 32) {
+                    override fun migrate(db: SupportSQLiteDatabase) {
+                        db.execSQL("ALTER TABLE pacientes ADD COLUMN allergies TEXT")
+                        db.execSQL("ALTER TABLE pacientes ADD COLUMN medication TEXT")
+                        db.execSQL("ALTER TABLE pacientes ADD COLUMN medicalHistory TEXT")
+                        db.execSQL("ALTER TABLE pacientes ADD COLUMN photoUri TEXT")
+                        db.execSQL("ALTER TABLE heridas ADD COLUMN isDischarged INTEGER NOT NULL DEFAULT 0")
+                    }
+                }
+
+                val MIGRATION_32_33 = object : androidx.room.migration.Migration(32, 33) {
+                    override fun migrate(db: SupportSQLiteDatabase) {
+                        db.execSQL("ALTER TABLE heridas ADD COLUMN dischargedAt INTEGER")
+                    }
+                }
+
                 val builder = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     dbName
                 )
-                    .addMigrations(MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31)
+                    .addMigrations(MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31, MIGRATION_31_32, MIGRATION_32_33)
                     .addCallback(DatabaseCallback(context)) // Disparador para la primera ejecución
                 
                 if (useEncryption) {

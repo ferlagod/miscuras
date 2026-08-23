@@ -375,6 +375,7 @@ fun DashboardScreen(
                             PatientCard(
                                 name = patient.anonymizedName,
                                 room = patient.roomNumber,
+                                photoUri = patient.photoUri,
                                 onClick = { onPatientClick(patient.id) }
                             )
                         }
@@ -448,6 +449,7 @@ fun DashboardScreen(
 private fun PatientCard(
     name: String,
     room: String,
+    photoUri: String? = null,
     onClick: () -> Unit
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -488,14 +490,23 @@ private fun PatientCard(
                 modifier = Modifier.size(48.dp),
                 shadowElevation = 2.dp
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Text(
-                        text = initials,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        fontSize = 16.sp
+                if (photoUri != null) {
+                    androidx.compose.foundation.Image(
+                        painter = coil.compose.rememberAsyncImagePainter(photoUri),
+                        contentDescription = stringResource(R.string.content_desc_patient_photo),
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                        modifier = Modifier.fillMaxSize()
                     )
+                } else {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text(
+                            text = initials,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            fontSize = 16.sp
+                        )
+                    }
                 }
             }
             Spacer(modifier = Modifier.width(14.dp))

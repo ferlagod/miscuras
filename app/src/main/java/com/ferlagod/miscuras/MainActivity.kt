@@ -18,7 +18,7 @@ import android.widget.TextView
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
+import androidx.core.view.WindowCompat
 import androidx.activity.viewModels
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -62,8 +62,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Diseño inmersivo (edge-to-edge)
-        enableEdgeToEdge()
+        // Diseño inmersivo sin usar enableEdgeToEdge() para evitar warning en Play Console (API 35)
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         // 5. Dibujar la pantalla con Navegación
         setContent {

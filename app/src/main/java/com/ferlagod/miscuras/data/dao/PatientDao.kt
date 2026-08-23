@@ -22,6 +22,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import com.ferlagod.miscuras.data.entities.EvaluationEntity
 import com.ferlagod.miscuras.data.entities.PatientEntity
 import com.ferlagod.miscuras.data.entities.WoundEntity
@@ -73,8 +74,16 @@ interface PatientDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPatients(patients: List<PatientEntity>): @JvmSuppressWildcards List<Long>
 
+    @Update
+    suspend fun updatePatient(patient: PatientEntity): @JvmSuppressWildcards Int
+
+
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertWounds(wounds: List<WoundEntity>): @JvmSuppressWildcards List<Long>
+
+    @Update
+    suspend fun updateWound(wound: WoundEntity): @JvmSuppressWildcards Int
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEvaluations(evaluations: List<EvaluationEntity>): @JvmSuppressWildcards List<Long>

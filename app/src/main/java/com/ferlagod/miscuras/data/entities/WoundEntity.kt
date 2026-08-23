@@ -53,5 +53,7 @@ data class WoundEntity(
     val id: Long = 0,
     val patientId: Long,
     val name: String, // ej. "Talón Izquierdo"
+    val isDischarged: Boolean = false,
+    val dischargedAt: Long? = null,
     val createdAt: Long = System.currentTimeMillis()
 )

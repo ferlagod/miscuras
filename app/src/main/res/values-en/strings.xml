@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
     <string name="app_name">My Cures</string>
     <string name="disclaimer_title">Disclaimer</string>
@@ -249,11 +249,11 @@
     <string name="eval_treatment_format">Treatment: %1$s</string>
     <string name="photo_evolution_desc">Evolution photo</string>
     
-    <!-- Dashboard Strings -->
+    
     <string name="quick_evaluation_desc">Direct evaluation without patient</string>
     <string name="patient_room">Room: %1$s</string>
 
-    <!-- Redesign: Empty States -->
+    
     <string name="empty_patients_title">No patients yet</string>
     <string name="empty_patients_subtitle">Register your first patient to start documenting their wounds</string>
     <string name="empty_patients_cta">Add first patient</string>
@@ -263,21 +263,21 @@
     <string name="empty_evaluations_title">No evaluations</string>
     <string name="empty_evaluations_subtitle">Evaluate this wound to get treatment recommendations</string>
 
-    <!-- Redesign: Bottom Sheet -->
+    
     <string name="patient_name_hint">E.g.: J.S.D.</string>
     <string name="room_bed_hint">E.g.: 302-B</string>
     <string name="wound_name_hint">E.g.: Left heel</string>
 
-    <!-- Redesign: Patient Detail -->
+    
     <string name="wounds_count">%1$d wounds</string>
     <string name="wounds_count_singular">1 wound</string>
     <string name="registered_since">Registered on %1$s</string>
 
-    <!-- Redesign: Wound Detail Timeline -->
+    
     <string name="latest_evaluation">Latest evaluation</string>
     <string name="area_label">Area: %1$s cm²</string>
 
-    <!-- Redesign: Misc -->
+    
     <string name="next_button">Next</string>
     <string name="analyzing_prevention">Analyzing prevention…</string>
     <string name="analyzing_wound">Analyzing wound bed and exudate…</string>
@@ -290,9 +290,9 @@
     <string name="add_button">Add</string>
     <string name="cure_frequency_label">Recommended Cure Frequency</string>
 
-    <!-- Backup / Restore -->
+    
     <string name="settings_backup_export">Export</string>
     <string name="settings_backup_restore">Restore</string>
     <string name="backup_success">Operation completed successfully</string>
     <string name="backup_error_prefix">Error: %1$s</string>
-</resources>
+<string name="patient_allergies_label">Allergies: %1$s</string><string name="patient_medication_label">Medication: %1$s</string><string name="patient_medical_history_label">Medical History: %1$s</string><string name="wounds_active_title">Active</string><string name="wounds_discharged_title">Discharged</string><string name="wound_discharged_date_format">Discharged: %1$s</string><string name="action_discharge_wound">Discharge</string><string name="content_desc_edit">Edit</string><string name="content_desc_patient_photo">Patient photo</string><string name="add_photo">Add photo</string><string name="patient_allergies_hint">Allergies (optional)</string><string name="patient_medication_hint">Medication (optional)</string><string name="patient_medical_history_hint">Medical history (optional)</string><string name="save_changes">Save changes</string><string name="edit_patient_title">Edit Patient Details</string></resources>

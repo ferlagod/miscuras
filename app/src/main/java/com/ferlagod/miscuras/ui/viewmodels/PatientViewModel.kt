@@ -95,4 +95,29 @@ class PatientViewModel(private val patientDao: PatientDao) : ViewModel() {
             patientDao.insertWound(WoundEntity(patientId = patientId, name = woundName))
         }
     }
+
+    fun updatePatientDetails(patient: PatientEntity) {
+        viewModelScope.launch(Dispatchers.IO) {
+            patientDao.updatePatient(patient)
+            // Reload patients to reflect changes
+            patientDao.getAllPatients()
+                .catch { e -> e.printStackTrace() }
+                .collect { list ->
+                    _patients.value = list
+                }
+        }
+    }
+
+    fun dischargeWound(woundId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val wound = patientDao.getWoundById(woundId)
+            if (wound != null) {
+                patientDao.updateWound(wound.copy(
+                    isDischarged = true,
+                    dischargedAt = System.currentTimeMillis()
+                ))
+                // The currentPatientWounds will automatically update because it's a flow from DB
+            }
+        }
+    }
 }
