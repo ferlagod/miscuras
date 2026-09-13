@@ -34,6 +34,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.Image
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -76,6 +77,7 @@ fun PatientDetailScreen(
     val wounds by patientViewModel.currentPatientWounds.collectAsState()
     val patients by patientViewModel.patients.collectAsState()
     var showAddSheet by remember { mutableStateOf(false) }
+    var woundToDelete by remember { mutableStateOf<com.ferlagod.miscuras.data.entities.WoundEntity?>(null) }
 
     val patient = patients.find { it.id == patientId }
     
@@ -95,7 +97,7 @@ fun PatientDetailScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Rounded.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Volver")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -214,7 +216,12 @@ fun PatientDetailScreen(
                             )
                         }
                         itemsIndexed(activeWounds, key = { _, w -> "active_${w.id}" }) { index, wound ->
-                            WoundAnimatedItem(wound = wound, index = index, onWoundClick = onWoundClick)
+                            WoundAnimatedItem(
+                                wound = wound,
+                                index = index,
+                                onWoundClick = onWoundClick,
+                                onDeleteClick = { woundToDelete = wound }
+                            )
                         }
                     }
                     if (dischargedWounds.isNotEmpty()) {
@@ -227,12 +234,44 @@ fun PatientDetailScreen(
                             )
                         }
                         itemsIndexed(dischargedWounds, key = { _, w -> "discharged_${w.id}" }) { index, wound ->
-                            WoundAnimatedItem(wound = wound, index = index, onWoundClick = onWoundClick, isDischarged = true)
+                            WoundAnimatedItem(
+                                wound = wound,
+                                index = index,
+                                onWoundClick = onWoundClick,
+                                isDischarged = true,
+                                onDeleteClick = { woundToDelete = wound }
+                            )
                         }
                     }
                 }
             }
         }
+    }
+
+    // Confirmation dialog for deleting wound
+    if (woundToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { woundToDelete = null },
+            icon = { Icon(Icons.Rounded.DeleteForever, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            title = { Text("¿Eliminar herida?") },
+            text = { Text("Se eliminará la herida \"${woundToDelete?.name}\" y todo su historial de evaluaciones y fotografías. Esta acción es irreversible.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        woundToDelete?.let { patientViewModel.deleteWound(it.id) }
+                        woundToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { woundToDelete = null }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 
     // === BottomSheet para crear herida ===
@@ -393,7 +432,8 @@ private fun PatientInfoHeader(
 @Composable
 private fun WoundCard(
     wound: com.ferlagod.miscuras.data.entities.WoundEntity,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDeleteClick: (() -> Unit)? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -461,12 +501,23 @@ private fun WoundCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Icon(
-                imageVector = Icons.Rounded.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                modifier = Modifier.size(20.dp)
-            )
+            if (onDeleteClick != null) {
+                IconButton(onClick = onDeleteClick) {
+                    Icon(
+                        imageVector = Icons.Rounded.DeleteOutline,
+                        contentDescription = "Eliminar herida",
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            } else {
+                Icon(
+                    imageVector = Icons.Rounded.ChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
     }
 }
@@ -610,7 +661,13 @@ private fun AddWoundBottomSheet(
 }
 
 @Composable
-private fun WoundAnimatedItem(wound: com.ferlagod.miscuras.data.entities.WoundEntity, index: Int, onWoundClick: (Long) -> Unit, isDischarged: Boolean = false) {
+private fun WoundAnimatedItem(
+    wound: com.ferlagod.miscuras.data.entities.WoundEntity,
+    index: Int,
+    onWoundClick: (Long) -> Unit,
+    isDischarged: Boolean = false,
+    onDeleteClick: (() -> Unit)? = null
+) {
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(wound.id) {
         delay(index * 60L)
@@ -630,7 +687,8 @@ private fun WoundAnimatedItem(wound: com.ferlagod.miscuras.data.entities.WoundEn
     ) {
         WoundCard(
             wound = wound,
-            onClick = { onWoundClick(wound.id) }
+            onClick = { onWoundClick(wound.id) },
+            onDeleteClick = onDeleteClick
         )
     }
 }

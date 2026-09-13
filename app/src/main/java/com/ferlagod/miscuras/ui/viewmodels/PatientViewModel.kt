@@ -99,12 +99,49 @@ class PatientViewModel(private val patientDao: PatientDao) : ViewModel() {
     fun updatePatientDetails(patient: PatientEntity) {
         viewModelScope.launch(Dispatchers.IO) {
             patientDao.updatePatient(patient)
-            // Reload patients to reflect changes
-            patientDao.getAllPatients()
-                .catch { e -> e.printStackTrace() }
-                .collect { list ->
-                    _patients.value = list
+        }
+    }
+
+    fun deletePatient(patientId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val patient = patientDao.getPatientById(patientId)
+            val wounds = patientDao.getWoundsForPatientSync(patientId)
+            for (wound in wounds) {
+                val evals = patientDao.getEvaluationsForWoundSync(wound.id)
+                for (eval in evals) {
+                    eval.photoPath?.let { path ->
+                        try { java.io.File(path).delete() } catch (e: Exception) { e.printStackTrace() }
+                    }
                 }
+            }
+            patient?.photoUri?.let { uriStr ->
+                try {
+                    val file = java.io.File(uriStr)
+                    if (file.exists()) file.delete()
+                } catch (e: Exception) { e.printStackTrace() }
+            }
+            patientDao.deletePatientById(patientId)
+        }
+    }
+
+    fun deleteWound(woundId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val evals = patientDao.getEvaluationsForWoundSync(woundId)
+            for (eval in evals) {
+                eval.photoPath?.let { path ->
+                    try { java.io.File(path).delete() } catch (e: Exception) { e.printStackTrace() }
+                }
+            }
+            patientDao.deleteWoundById(woundId)
+        }
+    }
+
+    fun deleteEvaluation(evaluationId: Long, photoPath: String? = null) {
+        viewModelScope.launch(Dispatchers.IO) {
+            photoPath?.let { path ->
+                try { java.io.File(path).delete() } catch (e: Exception) { e.printStackTrace() }
+            }
+            patientDao.deleteEvaluationById(evaluationId)
         }
     }
 
@@ -116,7 +153,6 @@ class PatientViewModel(private val patientDao: PatientDao) : ViewModel() {
                     isDischarged = true,
                     dischargedAt = System.currentTimeMillis()
                 ))
-                // The currentPatientWounds will automatically update because it's a flow from DB
             }
         }
     }

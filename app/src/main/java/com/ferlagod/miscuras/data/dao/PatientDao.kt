@@ -87,4 +87,22 @@ interface PatientDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertEvaluations(evaluations: List<EvaluationEntity>): @JvmSuppressWildcards List<Long>
+
+    @Query("SELECT * FROM pacientes WHERE id = :patientId")
+    suspend fun getPatientById(patientId: Long): @JvmSuppressWildcards PatientEntity?
+
+    @Query("DELETE FROM pacientes WHERE id = :patientId")
+    suspend fun deletePatientById(patientId: Long): @JvmSuppressWildcards Int
+
+    @Query("DELETE FROM heridas WHERE id = :woundId")
+    suspend fun deleteWoundById(woundId: Long): @JvmSuppressWildcards Int
+
+    @Query("DELETE FROM evaluaciones WHERE id = :evaluationId")
+    suspend fun deleteEvaluationById(evaluationId: Long): @JvmSuppressWildcards Int
+
+    @Query("SELECT * FROM evaluaciones WHERE woundId = :woundId")
+    suspend fun getEvaluationsForWoundSync(woundId: Long): @JvmSuppressWildcards List<EvaluationEntity>
+
+    @Query("SELECT * FROM heridas WHERE patientId = :patientId")
+    suspend fun getWoundsForPatientSync(patientId: Long): @JvmSuppressWildcards List<WoundEntity>
 }

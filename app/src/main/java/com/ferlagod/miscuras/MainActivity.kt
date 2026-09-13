@@ -86,7 +86,7 @@ class MainActivity : AppCompatActivity() {
                                 patientViewModel = patientViewModel,
                                 woundViewModel = viewModel,
                                 onQuickEvaluationClick = { 
-                                    viewModel.resetWizard() // Helper to add later or just clear state
+                                    viewModel.resetWizard()
                                     navController.navigate("wound_eval/-1") 
                                 },
                                 onPatientClick = { patientId ->
@@ -94,7 +94,27 @@ class MainActivity : AppCompatActivity() {
                                 },
                                 onNavigateToWoundEval = {
                                     navController.navigate("wound_eval/-1")
+                                },
+                                onNavigateToCatalog = {
+                                    navController.navigate("catalog")
+                                },
+                                onNavigateToResvech = {
+                                    navController.navigate("resvech")
                                 }
+                            )
+                        }
+
+                        composable("catalog") {
+                            val repository: ApositosRepository = org.koin.compose.koinInject()
+                            com.ferlagod.miscuras.ui.screens.CatalogScreen(
+                                repository = repository,
+                                onBackClick = { navController.popBackStack() }
+                            )
+                        }
+
+                        composable("resvech") {
+                            com.ferlagod.miscuras.ui.screens.ResvechScreen(
+                                onBackClick = { navController.popBackStack() }
                             )
                         }
 

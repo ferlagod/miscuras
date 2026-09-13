@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import com.ferlagod.miscuras.R
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -90,13 +91,28 @@ fun DashboardScreen(
     woundViewModel: WoundViewModel,
     onQuickEvaluationClick: () -> Unit,
     onPatientClick: (Long) -> Unit,
-    onNavigateToWoundEval: () -> Unit
+    onNavigateToWoundEval: () -> Unit,
+    onNavigateToCatalog: () -> Unit = {},
+    onNavigateToResvech: () -> Unit = {}
 ) {
     val patients by patientViewModel.patients.collectAsState()
     val configState by woundViewModel.configState.collectAsStateWithLifecycle()
     val backupState by woundViewModel.backupState.collectAsStateWithLifecycle()
     var showSettings by remember { mutableStateOf(false) }
     var showAddSheet by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
+    var patientToDelete by remember { mutableStateOf<com.ferlagod.miscuras.data.entities.PatientEntity?>(null) }
+
+    val filteredPatients = remember(patients, searchQuery) {
+        if (searchQuery.isBlank()) {
+            patients
+        } else {
+            val q = searchQuery.trim().lowercase()
+            patients.filter {
+                it.anonymizedName.lowercase().contains(q) || it.roomNumber.lowercase().contains(q)
+            }
+        }
+    }
 
     val createDocumentLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/zip")
@@ -128,6 +144,18 @@ fun DashboardScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onNavigateToCatalog) {
+                        Icon(
+                            imageVector = Icons.Rounded.MedicalServices,
+                            contentDescription = "Catálogo SAS"
+                        )
+                    }
+                    IconButton(onClick = onNavigateToResvech) {
+                        Icon(
+                            imageVector = Icons.Rounded.BarChart,
+                            contentDescription = "Escala RESVECH 2.0"
+                        )
+                    }
                     IconButton(onClick = { 
                         woundViewModel.showBraden()
                         onNavigateToWoundEval()
@@ -142,7 +170,7 @@ fun DashboardScreen(
                         onNavigateToWoundEval()
                     }) {
                         Icon(
-                            imageVector = Icons.Rounded.MenuBook,
+                            imageVector = Icons.AutoMirrored.Rounded.MenuBook,
                             contentDescription = "Glosario / Biblioteca"
                         )
                     }
@@ -153,7 +181,7 @@ fun DashboardScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.largeTopAppBarColors(
+                colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     scrolledContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
                     titleContentColor = MaterialTheme.colorScheme.primary,
@@ -266,7 +294,7 @@ fun DashboardScreen(
                 }
             }
 
-            // === Section Header ===
+            // === Section Header + Search ===
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -284,7 +312,7 @@ fun DashboardScreen(
                         color = MaterialTheme.colorScheme.primaryContainer,
                     ) {
                         Text(
-                            text = "${patients.size}",
+                            text = "${filteredPatients.size} / ${patients.size}",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -293,6 +321,31 @@ fun DashboardScreen(
                     }
                 }
             }
+
+            if (patients.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Buscar paciente por nombre o habitación...") },
+                    leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Icon(Icons.Rounded.Clear, contentDescription = "Limpiar")
+                            }
+                        }
+                    },
+                    shape = RoundedCornerShape(14.dp),
+                    singleLine = true,
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
+                    )
+                )
+            }
+
             Spacer(modifier = Modifier.height(12.dp))
 
             if (patients.isEmpty()) {
@@ -307,15 +360,20 @@ fun DashboardScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(horizontal = 32.dp)
                     ) {
-                        // Lottie empty state animation
-                        val composition by rememberLottieComposition(
-                            LottieCompositionSpec.Url("https://lottie.host/2ce4e2ec-b2a1-4330-8a88-e5b6f2c4ae83/rUqJJ5QRfJ.lottie")
-                        )
-                        LottieAnimation(
-                            composition = composition,
-                            iterations = LottieConstants.IterateForever,
-                            modifier = Modifier.size(180.dp)
-                        )
+                        Surface(
+                            shape = CircleShape,
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            modifier = Modifier.size(100.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    Icons.Rounded.PersonAdd,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(48.dp)
+                                )
+                            }
+                        }
                         
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
@@ -354,10 +412,10 @@ fun DashboardScreen(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     contentPadding = PaddingValues(bottom = 80.dp)
                 ) {
-                    itemsIndexed(patients, key = { _, p -> p.id }) { index, patient ->
+                    itemsIndexed(filteredPatients, key = { _, p -> p.id }) { index, patient ->
                         var visible by remember { mutableStateOf(false) }
                         LaunchedEffect(patient.id) {
-                            delay(index * 50L)
+                            delay(index * 40L)
                             visible = true
                         }
 
@@ -376,13 +434,40 @@ fun DashboardScreen(
                                 name = patient.anonymizedName,
                                 room = patient.roomNumber,
                                 photoUri = patient.photoUri,
-                                onClick = { onPatientClick(patient.id) }
+                                onClick = { onPatientClick(patient.id) },
+                                onDeleteClick = { patientToDelete = patient }
                             )
                         }
                     }
                 }
             }
         }
+    }
+
+    // Confirmation dialog for deleting patient
+    if (patientToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { patientToDelete = null },
+            icon = { Icon(Icons.Rounded.DeleteForever, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            title = { Text("¿Eliminar paciente?") },
+            text = { Text("Se eliminará al paciente \"${patientToDelete?.anonymizedName}\" junto con todas sus heridas, evaluaciones y fotografías clínicas asociadas. Esta acción no se puede deshacer.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        patientToDelete?.let { patientViewModel.deletePatient(it.id) }
+                        patientToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { patientToDelete = null }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 
     // === BottomSheet para crear paciente ===
@@ -450,7 +535,8 @@ private fun PatientCard(
     name: String,
     room: String,
     photoUri: String? = null,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    onDeleteClick: (() -> Unit)? = null
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -538,12 +624,23 @@ private fun PatientCard(
                 }
             }
 
-            Icon(
-                imageVector = Icons.Rounded.ChevronRight,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
-                modifier = Modifier.size(20.dp)
-            )
+            if (onDeleteClick != null) {
+                IconButton(onClick = onDeleteClick) {
+                    Icon(
+                        imageVector = Icons.Rounded.DeleteOutline,
+                        contentDescription = "Eliminar paciente",
+                        tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            } else {
+                Icon(
+                    imageVector = Icons.Rounded.ChevronRight,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
     }
 }

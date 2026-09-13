@@ -72,6 +72,22 @@ interface ApositoDao {
     @Query("SELECT COUNT(*) FROM ReglasClinicas")
     fun obtenerCantidadReglas(): Int
 
+    @Query("SELECT * FROM ProductosApositos ORDER BY nombre_comercial ASC")
+    fun getAllProductsFlow(): kotlinx.coroutines.flow.Flow<List<ApositoEntity>>
+
+    @Query("""
+        SELECT * FROM ProductosApositos 
+        WHERE nombre_comercial LIKE '%' || :query || '%' 
+           OR familia_generica LIKE '%' || :query || '%' 
+           OR codigo_cn LIKE '%' || :query || '%'
+           OR fabricante LIKE '%' || :query || '%'
+        ORDER BY nombre_comercial ASC
+    """)
+    fun searchProductsFlow(query: String): kotlinx.coroutines.flow.Flow<List<ApositoEntity>>
+
+    @Query("SELECT DISTINCT familia_generica FROM ProductosApositos ORDER BY familia_generica ASC")
+    fun getAllFamilies(): List<String>
+
     // --- Backup/Restore Methods ---
 
     @Query("SELECT * FROM ProductosApositos")

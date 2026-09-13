@@ -157,7 +157,7 @@ class EvaluateWoundUseCase(
             dolor = state.painLevel.toInt()
         )
         
-        if (respuesta != null) {
+        if (respuesta.isNotBlank()) {
             repository.saveCachedAiResponse(cacheKey, respuesta)
         }
         

@@ -35,7 +35,7 @@ object AsistenteIA {
 
     // Se instancia el modelo usando la clave API inyectada de forma segura desde BuildConfig
     private val generativeModel = GenerativeModel(
-        modelName = "gemini-2.5-flash",
+        modelName = "gemini-2.0-flash",
         apiKey = BuildConfig.GEMINI_API_KEY,
         safetySettings = listOf(
             SafetySetting(HarmCategory.DANGEROUS_CONTENT, BlockThreshold.LOW_AND_ABOVE),

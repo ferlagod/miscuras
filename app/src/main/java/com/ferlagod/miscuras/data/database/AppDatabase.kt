@@ -36,7 +36,7 @@ import com.ferlagod.miscuras.data.security.CryptoManager
 import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import android.util.Log
 import java.io.BufferedReader
@@ -230,7 +230,7 @@ abstract class AppDatabase : RoomDatabase() {
             super.onOpen(db)
 
             // Ejecutar la lectura de los CSV en un hilo secundario si las tablas están vacías
-            GlobalScope.launch(Dispatchers.IO) {
+            CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
                 val database = getDatabase(context)
                 
                 // B2: Limpiar la caché de IA con más de 7 días (TTL)

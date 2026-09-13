@@ -87,9 +87,11 @@ class BackupService(private val context: Context, private val database: AppDatab
                     zipOut.write(jsonStr.toByteArray(Charsets.UTF_8))
                     zipOut.closeEntry()
 
-                    // 2. Save images
-                    val photoPaths = evaluations.mapNotNull { it.photoPath }.distinct()
-                    for (path in photoPaths) {
+                    // 2. Save images (evaluations + patient photos)
+                    val evalPhotoPaths = evaluations.mapNotNull { it.photoPath }
+                    val patientPhotoPaths = patients.mapNotNull { it.photoUri }
+                    val allPhotoPaths = (evalPhotoPaths + patientPhotoPaths).distinct()
+                    for (path in allPhotoPaths) {
                         val file = File(path)
                         if (file.exists()) {
                             val imgEntry = ZipEntry("images/${file.name}")
@@ -136,11 +138,22 @@ class BackupService(private val context: Context, private val database: AppDatab
                 throw Exception("Invalid backup file: data.json not found")
             }
 
-            // Update photoPaths to new absolute paths
+            // Update photoPaths and photoUris to new absolute paths
+            val updatedPatients = backup!!.patients.map { patient ->
+                if (patient.photoUri != null) {
+                    val fileName = File(patient.photoUri).name
+                    val localFile = File(newImagesDir, fileName)
+                    patient.copy(photoUri = if (localFile.exists()) localFile.absolutePath else patient.photoUri)
+                } else {
+                    patient
+                }
+            }
+
             val updatedEvaluations = backup!!.evaluations.map { eval ->
                 if (eval.photoPath != null) {
                     val fileName = File(eval.photoPath).name
-                    eval.copy(photoPath = File(newImagesDir, fileName).absolutePath)
+                    val localFile = File(newImagesDir, fileName)
+                    eval.copy(photoPath = if (localFile.exists()) localFile.absolutePath else eval.photoPath)
                 } else {
                     eval
                 }
@@ -149,14 +162,11 @@ class BackupService(private val context: Context, private val database: AppDatab
             // Restore DB inside a transaction to ensure all or nothing
             database.runInTransaction {
                 kotlinx.coroutines.runBlocking {
-                    database.patientDao().deleteAllPatients() // Cascade deletes wounds & evals usually, but let's be explicit if not handled properly in some DBs
-                    // Re-insert. ID conflicts won't happen because we replace and autoGenerate might just reuse or create new if we insert with ID 0.
-                    // Wait, if we replace, Room inserts them with their original IDs (since they have a >0 id), which preserves relations!
-                    database.patientDao().insertPatients(backup!!.patients)
+                    database.patientDao().deleteAllPatients() // Cascade deletes wounds & evals
+                    database.patientDao().insertPatients(updatedPatients)
                     database.patientDao().insertWounds(backup!!.wounds)
                     database.patientDao().insertEvaluations(updatedEvaluations)
                     
-                    // Apositos & Reglas might be fine to overwrite
                     database.apositoDao().deleteAllApositos()
                     database.apositoDao().deleteAllReglas()
                     database.apositoDao().insertarProductos(backup!!.apositos)

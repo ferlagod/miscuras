@@ -30,8 +30,11 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.TrendingDown
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -62,20 +65,39 @@ import androidx.compose.ui.res.stringResource
 import com.airbnb.lottie.compose.*
 import kotlinx.coroutines.delay
 
+import android.content.Intent
+import android.widget.Toast
+import androidx.core.content.FileProvider
+import com.ferlagod.miscuras.domain.PdfReportService
+import org.koin.compose.koinInject
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WoundDetailScreen(
     woundId: Long,
     patientViewModel: PatientViewModel,
     onBackClick: () -> Unit,
-    onNewEvaluationClick: (Long) -> Unit
+    onNewEvaluationClick: (Long) -> Unit,
+    pdfReportService: PdfReportService = koinInject()
 ) {
     val wound by patientViewModel.currentWound.collectAsState()
     val evaluations by patientViewModel.currentWoundEvaluations.collectAsState()
+    val patients by patientViewModel.patients.collectAsState()
+
+    val currentPatient = remember(wound, patients) {
+        patients.find { it.id == wound?.patientId }
+    }
 
     val modelProducer = remember { ChartEntryModelProducer() }
-    
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var isGeneratingPdf by remember { mutableStateOf(false) }
+    var showPhotoCompare by remember { mutableStateOf(false) }
+    var evalToDelete by remember { mutableStateOf<EvaluationEntity?>(null) }
+
+    val evaluationsWithPhotos = remember(evaluations) {
+        evaluations.filter { !it.photoPath.isNullOrEmpty() && File(it.photoPath).exists() }
+    }
         
     LaunchedEffect(woundId) {
         patientViewModel.loadEvaluationsForWound(woundId)
@@ -106,7 +128,7 @@ fun WoundDetailScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Rounded.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Volver")
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -114,6 +136,54 @@ fun WoundDetailScreen(
                     titleContentColor = MaterialTheme.colorScheme.primary
                 ),
                 actions = {
+                    if (evaluationsWithPhotos.size >= 2) {
+                        IconButton(onClick = { showPhotoCompare = true }) {
+                            Icon(Icons.Rounded.Compare, contentDescription = "Comparar fotos")
+                        }
+                    }
+
+                    if (currentPatient != null && wound != null && evaluations.isNotEmpty()) {
+                        IconButton(
+                            onClick = {
+                                isGeneratingPdf = true
+                                coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                                    val reportsDir = File(context.cacheDir, "reports").apply { mkdirs() }
+                                    val pdfFile = File(reportsDir, "Informe_${currentPatient.anonymizedName}_${wound?.name}.pdf")
+                                    val success = pdfReportService.generateWoundReport(
+                                        patient = currentPatient,
+                                        wound = wound!!,
+                                        evaluations = evaluations,
+                                        outputFile = pdfFile
+                                    )
+                                    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                        isGeneratingPdf = false
+                                        if (success && pdfFile.exists()) {
+                                            val uri = FileProvider.getUriForFile(
+                                                context,
+                                                "${context.packageName}.fileprovider",
+                                                pdfFile
+                                            )
+                                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                                type = "application/pdf"
+                                                putExtra(Intent.EXTRA_STREAM, uri)
+                                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                            }
+                                            context.startActivity(Intent.createChooser(shareIntent, "Compartir informe de evolución"))
+                                        } else {
+                                            Toast.makeText(context, "Error al generar informe PDF", Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                            }
+                        ) {
+                            if (isGeneratingPdf) {
+                                CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+                            } else {
+                                Icon(Icons.Rounded.PictureAsPdf, contentDescription = "Exportar informe PDF")
+                            }
+                        }
+                    }
+
                     if (wound?.isDischarged == false) {
                         TextButton(onClick = { 
                             wound?.id?.let { patientViewModel.dischargeWound(it) }
@@ -226,12 +296,45 @@ fun WoundDetailScreen(
                         TimelineEvaluationItem(
                             eval = eval,
                             isFirst = index == 0,
-                            isLast = index == reversedEvals.lastIndex
+                            isLast = index == reversedEvals.lastIndex,
+                            onDeleteClick = { evalToDelete = eval }
                         )
                     }
                 }
             }
         }
+    }
+
+    if (showPhotoCompare && evaluationsWithPhotos.size >= 2) {
+        PhotoCompareDialog(
+            evaluationsWithPhotos = evaluationsWithPhotos,
+            onDismiss = { showPhotoCompare = false }
+        )
+    }
+
+    if (evalToDelete != null) {
+        AlertDialog(
+            onDismissRequest = { evalToDelete = null },
+            icon = { Icon(Icons.Rounded.DeleteForever, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
+            title = { Text("¿Eliminar evaluación?") },
+            text = { Text("Se eliminará esta evaluación clínica y su fotografía asociada permanentemente.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        evalToDelete?.let { patientViewModel.deleteEvaluation(it.id, it.photoPath) }
+                        evalToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Eliminar")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { evalToDelete = null }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
 
@@ -263,7 +366,7 @@ private fun ChartCard(
         Column(modifier = Modifier.padding(20.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    Icons.Rounded.TrendingDown,
+                    Icons.AutoMirrored.Rounded.TrendingDown,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
@@ -299,7 +402,8 @@ private fun ChartCard(
 private fun TimelineEvaluationItem(
     eval: EvaluationEntity,
     isFirst: Boolean,
-    isLast: Boolean
+    isLast: Boolean,
+    onDeleteClick: (() -> Unit)? = null
 ) {
     val dateStr = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault()).format(Date(eval.timestamp))
     val timelineColor = MaterialTheme.colorScheme.primary
@@ -395,6 +499,22 @@ private fun TimelineEvaluationItem(
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    if (onDeleteClick != null) {
+                        IconButton(
+                            onClick = onDeleteClick,
+                            modifier = Modifier.size(24.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.DeleteOutline,
+                                contentDescription = "Eliminar evaluación",
+                                tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                                modifier = Modifier.size(16.dp)
                             )
                         }
                     }

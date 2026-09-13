@@ -146,7 +146,6 @@ class WoundViewModel(
             // Forzar inicialización y carga de la BD mientras se muestra el splash
             repository.preCargarBaseDeDatos()
             
-            kotlinx.coroutines.delay(2000)
             _configState.update { it.copy(showSplash = false) }
         }
     }
@@ -165,15 +164,13 @@ class WoundViewModel(
      */
     fun nextStep() {
         val current = _wizardState.value.currentWizardStep
-        val values = WizardStep.values()
+        val values = WizardStep.entries
         
-        var nextOrdinal = current.ordinal + 1
+        val nextOrdinal = current.ordinal + 1
         if (nextOrdinal >= values.size) return
         
-        var nextStep = values[nextOrdinal]
+        val nextStep = values[nextOrdinal]
         val wizard = _wizardState.value
-        val eval = _evaluationState.value
-        val config = _configState.value
         
         // Branching logic
         if (current == WizardStep.ETIOLOGY && wizard.selectedLecho == "Piel Intacta (Prevención)") {
@@ -190,9 +187,9 @@ class WoundViewModel(
             return
         }
         val current = _wizardState.value.currentWizardStep
-        val values = WizardStep.values()
+        val values = WizardStep.entries
         
-        var prevOrdinal = current.ordinal - 1
+        val prevOrdinal = current.ordinal - 1
         if (prevOrdinal < 0) return
         
         var prevStep = values[prevOrdinal]
@@ -389,14 +386,9 @@ class WoundViewModel(
      * actuales almacenados en el estado de la UI.
      */
     fun buscarAposito() {
-        val wizard = _wizardState.value
-        val eval = _evaluationState.value
-        val config = _configState.value
-        
         _evaluationState.update { it.copy(isLoading = true, noMatchFound = false) }
 
         viewModelScope.launch(Dispatchers.IO) {
-            kotlinx.coroutines.delay(1200) // Artificial delay for UX
             val result = evaluateWoundUseCase.getClinicalRecommendation(_wizardState.value)
 
             if (result.familiaRecomendada != null) {

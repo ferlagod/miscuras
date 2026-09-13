@@ -85,4 +85,25 @@ class ApositosRepository(
         )
         aiCacheDao.insertCache(entity)
     }
+
+    /**
+     * Flujo reactivo con todos los productos del catálogo ordenados alfabéticamente.
+     */
+    fun getAllProductsFlow(): kotlinx.coroutines.flow.Flow<List<ApositoEntity>> {
+        return apositoDao.getAllProductsFlow()
+    }
+
+    /**
+     * Flujo reactivo de búsqueda en el catálogo por nombre, familia, fabricante o código CN.
+     */
+    fun searchProductsFlow(query: String): kotlinx.coroutines.flow.Flow<List<ApositoEntity>> {
+        return apositoDao.searchProductsFlow(query)
+    }
+
+    /**
+     * Obtiene la lista de familias genéricas únicas.
+     */
+    fun getAllFamilies(): List<String> {
+        return apositoDao.getAllFamilies()
+    }
 }
