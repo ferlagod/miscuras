@@ -38,6 +38,7 @@ import io.github.sceneview.ar.ARScene
 import io.github.sceneview.ar.node.AnchorNode
 import kotlin.math.sqrt
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.foundation.magnifier
@@ -104,6 +105,26 @@ fun ARMeasureScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .pointerInput(Unit) {
+                    detectTapGestures(
+                        onTap = { offset ->
+                            if (points.size < 4 && frame != null) {
+                                val hitResult = frame?.hitTest(offset.x, offset.y)
+                                if (hitResult != null && hitResult.isNotEmpty()) {
+                                    val anchor = hitResult.first().createAnchor()
+                                    points.add(anchor.pose)
+                                    anchors.add(anchor)
+
+                                    if (points.size == 2) {
+                                        lengthCm = calculateDistanceCm(points[0], points[1])
+                                    } else if (points.size == 4) {
+                                        widthCm = calculateDistanceCm(points[2], points[3])
+                                    }
+                                }
+                            }
+                        }
+                    )
+                }
                 .pointerInput(Unit) {
                     detectDragGestures(
                         onDragStart = { offset ->

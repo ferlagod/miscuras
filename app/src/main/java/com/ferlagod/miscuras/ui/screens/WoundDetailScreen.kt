@@ -106,8 +106,8 @@ fun WoundDetailScreen(
     LaunchedEffect(evaluations) {
         if (evaluations.isNotEmpty()) {
             val areas = evaluations.mapIndexedNotNull { index, eval ->
-                val l = eval.length.toFloatOrNull() ?: 0f
-                val w = eval.width.toFloatOrNull() ?: 0f
+                val l = eval.length.replace(",", ".").toFloatOrNull() ?: 0f
+                val w = eval.width.replace(",", ".").toFloatOrNull() ?: 0f
                 if (l > 0f && w > 0f) FloatEntry(x = index.toFloat(), y = l * w) else null
             }
             if (areas.isNotEmpty()) {
@@ -348,7 +348,7 @@ private fun ChartCard(
     modelProducer: ChartEntryModelProducer
 ) {
     val hasChartData = evaluations.any { 
-        (it.length.toFloatOrNull() ?: 0f) > 0f && (it.width.toFloatOrNull() ?: 0f) > 0f 
+        (it.length.replace(",", ".").toFloatOrNull() ?: 0f) > 0f && (it.width.replace(",", ".").toFloatOrNull() ?: 0f) > 0f 
     }
 
     if (!hasChartData) return

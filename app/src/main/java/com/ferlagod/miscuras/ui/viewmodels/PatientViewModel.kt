@@ -116,7 +116,12 @@ class PatientViewModel(private val patientDao: PatientDao) : ViewModel() {
             }
             patient?.photoUri?.let { uriStr ->
                 try {
-                    val file = java.io.File(uriStr)
+                    val cleanPath = when {
+                        uriStr.startsWith("file://") -> uriStr.removePrefix("file://")
+                        uriStr.startsWith("file:") -> uriStr.removePrefix("file:")
+                        else -> uriStr
+                    }
+                    val file = java.io.File(cleanPath)
                     if (file.exists()) file.delete()
                 } catch (e: Exception) { e.printStackTrace() }
             }

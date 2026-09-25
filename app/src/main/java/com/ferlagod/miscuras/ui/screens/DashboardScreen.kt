@@ -93,7 +93,9 @@ fun DashboardScreen(
     onPatientClick: (Long) -> Unit,
     onNavigateToWoundEval: () -> Unit,
     onNavigateToCatalog: () -> Unit = {},
-    onNavigateToResvech: () -> Unit = {}
+    onNavigateToResvech: () -> Unit = {},
+    onNavigateToBraden: () -> Unit = {},
+    onNavigateToGlossary: () -> Unit = {}
 ) {
     val patients by patientViewModel.patients.collectAsState()
     val configState by woundViewModel.configState.collectAsStateWithLifecycle()
@@ -156,19 +158,13 @@ fun DashboardScreen(
                             contentDescription = "Escala RESVECH 2.0"
                         )
                     }
-                    IconButton(onClick = { 
-                        woundViewModel.showBraden()
-                        onNavigateToWoundEval()
-                    }) {
+                    IconButton(onClick = onNavigateToBraden) {
                         Icon(
                             imageVector = Icons.Rounded.Warning,
                             contentDescription = "Calculadora Braden"
                         )
                     }
-                    IconButton(onClick = { 
-                        woundViewModel.showGlossary()
-                        onNavigateToWoundEval()
-                    }) {
+                    IconButton(onClick = onNavigateToGlossary) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.MenuBook,
                             contentDescription = "Glosario / Biblioteca"

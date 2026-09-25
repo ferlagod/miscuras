@@ -71,6 +71,12 @@ interface PatientDao {
     @Query("DELETE FROM pacientes")
     suspend fun deleteAllPatients(): @JvmSuppressWildcards Int
 
+    @Query("DELETE FROM heridas")
+    suspend fun deleteAllWounds(): @JvmSuppressWildcards Int
+
+    @Query("DELETE FROM evaluaciones")
+    suspend fun deleteAllEvaluations(): @JvmSuppressWildcards Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPatients(patients: List<PatientEntity>): @JvmSuppressWildcards List<Long>
 

@@ -719,7 +719,7 @@ private fun EditPatientBottomSheet(
                 inputStream?.copyTo(outputStream)
                 inputStream?.close()
                 outputStream.close()
-                photoUri = file.toURI().toString()
+                photoUri = file.absolutePath
             } catch (e: Exception) {
                 e.printStackTrace()
                 photoUri = uri.toString()

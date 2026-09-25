@@ -209,7 +209,7 @@ fun CatalogScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(filteredProducts, key = { "${it.codigoCn}_${it.nombreComercial}" }) { product ->
+                    items(filteredProducts, key = { if (it.id != 0) it.id else "${it.codigoCn}_${it.nombreComercial}" }) { product ->
                         CatalogProductCard(
                             product = product,
                             onCopyCn = { cn ->

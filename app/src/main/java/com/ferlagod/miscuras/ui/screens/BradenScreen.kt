@@ -46,19 +46,22 @@ import com.ferlagod.miscuras.R
 @Composable
 fun BradenScreen(
     onBackClick: () -> Unit,
-    onScoreCalculated: (Int) -> Unit,
-    ) {
+    onScoreCalculated: (Int) -> Unit = {},
+) {
     var percepcion by remember { mutableStateOf(4) }
     var humedad by remember { mutableStateOf(4) }
     var actividad by remember { mutableStateOf(4) }
     var movilidad by remember { mutableStateOf(4) }
     var nutricion by remember { mutableStateOf(4) }
     var roce by remember { mutableStateOf(3) }
+    var hasInteracted by remember { mutableStateOf(false) }
 
     val totalScore = percepcion + humedad + actividad + movilidad + nutricion + roce
 
-    LaunchedEffect(totalScore) {
-        onScoreCalculated(totalScore)
+    LaunchedEffect(totalScore, hasInteracted) {
+        if (hasInteracted) {
+            onScoreCalculated(totalScore)
+        }
     }
 
     val riskLevel = when {
@@ -146,37 +149,37 @@ fun BradenScreen(
                 title = stringResource(R.string.braden_sensory),
                 options = listOf(stringResource(R.string.braden_sensory1), stringResource(R.string.braden_sensory2), stringResource(R.string.braden_sensory3), stringResource(R.string.braden_sensory4)),
                 selectedValue = percepcion,
-                onSelected = { percepcion = it }
+                onSelected = { percepcion = it; hasInteracted = true }
             )
             BradenCategory(
                 title = stringResource(R.string.braden_moisture),
                 options = listOf(stringResource(R.string.braden_moisture1), stringResource(R.string.braden_moisture2), stringResource(R.string.braden_moisture3), stringResource(R.string.braden_moisture4)),
                 selectedValue = humedad,
-                onSelected = { humedad = it }
+                onSelected = { humedad = it; hasInteracted = true }
             )
             BradenCategory(
                 title = stringResource(R.string.braden_activity),
                 options = listOf(stringResource(R.string.braden_activity1), stringResource(R.string.braden_activity2), stringResource(R.string.braden_activity3), stringResource(R.string.braden_activity4)),
                 selectedValue = actividad,
-                onSelected = { actividad = it }
+                onSelected = { actividad = it; hasInteracted = true }
             )
             BradenCategory(
                 title = stringResource(R.string.braden_mobility),
                 options = listOf(stringResource(R.string.braden_mobility1), stringResource(R.string.braden_mobility2), stringResource(R.string.braden_mobility3), stringResource(R.string.braden_mobility4)),
                 selectedValue = movilidad,
-                onSelected = { movilidad = it }
+                onSelected = { movilidad = it; hasInteracted = true }
             )
             BradenCategory(
                 title = stringResource(R.string.braden_nutrition),
                 options = listOf(stringResource(R.string.braden_nutrition1), stringResource(R.string.braden_nutrition2), stringResource(R.string.braden_nutrition3), stringResource(R.string.braden_nutrition4)),
                 selectedValue = nutricion,
-                onSelected = { nutricion = it }
+                onSelected = { nutricion = it; hasInteracted = true }
             )
             BradenCategory(
                 title = stringResource(R.string.braden_friction),
                 options = listOf(stringResource(R.string.braden_friction1), stringResource(R.string.braden_friction2), stringResource(R.string.braden_friction3)),
                 selectedValue = roce,
-                onSelected = { roce = it }
+                onSelected = { roce = it; hasInteracted = true }
             )
 
             // Recomendaciones

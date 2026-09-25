@@ -79,12 +79,15 @@ class EvaluateWoundUseCase(
                 specialLocation = state.specialLocation
             ).sortedByDescending { producto ->
                 val dimStr = producto.dimensiones.lowercase()
-                val locStr = state.specialLocation.lowercase()
-                if (state.specialLocation != "Ninguno" && ((locStr == "talón" && dimStr.contains("talón")) || (locStr == "sacro" && dimStr.contains("sacro")))) {
-                    1
-                } else {
-                    0
+                val nomStr = producto.nombreComercial.lowercase()
+                val loc = state.specialLocation.lowercase()
+                val isAnatomicMatch = when (loc) {
+                    "talón", "talon" -> dimStr.contains("talon") || dimStr.contains("talón") || dimStr.contains("heel") || nomStr.contains("talon") || nomStr.contains("talón") || nomStr.contains("heel")
+                    "sacro" -> dimStr.contains("sacro") || dimStr.contains("sacrum") || nomStr.contains("sacro") || nomStr.contains("sacrum")
+                    "codos/rodillas" -> dimStr.contains("multisite") || dimStr.contains("flex") || dimStr.contains("borde") || dimStr.contains("lite") || nomStr.contains("multisite") || nomStr.contains("flex")
+                    else -> false
                 }
+                if (isAnatomicMatch) 1 else 0
             }
 
             // Fallback para heridas gigantes
@@ -96,8 +99,12 @@ class EvaluateWoundUseCase(
                       d.contains("spray") || Regex("\\d+g").containsMatchIn(d) || d.contains("solucion") || 
                       d.contains("venda") || d.contains("kit"))
                 }.sortedByDescending { p ->
-                    val match = Regex("(\\d+(?:\\.\\d+)?)\\s*x\\s*(\\d+(?:\\.\\d+)?)").find(p.dimensiones.lowercase())
-                    if (match != null) match.groupValues[1].toFloat() * match.groupValues[2].toFloat() else 0f
+                    val matches = Regex("(\\d+(?:[,.]\\d+)?)\\s*x\\s*(\\d+(?:[,.]\\d+)?)").findAll(p.dimensiones.lowercase())
+                    matches.map { match ->
+                        val l = match.groupValues[1].replace(",", ".").toFloatOrNull() ?: 0f
+                        val w = match.groupValues[2].replace(",", ".").toFloatOrNull() ?: 0f
+                        l * w
+                    }.maxOrNull() ?: 0f
                 }.take(3) // Tomar los 3 más grandes
                 
                 if (productos.isNotEmpty()) {

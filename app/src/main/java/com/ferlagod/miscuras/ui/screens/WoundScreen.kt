@@ -776,17 +776,16 @@ private fun SelectionContent(
                     }
                     com.ferlagod.miscuras.ui.WizardStep.EDGES -> {
                         item {
-                val currentBordes = wizardState.selectedBordes
-                val optionsBordes = WoundViewModel.opcionesBordes
+                val currentBordesTrans = ClinicalTermMapper.translateClinicalTerm(wizardState.selectedBordes, context)
+                val optionsBordesTrans = WoundViewModel.opcionesBordes.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
                 ChipGroupCard(
                     label = stringResource(R.string.edges_label),
                     description = stringResource(R.string.edges_desc),
-                    selectedOption = currentBordes,
-                    options = optionsBordes,
+                    selectedOption = currentBordesTrans,
+                    options = optionsBordesTrans,
                     onOptionSelected = { 
-                        onBordesChanged(it) 
+                        onBordesChanged(ClinicalTermMapper.mapToDbTerm(it, context)) 
                     },
-                    
                     chipType = "edge"
                 )
             }
@@ -1139,7 +1138,7 @@ private fun ResultsContent(
     onSuggestProductClick: () -> Unit,
     onCopyProductSummary: (String) -> String,
     onToggleProductSelection: (String) -> Unit,
-    onPhotoPathChanged: (String) -> Unit,
+    onPhotoPathChanged: (String?) -> Unit,
     context: android.content.Context
 ) {
     var selectedProduct by remember { mutableStateOf<ApositoEntity?>(null) }
@@ -1545,7 +1544,7 @@ private fun ResultsContent(
                             )
                             Spacer(modifier = Modifier.height(8.dp))
                             
-                            if (wizardState.photoPath != null) {
+                            if (!wizardState.photoPath.isNullOrBlank()) {
                                 AsyncImage(
                                     model = File(wizardState.photoPath),
                                     contentDescription = "Foto de la herida",
@@ -1556,7 +1555,7 @@ private fun ResultsContent(
                                     contentScale = ContentScale.Crop
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
-                                TextButton(onClick = { onPhotoPathChanged("") }) { // TODO: borrar uri
+                                TextButton(onClick = { onPhotoPathChanged(null) }) {
                                     Text(stringResource(R.string.delete_photo_button), color = MaterialTheme.colorScheme.error)
                                 }
                             } else {
@@ -3361,7 +3360,7 @@ private fun ExpertModeView(
                                 "MRSA" -> context.getString(R.string.germ_mrsa)
                                 "Candida albicans" -> context.getString(R.string.germ_candida)
                                 "Acinetobacter" -> context.getString(R.string.germ_acinetobacter)
-                                "Otros/Multirresistente" -> context.getString(R.string.germ_biofilm)
+                                "Biofilm complejo" -> context.getString(R.string.germ_biofilm)
                                 else -> stringResource(R.string.germ_none)
                             }
                             GermSelectorCard(germSelected = currentGermTrans, germOptions = germOptionsTrans, onGermChange = { transGerm ->
@@ -3370,7 +3369,7 @@ private fun ExpertModeView(
                                     context.getString(R.string.germ_mrsa) -> "MRSA"
                                     context.getString(R.string.germ_candida) -> "Candida albicans"
                                     context.getString(R.string.germ_acinetobacter) -> "Acinetobacter"
-                                    context.getString(R.string.germ_biofilm) -> "Otros/Multirresistente"
+                                    context.getString(R.string.germ_biofilm) -> "Biofilm complejo"
                                     else -> "Desconocido"
                                 }
                                 onInfectionGermChanged(dbGerm)

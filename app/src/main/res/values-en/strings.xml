@@ -69,6 +69,12 @@
     <string name="peri_descamativa">Desquamating</string>
     <string name="peri_eccematosa">Eczematous</string>
     <string name="peri_eritematosa">Erythematous</string>
+    <string name="borde_sano">Healthy/Intact</string>
+    <string name="borde_macerado">Macerated</string>
+    <string name="borde_descamativo">Desquamating</string>
+    <string name="borde_hiperqueratosico">Hyperkeratotic</string>
+    <string name="borde_socavado">Undermined</string>
+    <string name="borde_epibolico">Epibole (rolled)</string>
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="search_button">Search Dressings</string>

@@ -92,7 +92,12 @@ class BackupService(private val context: Context, private val database: AppDatab
                     val patientPhotoPaths = patients.mapNotNull { it.photoUri }
                     val allPhotoPaths = (evalPhotoPaths + patientPhotoPaths).distinct()
                     for (path in allPhotoPaths) {
-                        val file = File(path)
+                        val cleanPath = when {
+                            path.startsWith("file://") -> path.removePrefix("file://")
+                            path.startsWith("file:") -> path.removePrefix("file:")
+                            else -> path
+                        }
+                        val file = File(cleanPath)
                         if (file.exists()) {
                             val imgEntry = ZipEntry("images/${file.name}")
                             zipOut.putNextEntry(imgEntry)
@@ -141,7 +146,12 @@ class BackupService(private val context: Context, private val database: AppDatab
             // Update photoPaths and photoUris to new absolute paths
             val updatedPatients = backup!!.patients.map { patient ->
                 if (patient.photoUri != null) {
-                    val fileName = File(patient.photoUri).name
+                    val clean = when {
+                        patient.photoUri.startsWith("file://") -> patient.photoUri.removePrefix("file://")
+                        patient.photoUri.startsWith("file:") -> patient.photoUri.removePrefix("file:")
+                        else -> patient.photoUri
+                    }
+                    val fileName = File(clean).name
                     val localFile = File(newImagesDir, fileName)
                     patient.copy(photoUri = if (localFile.exists()) localFile.absolutePath else patient.photoUri)
                 } else {
@@ -151,7 +161,12 @@ class BackupService(private val context: Context, private val database: AppDatab
 
             val updatedEvaluations = backup!!.evaluations.map { eval ->
                 if (eval.photoPath != null) {
-                    val fileName = File(eval.photoPath).name
+                    val clean = when {
+                        eval.photoPath.startsWith("file://") -> eval.photoPath.removePrefix("file://")
+                        eval.photoPath.startsWith("file:") -> eval.photoPath.removePrefix("file:")
+                        else -> eval.photoPath
+                    }
+                    val fileName = File(clean).name
                     val localFile = File(newImagesDir, fileName)
                     eval.copy(photoPath = if (localFile.exists()) localFile.absolutePath else eval.photoPath)
                 } else {
@@ -162,7 +177,9 @@ class BackupService(private val context: Context, private val database: AppDatab
             // Restore DB inside a transaction to ensure all or nothing
             database.runInTransaction {
                 kotlinx.coroutines.runBlocking {
-                    database.patientDao().deleteAllPatients() // Cascade deletes wounds & evals
+                    database.patientDao().deleteAllEvaluations()
+                    database.patientDao().deleteAllWounds()
+                    database.patientDao().deleteAllPatients()
                     database.patientDao().insertPatients(updatedPatients)
                     database.patientDao().insertWounds(backup!!.wounds)
                     database.patientDao().insertEvaluations(updatedEvaluations)

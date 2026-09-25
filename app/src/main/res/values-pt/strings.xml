@@ -69,6 +69,12 @@
     <string name="peri_descamativa">Descamativa</string>
     <string name="peri_eccematosa">Eczematosa</string>
     <string name="peri_eritematosa">Eritematosa</string>
+    <string name="borde_sano">Saudáveis/Íntegros</string>
+    <string name="borde_macerado">Macerados</string>
+    <string name="borde_descamativo">Descamativos</string>
+    <string name="borde_hiperqueratosico">Hiperceratóticos</string>
+    <string name="borde_socavado">Solapados</string>
+    <string name="borde_epibolico">Epibólicos (enrolados)</string>
     <string name="yes">Sim</string>
     <string name="no">Não</string>
     <string name="search_button">Buscar Curativos</string>

@@ -566,8 +566,8 @@ class WoundViewModel(
         }
     }
 
-    fun setPhotoPath(path: String) {
-        _wizardState.update { it.copy(photoPath = path) }
+    fun setPhotoPath(path: String?) {
+        _wizardState.update { it.copy(photoPath = path?.takeIf { p -> p.isNotBlank() }) }
     }
 
     fun resetWizard(woundId: Long = -1L) {

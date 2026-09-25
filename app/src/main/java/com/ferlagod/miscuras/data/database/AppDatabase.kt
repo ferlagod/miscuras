@@ -57,7 +57,7 @@ import java.io.InputStreamReader
         WoundEntity::class,
         EvaluationEntity::class
     ],
-    version = 33,
+    version = 34,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -200,12 +200,19 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
 
+                val MIGRATION_33_34 = object : androidx.room.migration.Migration(33, 34) {
+                    override fun migrate(db: SupportSQLiteDatabase) {
+                        // Limpiamos ProductosApositos para que onOpen recargue el CSV corregido sin duplicados
+                        db.execSQL("DELETE FROM ProductosApositos")
+                    }
+                }
+
                 val builder = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     dbName
                 )
-                    .addMigrations(MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31, MIGRATION_31_32, MIGRATION_32_33)
+                    .addMigrations(MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31, MIGRATION_31_32, MIGRATION_32_33, MIGRATION_33_34)
                     .addCallback(DatabaseCallback(context)) // Disparador para la primera ejecución
                 
                 if (useEncryption) {

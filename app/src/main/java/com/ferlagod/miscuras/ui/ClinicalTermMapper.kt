@@ -54,6 +54,12 @@ object ClinicalTermMapper {
             "Descamativa" -> context.getString(R.string.peri_descamativa)
             "Eccematosa" -> context.getString(R.string.peri_eccematosa)
             "Eritematosa" -> context.getString(R.string.peri_eritematosa)
+            "Sanos/Íntegros" -> context.getString(R.string.borde_sano)
+            "Macerados" -> context.getString(R.string.borde_macerado)
+            "Descamativos" -> context.getString(R.string.borde_descamativo)
+            "Hiperqueratósicos" -> context.getString(R.string.borde_hiperqueratosico)
+            "Socavados" -> context.getString(R.string.borde_socavado)
+            "Epibólicos (enrollados)" -> context.getString(R.string.borde_epibolico)
             "Ninguno" -> context.getString(R.string.location_none)
             "Talón" -> context.getString(R.string.location_heel)
             "Sacro" -> context.getString(R.string.location_sacrum)
@@ -97,6 +103,12 @@ object ClinicalTermMapper {
             context.getString(R.string.peri_descamativa) -> "Descamativa"
             context.getString(R.string.peri_eccematosa) -> "Eccematosa"
             context.getString(R.string.peri_eritematosa) -> "Eritematosa"
+            context.getString(R.string.borde_sano) -> "Sanos/Íntegros"
+            context.getString(R.string.borde_macerado) -> "Macerados"
+            context.getString(R.string.borde_descamativo) -> "Descamativos"
+            context.getString(R.string.borde_hiperqueratosico) -> "Hiperqueratósicos"
+            context.getString(R.string.borde_socavado) -> "Socavados"
+            context.getString(R.string.borde_epibolico) -> "Epibólicos (enrollados)"
             context.getString(R.string.location_none) -> "Ninguno"
             context.getString(R.string.location_heel) -> "Talón"
             context.getString(R.string.location_sacrum) -> "Sacro"

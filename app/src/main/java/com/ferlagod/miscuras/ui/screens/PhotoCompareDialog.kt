@@ -199,12 +199,81 @@ fun PhotoCompareDialog(
 
                 // Selectors for multiple photos
                 if (evaluationsWithPhotos.size > 2) {
+                    var showBeforeDropdown by remember { mutableStateOf(false) }
+                    var showAfterDropdown by remember { mutableStateOf(false) }
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Fotos disponibles: ${evaluationsWithPhotos.size}", style = MaterialTheme.typography.bodySmall)
+                        // Selector Foto Antes
+                        Box(modifier = Modifier.weight(1f)) {
+                            OutlinedButton(
+                                onClick = { showBeforeDropdown = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "Antes: ${dateFormat.format(Date(beforeEval.timestamp))}",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    maxLines = 1
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showBeforeDropdown,
+                                onDismissRequest = { showBeforeDropdown = false }
+                            ) {
+                                evaluationsWithPhotos.forEachIndexed { index, eval ->
+                                    DropdownMenuItem(
+                                        text = { 
+                                            Text(
+                                                "${dateFormat.format(Date(eval.timestamp))} (${eval.length}x${eval.width} cm)",
+                                                fontWeight = if (index == beforeIndex) FontWeight.Bold else FontWeight.Normal
+                                            ) 
+                                        },
+                                        onClick = {
+                                            beforeIndex = index
+                                            showBeforeDropdown = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        // Selector Foto Después
+                        Box(modifier = Modifier.weight(1f)) {
+                            OutlinedButton(
+                                onClick = { showAfterDropdown = true },
+                                modifier = Modifier.fillMaxWidth(),
+                                contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp)
+                            ) {
+                                Text(
+                                    text = "Después: ${dateFormat.format(Date(afterEval.timestamp))}",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    maxLines = 1
+                                )
+                            }
+                            DropdownMenu(
+                                expanded = showAfterDropdown,
+                                onDismissRequest = { showAfterDropdown = false }
+                            ) {
+                                evaluationsWithPhotos.forEachIndexed { index, eval ->
+                                    DropdownMenuItem(
+                                        text = { 
+                                            Text(
+                                                "${dateFormat.format(Date(eval.timestamp))} (${eval.length}x${eval.width} cm)",
+                                                fontWeight = if (index == afterIndex) FontWeight.Bold else FontWeight.Normal
+                                            ) 
+                                        },
+                                        onClick = {
+                                            afterIndex = index
+                                            showAfterDropdown = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }

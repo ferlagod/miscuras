@@ -10,19 +10,9 @@
 package com.ferlagod.miscuras
 
 import android.os.Bundle
-import android.app.AlertDialog
-import android.view.View
-import android.widget.LinearLayout
-import android.widget.ProgressBar
-import android.widget.TextView
-import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.core.view.WindowCompat
-import androidx.activity.viewModels
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.launch
-import com.ferlagod.miscuras.network.AsistenteIA
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
@@ -100,6 +90,12 @@ class MainActivity : AppCompatActivity() {
                                 },
                                 onNavigateToResvech = {
                                     navController.navigate("resvech")
+                                },
+                                onNavigateToBraden = {
+                                    navController.navigate("braden")
+                                },
+                                onNavigateToGlossary = {
+                                    navController.navigate("glossary")
                                 }
                             )
                         }
@@ -115,6 +111,20 @@ class MainActivity : AppCompatActivity() {
                         composable("resvech") {
                             com.ferlagod.miscuras.ui.screens.ResvechScreen(
                                 onBackClick = { navController.popBackStack() }
+                            )
+                        }
+
+                        composable("braden") {
+                            com.ferlagod.miscuras.ui.screens.BradenScreen(
+                                onBackClick = { navController.popBackStack() }
+                            )
+                        }
+
+                        composable("glossary") {
+                            val configState by viewModel.configState.collectAsState()
+                            com.ferlagod.miscuras.ui.screens.GlossaryScreen(
+                                onBackClick = { navController.popBackStack() },
+                                currentLanguage = configState.currentLanguage
                             )
                         }
 
