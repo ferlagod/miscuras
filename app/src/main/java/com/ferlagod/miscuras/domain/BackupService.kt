@@ -184,10 +184,14 @@ class BackupService(private val context: Context, private val database: AppDatab
                     database.patientDao().insertWounds(backup!!.wounds)
                     database.patientDao().insertEvaluations(updatedEvaluations)
                     
-                    database.apositoDao().deleteAllApositos()
-                    database.apositoDao().deleteAllReglas()
-                    database.apositoDao().insertarProductos(backup!!.apositos)
-                    database.apositoDao().insertarReglas(backup!!.reglas)
+                    // Proteger el catálogo oficial: no borrar ni degradar productos/reglas al restaurar datos de pacientes.
+                    // Solo poblar desde el backup si la base de datos local estuviera vacía.
+                    if (database.apositoDao().obtenerCantidadProductos() == 0 && backup!!.apositos.isNotEmpty()) {
+                        database.apositoDao().insertarProductos(backup!!.apositos)
+                    }
+                    if (database.apositoDao().obtenerCantidadReglas() == 0 && backup!!.reglas.isNotEmpty()) {
+                        database.apositoDao().insertarReglas(backup!!.reglas)
+                    }
                 }
             }
 
