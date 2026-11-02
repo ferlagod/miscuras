@@ -44,6 +44,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -109,13 +110,13 @@ fun CatalogScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("Vademécum de Apósitos SAS", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                        Text("${filteredProducts.size} productos disponibles", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.catalog_title), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                        Text(pluralStringResource(R.plurals.catalog_count, filteredProducts.size, filteredProducts.size), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -134,12 +135,12 @@ fun CatalogScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
-                placeholder = { Text("Buscar por nombre, familia, fabricante o CN...") },
+                placeholder = { Text(stringResource(R.string.catalog_search_hint)) },
                 leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { searchQuery = "" }) {
-                            Icon(Icons.Rounded.Clear, contentDescription = "Limpiar")
+                            Icon(Icons.Rounded.Clear, contentDescription = stringResource(R.string.cd_clear))
                         }
                     }
                 },
@@ -162,7 +163,7 @@ fun CatalogScreen(
                 FilterChip(
                     selected = selectedFamilyFilter == null,
                     onClick = { selectedFamilyFilter = null },
-                    label = { Text("Todos (${products.size})") },
+                    label = { Text(stringResource(R.string.catalog_all, products.size)) },
                     leadingIcon = if (selectedFamilyFilter == null) {
                         { Icon(Icons.Rounded.Check, contentDescription = null, modifier = Modifier.size(16.dp)) }
                     } else null
@@ -206,13 +207,13 @@ fun CatalogScreen(
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            "No se encontraron apósitos",
+                            stringResource(R.string.catalog_empty_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            "Prueba a buscar con otro término o borra los filtros.",
+                            stringResource(R.string.catalog_empty_text),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -229,7 +230,7 @@ fun CatalogScreen(
                             product = product,
                             onCopyCn = { cn ->
                                 clipboardManager.setText(AnnotatedString(cn))
-                                Toast.makeText(context, "Código CN $cn copiado", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, context.getString(R.string.catalog_cn_copied, cn), Toast.LENGTH_SHORT).show()
                             }
                         )
                     }
@@ -335,7 +336,7 @@ private fun CatalogProductCard(
                 IconButton(onClick = { expanded = !expanded }) {
                     Icon(
                         if (expanded) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore,
-                        contentDescription = if (expanded) "Contraer" else "Expandir"
+                        contentDescription = if (expanded) stringResource(R.string.glossary_collapse) else stringResource(R.string.glossary_expand)
                     )
                 }
             }
@@ -403,7 +404,7 @@ private fun CatalogProductCard(
                             Spacer(modifier = Modifier.width(4.dp))
                             Icon(
                                 Icons.Rounded.ContentCopy,
-                                contentDescription = "Copiar CN",
+                                contentDescription = stringResource(R.string.cd_copy_cn),
                                 modifier = Modifier.size(12.dp),
                                 tint = MaterialTheme.colorScheme.onSecondaryContainer
                             )
@@ -447,7 +448,7 @@ private fun CatalogProductCard(
                         ) {
                             Icon(
                                 Icons.Rounded.ZoomIn,
-                                contentDescription = "Ver imagen completa",
+                                contentDescription = stringResource(R.string.cd_view_full_image),
                                 modifier = Modifier
                                     .padding(6.dp)
                                     .size(18.dp),
@@ -463,7 +464,7 @@ private fun CatalogProductCard(
 
                 if (product.descripcion.isNotBlank()) {
                     Text(
-                        "Mecanismo de acción e Indicaciones:",
+                        stringResource(R.string.catalog_mechanism),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -480,7 +481,7 @@ private fun CatalogProductCard(
                 // Medidas disponibles (si hay varias)
                 if (dimensionsList.size > 1) {
                     Text(
-                        "Medidas y formatos disponibles:",
+                        stringResource(R.string.catalog_formats),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -512,7 +513,7 @@ private fun CatalogProductCard(
                 // Códigos Nacionales (si hay varios)
                 if (cnList.size > 1) {
                     Text(
-                        "Códigos Nacionales (CN) según formato:",
+                        stringResource(R.string.catalog_cn_by_format),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -543,7 +544,7 @@ private fun CatalogProductCard(
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Icon(
                                         Icons.Rounded.ContentCopy,
-                                        contentDescription = "Copiar $cn",
+                                        contentDescription = stringResource(R.string.cd_copy_item, cn),
                                         modifier = Modifier.size(10.dp),
                                         tint = MaterialTheme.colorScheme.onSecondaryContainer
                                     )
@@ -556,7 +557,7 @@ private fun CatalogProductCard(
 
                 if (product.usoPrimarioSecundario.isNotBlank()) {
                     Text(
-                        "Tipo de apósito:",
+                        stringResource(R.string.catalog_type),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary
@@ -589,7 +590,7 @@ private fun CatalogProductCard(
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
                                 Text(
-                                    "Precauciones e Incompatibilidades:",
+                                    stringResource(R.string.catalog_precautions),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onErrorContainer
@@ -657,7 +658,7 @@ private fun CatalogProductCard(
                         onClick = { showFullPreview = false },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text("Cerrar")
+                        Text(stringResource(R.string.close_button))
                     }
                 }
             }

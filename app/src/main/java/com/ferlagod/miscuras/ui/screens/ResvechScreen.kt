@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import android.widget.Toast
 import com.ferlagod.miscuras.R
+import androidx.compose.ui.res.stringResource
 
 private data class ResvechOption(val text: String, val points: Int)
 private data class ResvechCategory(
@@ -67,87 +68,87 @@ fun ResvechScreen(
     val categories = remember {
         listOf(
             ResvechCategory(
-                title = "1. Dimensiones de la lesión",
-                subtitle = "Superficie (largo x ancho mayores)",
+                title = context.getString(R.string.resvech_c1_title),
+                subtitle = context.getString(R.string.resvech_c1_sub),
                 icon = Icons.Rounded.Straighten,
                 options = listOf(
-                    ResvechOption("Superficie = 0 cm²", 0),
-                    ResvechOption("Superficie < 4 cm²", 1),
-                    ResvechOption("Superficie = 4 – < 16 cm²", 2),
-                    ResvechOption("Superficie = 16 – < 36 cm²", 3),
-                    ResvechOption("Superficie = 36 – < 64 cm²", 4),
-                    ResvechOption("Superficie = 64 – < 100 cm²", 5),
-                    ResvechOption("Superficie ≥ 100 cm²", 6)
+                    ResvechOption(context.getString(R.string.resvech_c1_o0), 0),
+                    ResvechOption(context.getString(R.string.resvech_c1_o1), 1),
+                    ResvechOption(context.getString(R.string.resvech_c1_o2), 2),
+                    ResvechOption(context.getString(R.string.resvech_c1_o3), 3),
+                    ResvechOption(context.getString(R.string.resvech_c1_o4), 4),
+                    ResvechOption(context.getString(R.string.resvech_c1_o5), 5),
+                    ResvechOption(context.getString(R.string.resvech_c1_o6), 6)
                 )
             ),
             ResvechCategory(
-                title = "2. Profundidad / Tejidos afectados",
-                subtitle = "Estructura más profunda afectada",
+                title = context.getString(R.string.resvech_c2_title),
+                subtitle = context.getString(R.string.resvech_c2_sub),
                 icon = Icons.Rounded.Layers,
                 options = listOf(
-                    ResvechOption("Piel intacta cicatrizada", 0),
-                    ResvechOption("Afectación de la dermis-epidermis", 1),
-                    ResvechOption("Afectación del tejido subcutáneo (tejido adiposo sin llegar a la fascia del músculo)", 2),
-                    ResvechOption("Afectación del músculo", 3),
-                    ResvechOption("Afectación del hueso y/o tejidos anexos (tendones, ligamentos, cápsula articular) o escara negra que no permite ver los tejidos debajo de ella", 4)
+                    ResvechOption(context.getString(R.string.resvech_c2_o0), 0),
+                    ResvechOption(context.getString(R.string.resvech_c2_o1), 1),
+                    ResvechOption(context.getString(R.string.resvech_c2_o2), 2),
+                    ResvechOption(context.getString(R.string.resvech_c2_o3), 3),
+                    ResvechOption(context.getString(R.string.resvech_c2_o4), 4)
                 )
             ),
             ResvechCategory(
-                title = "3. Bordes",
-                subtitle = "Estado de los bordes de la herida",
+                title = context.getString(R.string.resvech_c3_title),
+                subtitle = context.getString(R.string.resvech_c3_sub),
                 icon = Icons.Rounded.CropFree,
                 options = listOf(
-                    ResvechOption("No distinguibles (no hay herida)", 0),
-                    ResvechOption("Difusos", 1),
-                    ResvechOption("Delimitados", 2),
-                    ResvechOption("Dañados", 3),
-                    ResvechOption("Engrosados (\"envejecidos\", \"evertidos\")", 4)
+                    ResvechOption(context.getString(R.string.resvech_c3_o0), 0),
+                    ResvechOption(context.getString(R.string.resvech_c3_o1), 1),
+                    ResvechOption(context.getString(R.string.resvech_c3_o2), 2),
+                    ResvechOption(context.getString(R.string.resvech_c3_o3), 3),
+                    ResvechOption(context.getString(R.string.resvech_c3_o4), 4)
                 )
             ),
             ResvechCategory(
-                title = "4. Tipo de tejido en el lecho",
-                subtitle = "Tejido de peor pronóstico presente",
+                title = context.getString(R.string.resvech_c4_title),
+                subtitle = context.getString(R.string.resvech_c4_sub),
                 icon = Icons.Rounded.Healing,
                 options = listOf(
-                    ResvechOption("Cerrada / cicatrizada", 0),
-                    ResvechOption("Tejido epitelial", 1),
-                    ResvechOption("Tejido de granulación", 2),
-                    ResvechOption("Tejido necrótico y/o esfacelos en el lecho", 3),
-                    ResvechOption("Necrótico (escara negra seca o húmeda)", 4)
+                    ResvechOption(context.getString(R.string.resvech_c4_o0), 0),
+                    ResvechOption(context.getString(R.string.resvech_c4_o1), 1),
+                    ResvechOption(context.getString(R.string.resvech_c4_o2), 2),
+                    ResvechOption(context.getString(R.string.resvech_c4_o3), 3),
+                    ResvechOption(context.getString(R.string.resvech_c4_o4), 4)
                 )
             ),
             ResvechCategory(
-                title = "5. Exudado",
-                subtitle = "Nivel de humedad del lecho",
+                title = context.getString(R.string.resvech_c5_title),
+                subtitle = context.getString(R.string.resvech_c5_sub),
                 icon = Icons.Rounded.WaterDrop,
                 options = listOf(
-                    ResvechOption("Húmedo", 0),
-                    ResvechOption("Mojado", 1),
-                    ResvechOption("Saturado", 2),
-                    ResvechOption("Con fuga de exudado", 3),
-                    ResvechOption("Seco", 3)
+                    ResvechOption(context.getString(R.string.resvech_c5_o0), 0),
+                    ResvechOption(context.getString(R.string.resvech_c5_o1), 1),
+                    ResvechOption(context.getString(R.string.resvech_c5_o2), 2),
+                    ResvechOption(context.getString(R.string.resvech_c5_o3), 3),
+                    ResvechOption(context.getString(R.string.resvech_c5_o4), 3)
                 )
             ),
             ResvechCategory(
-                title = "6. Infección / Inflamación (signos de biofilm)",
-                subtitle = "Marque todos los signos presentes (1 punto cada uno)",
+                title = context.getString(R.string.resvech_c6_title),
+                subtitle = context.getString(R.string.resvech_c6_sub),
                 icon = Icons.Rounded.Coronavirus,
                 multiSelect = true,
                 options = listOf(
-                    "Dolor que va en aumento",
-                    "Eritema en la perilesión",
-                    "Edema en la perilesión",
-                    "Aumento de la temperatura",
-                    "Exudado que va en aumento",
-                    "Exudado purulento",
-                    "Tejido friable o que sangra con facilidad",
-                    "Herida estancada, que no progresa",
-                    "Tejido compatible con biofilm",
-                    "Olor",
-                    "Hipergranulación",
-                    "Aumento del tamaño de la herida",
-                    "Lesiones satélite",
-                    "Palidez del tejido"
+                    context.getString(R.string.resvech_s1),
+                    context.getString(R.string.resvech_s2),
+                    context.getString(R.string.resvech_s3),
+                    context.getString(R.string.resvech_s4),
+                    context.getString(R.string.resvech_s5),
+                    context.getString(R.string.resvech_s6),
+                    context.getString(R.string.resvech_s7),
+                    context.getString(R.string.resvech_s8),
+                    context.getString(R.string.resvech_s9),
+                    context.getString(R.string.resvech_s10),
+                    context.getString(R.string.resvech_s11),
+                    context.getString(R.string.resvech_s12),
+                    context.getString(R.string.resvech_s13),
+                    context.getString(R.string.resvech_s14)
                 ).map { ResvechOption(it, 1) }
             )
         )
@@ -172,11 +173,11 @@ fun ResvechScreen(
     // RESVECH 2.0 no define puntos de corte validados: la interpretación es evolutiva
     // (la puntuación debe descender hacia 0 a medida que la herida cicatriza).
     val (severityText, severityColor, severityDescription) = when {
-        !isComplete -> Triple("Incompleta ($answeredItems/${categories.size} ítems)", Color(0xFF757575), "Responda todos los ítems para obtener la puntuación total de la escala.")
-        totalScore == 0 -> Triple("Herida cicatrizada", Color(0xFF43A047), "Puntuación 0: lesión cerrada.")
-        totalScore <= 11 -> Triple("Puntuación baja (orientativo)", Color(0xFF1E88E5), "Compare con valoraciones anteriores: un descenso de la puntuación indica evolución hacia la cicatrización.")
-        totalScore <= 23 -> Triple("Puntuación intermedia (orientativo)", Color(0xFFFB8C00), "Compare con valoraciones anteriores. Si la puntuación no desciende, reevalúe el plan de cuidados (desbridamiento, carga bacteriana, exudado).")
-        else -> Triple("Puntuación alta (orientativo)", Color(0xFFE53935), "Lesión con gran afectación. Si no mejora entre valoraciones, valore abordaje interdisciplinar y cura especializada.")
+        !isComplete -> Triple(stringResource(R.string.resvech_incomplete, answeredItems, categories.size), Color(0xFF757575), stringResource(R.string.resvech_incomplete_desc))
+        totalScore == 0 -> Triple(stringResource(R.string.resvech_healed), Color(0xFF43A047), stringResource(R.string.resvech_healed_desc))
+        totalScore <= 11 -> Triple(stringResource(R.string.resvech_low), Color(0xFF1E88E5), stringResource(R.string.resvech_low_desc))
+        totalScore <= 23 -> Triple(stringResource(R.string.resvech_mid), Color(0xFFFB8C00), stringResource(R.string.resvech_mid_desc))
+        else -> Triple(stringResource(R.string.resvech_high), Color(0xFFE53935), stringResource(R.string.resvech_high_desc))
     }
 
     Scaffold(
@@ -184,28 +185,22 @@ fun ResvechScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("Escala RESVECH 2.0", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                        Text("Monitorización objetiva de cicatrización", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(stringResource(R.string.cd_resvech), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.resvech_subtitle), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = {
-                        val summary = """
-                            --- ESCALA RESVECH 2.0 ---
-                            Puntuación Total: $totalScore / 35 puntos
-                            Estado: $severityText
-                            $severityDescription
-                            (RESVECH 2.0 no tiene puntos de corte validados; las bandas son orientativas.)
-                        """.trimIndent()
+                        val summary = context.getString(R.string.resvech_copy_summary, totalScore, severityText, severityDescription)
                         clipboardManager.setText(AnnotatedString(summary))
-                        Toast.makeText(context, "Resumen copiado al portapapeles", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, context.getString(R.string.copy_summary_toast), Toast.LENGTH_SHORT).show()
                     }) {
-                        Icon(Icons.Rounded.ContentCopy, contentDescription = "Copiar resumen")
+                        Icon(Icons.Rounded.ContentCopy, contentDescription = stringResource(R.string.cd_copy_summary))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -236,7 +231,7 @@ fun ResvechScreen(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Column {
-                                Text("PUNTUACIÓN TOTAL", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.SemiBold)
+                                Text(stringResource(R.string.resvech_total_label), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = FontWeight.SemiBold)
                                 Text(
                                     "$totalScore / 35",
                                     style = MaterialTheme.typography.headlineLarge,

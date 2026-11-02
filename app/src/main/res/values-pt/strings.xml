@@ -341,4 +341,147 @@
     <string name="chart_area_single">Área inicial: %1$s cm². São necessárias pelo menos duas medições para ver a evolução.</string>
 
     <string name="ar_undo_button">Desfazer</string>
+
+    <string name="cd_logo">Logótipo do Mis Curas</string>
+    <string name="cd_catalog">Catálogo de pensos</string>
+    <string name="cd_resvech">Escala RESVECH 2.0</string>
+    <string name="cd_braden">Escala de Braden</string>
+    <string name="cd_glossary">Glossário</string>
+    <string name="search_patient_hint">Pesquisar por nome ou quarto…</string>
+    <string name="cd_clear">Limpar pesquisa</string>
+    <string name="cd_back">Voltar</string>
+    <string name="action_delete">Eliminar</string>
+    <string name="delete_patient_title">Eliminar doente?</string>
+    <string name="delete_patient_text">O doente «%1$s» será eliminado juntamente com todas as suas feridas, avaliações e fotografias clínicas. Esta ação não pode ser anulada.</string>
+    <string name="cd_delete_patient">Eliminar doente</string>
+    <string name="delete_wound_title">Eliminar ferida?</string>
+    <string name="delete_wound_text">A ferida «%1$s» e todo o seu histórico de avaliações e fotografias serão eliminados. Esta ação é irreversível.</string>
+    <string name="cd_delete_wound">Eliminar ferida</string>
+    <string name="cd_compare_photos">Comparar fotos</string>
+    <string name="share_report_chooser">Partilhar relatório de evolução</string>
+    <string name="pdf_error">Erro ao gerar o relatório PDF</string>
+    <string name="cd_export_pdf">Exportar relatório PDF</string>
+    <string name="delete_eval_title">Eliminar avaliação?</string>
+    <string name="delete_eval_text">Esta avaliação clínica e a sua fotografia serão eliminadas permanentemente.</string>
+    <string name="cd_delete_eval">Eliminar avaliação</string>
+    <string name="catalog_title">Vademécum de pensos SAS</string>
+    <string name="catalog_search_hint">Pesquisar por nome, família, fabricante ou código…</string>
+    <string name="catalog_all">Todos (%1$d)</string>
+    <string name="catalog_empty_title">Não foram encontrados pensos</string>
+    <string name="catalog_empty_text">Experimente outro termo ou remova os filtros.</string>
+    <string name="catalog_cn_copied">Código %1$s copiado</string>
+    <string name="cd_copy_cn">Copiar código</string>
+    <string name="cd_view_full_image">Ver imagem completa</string>
+    <string name="catalog_mechanism">Mecanismo de ação e indicações:</string>
+    <string name="catalog_formats">Tamanhos e formatos disponíveis:</string>
+    <string name="catalog_cn_by_format">Códigos nacionais por formato:</string>
+    <string name="cd_copy_item">Copiar %1$s</string>
+    <string name="catalog_type">Tipo de penso:</string>
+    <string name="catalog_precautions">Precauções e incompatibilidades:</string>
+    <string name="photo_compare_title">Comparador evolutivo</string>
+    <string name="cd_photo_before">Foto inicial</string>
+    <string name="cd_photo_after">Foto atual</string>
+
+    <plurals name="catalog_count">
+        <item quantity="one">%1$d produto</item>
+        <item quantity="other">%1$d produtos</item>
+    </plurals>
+
+    <string name="resvech_c1_title">1. Dimensões da lesão</string>
+    <string name="resvech_c1_sub">Área (maior comprimento x largura)</string>
+    <string name="resvech_c1_o0">Área = 0 cm²</string>
+    <string name="resvech_c1_o1">Área &lt; 4 cm²</string>
+    <string name="resvech_c1_o2">Área = 4 – &lt; 16 cm²</string>
+    <string name="resvech_c1_o3">Área = 16 – &lt; 36 cm²</string>
+    <string name="resvech_c1_o4">Área = 36 – &lt; 64 cm²</string>
+    <string name="resvech_c1_o5">Área = 64 – &lt; 100 cm²</string>
+    <string name="resvech_c1_o6">Área ≥ 100 cm²</string>
+    <string name="resvech_c2_title">2. Profundidade / tecidos atingidos</string>
+    <string name="resvech_c2_sub">Estrutura mais profunda atingida</string>
+    <string name="resvech_c2_o0">Pele intacta cicatrizada</string>
+    <string name="resvech_c2_o1">Atingimento da derme-epiderme</string>
+    <string name="resvech_c2_o2">Atingimento do tecido subcutâneo (tecido adiposo sem chegar à fáscia muscular)</string>
+    <string name="resvech_c2_o3">Atingimento do músculo</string>
+    <string name="resvech_c2_o4">Atingimento do osso e/ou tecidos anexos (tendões, ligamentos, cápsula articular) ou escara negra que não permite ver os tecidos subjacentes</string>
+    <string name="resvech_c3_title">3. Bordos</string>
+    <string name="resvech_c3_sub">Estado dos bordos da ferida</string>
+    <string name="resvech_c3_o0">Não distinguíveis (não há ferida)</string>
+    <string name="resvech_c3_o1">Difusos</string>
+    <string name="resvech_c3_o2">Delimitados</string>
+    <string name="resvech_c3_o3">Danificados</string>
+    <string name="resvech_c3_o4">Espessados («envelhecidos», «evertidos»)</string>
+    <string name="resvech_c4_title">4. Tipo de tecido no leito</string>
+    <string name="resvech_c4_sub">Tecido de pior prognóstico presente</string>
+    <string name="resvech_c4_o0">Fechada / cicatrizada</string>
+    <string name="resvech_c4_o1">Tecido epitelial</string>
+    <string name="resvech_c4_o2">Tecido de granulação</string>
+    <string name="resvech_c4_o3">Tecido necrótico e/ou esfacelo no leito</string>
+    <string name="resvech_c4_o4">Necrótico (escara negra seca ou húmida)</string>
+    <string name="resvech_c5_title">5. Exsudado</string>
+    <string name="resvech_c5_sub">Nível de humidade do leito</string>
+    <string name="resvech_c5_o0">Húmido</string>
+    <string name="resvech_c5_o1">Molhado</string>
+    <string name="resvech_c5_o2">Saturado</string>
+    <string name="resvech_c5_o3">Com fuga de exsudado</string>
+    <string name="resvech_c5_o4">Seco</string>
+    <string name="resvech_c6_title">6. Infeção / inflamação (sinais de biofilme)</string>
+    <string name="resvech_c6_sub">Assinale todos os sinais presentes (1 ponto cada)</string>
+    <string name="resvech_s1">Dor crescente</string>
+    <string name="resvech_s2">Eritema perilesional</string>
+    <string name="resvech_s3">Edema perilesional</string>
+    <string name="resvech_s4">Aumento da temperatura</string>
+    <string name="resvech_s5">Exsudado crescente</string>
+    <string name="resvech_s6">Exsudado purulento</string>
+    <string name="resvech_s7">Tecido friável ou que sangra facilmente</string>
+    <string name="resvech_s8">Ferida estagnada, sem progressão</string>
+    <string name="resvech_s9">Tecido compatível com biofilme</string>
+    <string name="resvech_s10">Odor</string>
+    <string name="resvech_s11">Hipergranulação</string>
+    <string name="resvech_s12">Aumento do tamanho da ferida</string>
+    <string name="resvech_s13">Lesões satélite</string>
+    <string name="resvech_s14">Palidez do tecido</string>
+    <string name="resvech_incomplete">Incompleta (%1$d/%2$d itens)</string>
+    <string name="resvech_incomplete_desc">Responda a todos os itens para obter a pontuação total.</string>
+    <string name="resvech_healed">Ferida cicatrizada</string>
+    <string name="resvech_healed_desc">Pontuação 0: lesão fechada.</string>
+    <string name="resvech_low">Pontuação baixa (indicativa)</string>
+    <string name="resvech_low_desc">Compare com avaliações anteriores: uma descida da pontuação indica evolução para a cicatrização.</string>
+    <string name="resvech_mid">Pontuação intermédia (indicativa)</string>
+    <string name="resvech_mid_desc">Compare com avaliações anteriores. Se a pontuação não descer, reavalie o plano de cuidados (desbridamento, carga bacteriana, exsudado).</string>
+    <string name="resvech_high">Pontuação alta (indicativa)</string>
+    <string name="resvech_high_desc">Lesão muito afetada. Se não melhorar entre avaliações, considere uma abordagem interdisciplinar e cuidados especializados.</string>
+    <string name="resvech_subtitle">Monitorização objetiva da cicatrização</string>
+    <string name="resvech_copy_summary">--- ESCALA RESVECH 2.0 ---\nPontuação total: %1$d / 35\nEstado: %2$s\n%3$s\n(A RESVECH 2.0 não tem pontos de corte validados; as faixas são indicativas.)</string>
+    <string name="cd_copy_summary">Copiar resumo</string>
+
+    <string name="expert_mode_title">Modo especialista</string>
+    <string name="expert_mode_close">Fechar modo especialista</string>
+    <string name="pain_none">Sem dor</string>
+    <string name="pain_mild">Ligeira</string>
+    <string name="pain_moderate">Moderada</string>
+    <string name="pain_severe">Intensa</string>
+    <string name="pain_title">Sensibilidade / Dor (S)</string>
+    <string name="pain_desc">Escala EVA (0-10) na mudança de penso</string>
+    <string name="camera_permission_denied">Permissão da câmara negada</string>
+    <string name="cd_alert">Alerta</string>
+    <string name="braden_high_risk_text">Doente com risco alto ou muito alto. Recomende proativamente ácidos gordos hiperoxigenados (AGHO), espumas de poliuretano multicamada no sacro e calcanhares e uma superfície de redistribuição de pressão (colchão de ar alternado).</string>
+    <string name="cd_expand_collapse">Expandir ou recolher</string>
+    <string name="cd_wound_photo">Foto da ferida</string>
+    <string name="product_manufacturer">Fabricante: %1$s</string>
+    <string name="settings_backup_title">Cópias de segurança</string>
+    <string name="settings_backup_desc">Guarde os seus doentes e imagens num ficheiro cifrado para não os perder.</string>
+    <string name="settings_developer">Programador</string>
+    <string name="settings_privacy">Política de privacidade</string>
+    <string name="settings_privacy_view">Ver política de privacidade</string>
+    <string name="cd_measure_ar">Medir com realidade aumentada</string>
+    <string name="safety_alerts_title">Alertas de segurança clínica</string>
+    <string name="cd_developer_photo">Foto de perfil de ferlagod</string>
+    <string name="developer_name_line">ferlagod (Fernando Lago) | Enfermeiro e programador de software livre.</string>
+    <string name="developer_bio">Apaixonado por tecnologia independente, privacidade e leitura. Desenvolvo ferramentas nascidas dos meus próprios interesses e necessidades profissionais, como BiblioHouse, Mis Curas e Rocinante.</string>
+    <string name="generate_recommendation">Gerar recomendação</string>
+    <string name="expert_section_bed">Leito</string>
+    <string name="expert_section_infection">Infeção</string>
+
+    <string name="resvech_total_label">PONTUAÇÃO TOTAL</string>
+    <string name="rep_cavitation_format">- Cavitações: %1$s</string>
 </resources>

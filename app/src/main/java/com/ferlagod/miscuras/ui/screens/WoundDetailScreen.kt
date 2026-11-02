@@ -131,7 +131,7 @@ fun WoundDetailScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -141,7 +141,7 @@ fun WoundDetailScreen(
                 actions = {
                     if (evaluationsWithPhotos.size >= 2) {
                         IconButton(onClick = { showPhotoCompare = true }) {
-                            Icon(Icons.Rounded.Compare, contentDescription = "Comparar fotos")
+                            Icon(Icons.Rounded.Compare, contentDescription = stringResource(R.string.cd_compare_photos))
                         }
                     }
 
@@ -172,9 +172,9 @@ fun WoundDetailScreen(
                                                 putExtra(Intent.EXTRA_STREAM, uri)
                                                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                             }
-                                            context.startActivity(Intent.createChooser(shareIntent, "Compartir informe de evolución"))
+                                            context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_report_chooser)))
                                         } else {
-                                            Toast.makeText(context, "Error al generar informe PDF", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, context.getString(R.string.pdf_error), Toast.LENGTH_SHORT).show()
                                         }
                                     }
                                 }
@@ -183,7 +183,7 @@ fun WoundDetailScreen(
                             if (isGeneratingPdf) {
                                 CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                             } else {
-                                Icon(Icons.Rounded.PictureAsPdf, contentDescription = "Exportar informe PDF")
+                                Icon(Icons.Rounded.PictureAsPdf, contentDescription = stringResource(R.string.cd_export_pdf))
                             }
                         }
                     }
@@ -351,8 +351,8 @@ fun WoundDetailScreen(
         AlertDialog(
             onDismissRequest = { evalToDelete = null },
             icon = { Icon(Icons.Rounded.DeleteForever, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("¿Eliminar evaluación?") },
-            text = { Text("Se eliminará esta evaluación clínica y su fotografía asociada permanentemente.") },
+            title = { Text(stringResource(R.string.delete_eval_title)) },
+            text = { Text(stringResource(R.string.delete_eval_text)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -361,12 +361,12 @@ fun WoundDetailScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Eliminar")
+                    Text(stringResource(R.string.action_delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { evalToDelete = null }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.cancel_button))
                 }
             }
         )
@@ -600,7 +600,7 @@ private fun TimelineEvaluationItem(
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.DeleteOutline,
-                                contentDescription = "Eliminar evaluación",
+                                contentDescription = stringResource(R.string.cd_delete_eval),
                                 tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                                 modifier = Modifier.size(16.dp)
                             )

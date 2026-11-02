@@ -410,7 +410,7 @@ class WoundViewModel(
             ${context.getString(R.string.rep_moisture)}${wizard.selectedExudado}${if (wizard.selectedExudateType.isNotBlank()) " (${wizard.selectedExudateType})" else ""}
             ${String.format(context.getString(R.string.rep_edges_format), wizard.selectedBordes, wizard.selectedPerilesional)}
             ${String.format(context.getString(R.string.rep_pain_format), wizard.painLevel.toInt())}
-            ${String.format(context.getString(R.string.rep_size_format), tamaño)}${if (wizard.hasCavitation) "\n            - Cavitaciones: ${if (wizard.cavitationDetails.isNotEmpty()) wizard.cavitationDetails else "Sí"}" else ""}
+            ${String.format(context.getString(R.string.rep_size_format), tamaño)}${if (wizard.hasCavitation) "\n            ${context.getString(R.string.rep_cavitation_format, if (wizard.cavitationDetails.isNotEmpty()) wizard.cavitationDetails else context.getString(R.string.yes))}" else ""}
             ${String.format(context.getString(R.string.rep_location_format), wizard.specialLocation)}$bradenText
 
             ${context.getString(R.string.rep_plan_title)}

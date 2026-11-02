@@ -96,7 +96,7 @@ fun PatientDetailScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -245,8 +245,8 @@ fun PatientDetailScreen(
         AlertDialog(
             onDismissRequest = { woundToDelete = null },
             icon = { Icon(Icons.Rounded.DeleteForever, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("¿Eliminar herida?") },
-            text = { Text("Se eliminará la herida \"${woundToDelete?.name}\" y todo su historial de evaluaciones y fotografías. Esta acción es irreversible.") },
+            title = { Text(stringResource(R.string.delete_wound_title)) },
+            text = { Text(stringResource(R.string.delete_wound_text, woundToDelete?.name.orEmpty())) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -255,12 +255,12 @@ fun PatientDetailScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Eliminar")
+                    Text(stringResource(R.string.action_delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { woundToDelete = null }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.cancel_button))
                 }
             }
         )
@@ -333,7 +333,7 @@ private fun PatientInfoHeader(
                 if (patient.photoUri != null) {
                     AsyncImage(
                         model = patient.photoUri,
-                        contentDescription = "Foto",
+                        contentDescription = stringResource(R.string.content_desc_patient_photo),
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -497,7 +497,7 @@ private fun WoundCard(
                 IconButton(onClick = onDeleteClick) {
                     Icon(
                         imageVector = Icons.Rounded.DeleteOutline,
-                        contentDescription = "Eliminar herida",
+                        contentDescription = stringResource(R.string.cd_delete_wound),
                         tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                         modifier = Modifier.size(20.dp)
                     )

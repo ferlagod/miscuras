@@ -423,7 +423,7 @@ private fun SplashContent() {
         ) {
             Image(
                 painter = painterResource(id = R.drawable.logo),
-                contentDescription = "Logo",
+                contentDescription = stringResource(R.string.cd_logo),
                 modifier = Modifier
                     .size(240.dp)
                     .clip(CircleShape)
@@ -519,7 +519,7 @@ private fun SelectionContent(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Image(
                                 painter = painterResource(id = R.drawable.logo),
-                                contentDescription = "Logo",
+                                contentDescription = stringResource(R.string.cd_logo),
                                 modifier = Modifier.size(36.dp).clip(CircleShape)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -566,19 +566,19 @@ private fun SelectionContent(
                         IconButton(onClick = onToggleExpertMode) {
                             Icon(
                                 imageVector = if (configState.isExpertMode) Icons.Rounded.List else Icons.Rounded.AutoAwesome,
-                                contentDescription = "Modo Experto"
+                                contentDescription = stringResource(R.string.expert_mode_title)
                             )
                         }
                         IconButton(onClick = onBradenClick) {
                             Icon(
                                 imageVector = Icons.Rounded.Warning,
-                                contentDescription = "Calculadora Braden"
+                                contentDescription = stringResource(R.string.cd_braden)
                             )
                         }
                         IconButton(onClick = onGlossaryClick) {
                             Icon(
                                 imageVector = Icons.Rounded.MenuBook,
-                                contentDescription = "Glosario / Biblioteca"
+                                contentDescription = stringResource(R.string.cd_glossary)
                             )
                         }
                         IconButton(onClick = onSettingsClick) {
@@ -1079,10 +1079,11 @@ private fun PainCard(
     enabled: Boolean = true
 ) {
     val painDescription = when {
-        painLevel == 0f -> "Sin Dolor"
-        painLevel <= 3f -> "Leve"
-        painLevel <= 7f -> "Moderado"
-        else -> "Severo"
+        // EVA: 0 sin dolor · 1-3 leve · 4-6 moderado · 7-10 intenso
+        painLevel == 0f -> stringResource(R.string.pain_none)
+        painLevel <= 3f -> stringResource(R.string.pain_mild)
+        painLevel <= 6f -> stringResource(R.string.pain_moderate)
+        else -> stringResource(R.string.pain_severe)
     }
 
     val painColor = when {
@@ -1111,12 +1112,12 @@ private fun PainCard(
             ) {
                 Column {
                     Text(
-                        text = "Sensibilidad / Dolor (S)",
+                        text = stringResource(R.string.pain_title),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Escala EVA (0-10) al cambio de apósito",
+                        text = stringResource(R.string.pain_desc),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1285,7 +1286,7 @@ private fun ResultsContent(
             val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", newFile)
             takePictureLauncher.launch(uri)
         } else {
-            android.widget.Toast.makeText(context, "Permiso de cámara denegado", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(context, context.getString(R.string.camera_permission_denied), android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -1365,7 +1366,7 @@ private fun ResultsContent(
                     IconButton(onClick = onPreviousStep) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver"
+                            contentDescription = stringResource(R.string.cd_back)
                         )
                     }
                 },
@@ -1443,7 +1444,7 @@ private fun ResultsContent(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         imageVector = Icons.Rounded.Warning,
-                                        contentDescription = "Alerta",
+                                        contentDescription = stringResource(R.string.cd_alert),
                                         tint = MaterialTheme.colorScheme.error,
                                         modifier = Modifier.size(24.dp)
                                     )
@@ -1457,7 +1458,7 @@ private fun ResultsContent(
                                 }
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = "Paciente con Riesgo Alto/Muy Alto. Recomendar proactivamente Ácidos Grasos Hiperoxigenados (AGHO), espumas de poliuretano sacras/talonares de cinco capas, y colchón de aire alternante (SEMP).",
+                                    text = stringResource(R.string.braden_high_risk_text),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onErrorContainer
                                 )
@@ -1527,7 +1528,7 @@ private fun ResultsContent(
                                 )
                                 androidx.compose.material3.Icon(
                                     imageVector = if (isExpanded) Icons.Rounded.ArrowDropUp else Icons.Rounded.ArrowDropDown,
-                                    contentDescription = "Expandir/Contraer",
+                                    contentDescription = stringResource(R.string.cd_expand_collapse),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -1598,7 +1599,7 @@ private fun ResultsContent(
                                 )
                                 androidx.compose.material3.Icon(
                                     imageVector = if (isExpanded) Icons.Rounded.ArrowDropUp else Icons.Rounded.ArrowDropDown,
-                                    contentDescription = "Expandir/Contraer",
+                                    contentDescription = stringResource(R.string.cd_expand_collapse),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -1687,7 +1688,7 @@ private fun ResultsContent(
                             if (!wizardState.photoPath.isNullOrBlank()) {
                                 AsyncImage(
                                     model = File(wizardState.photoPath),
-                                    contentDescription = "Foto de la herida",
+                                    contentDescription = stringResource(R.string.cd_wound_photo),
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(200.dp)
@@ -1720,7 +1721,7 @@ private fun ResultsContent(
                                             }
                                         }
                                     ) {
-                                        Icon(Icons.Rounded.CameraAlt, contentDescription = "Cámara")
+                                        Icon(Icons.Rounded.CameraAlt, contentDescription = null)
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(stringResource(R.string.take_photo_button))
                                     }
@@ -1765,7 +1766,7 @@ private fun ResultsContent(
                                 containerColor = MaterialTheme.colorScheme.primary
                             )
                         ) {
-                            Icon(androidx.compose.material.icons.Icons.Rounded.Save, contentDescription = "Guardar")
+                            Icon(androidx.compose.material.icons.Icons.Rounded.Save, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 stringResource(R.string.save_evaluation_button),
@@ -2173,9 +2174,7 @@ private fun ProductDetailDialog(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = if (stringResource(R.string.language_label) == "Idioma") "Fabricante: ${producto.fabricante}" 
-                               else if (stringResource(R.string.language_label) == "Language") "Manufacturer: ${producto.fabricante}"
-                               else "Fabricante: ${producto.fabricante}",
+                        text = stringResource(R.string.product_manufacturer, producto.fabricante),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -2385,7 +2384,7 @@ private fun DisclaimerDialog(onAccept: () -> Unit) {
         icon = {
             Icon(
                 imageVector = Icons.Rounded.Warning,
-                contentDescription = "Warning",
+                contentDescription = stringResource(R.string.cd_alert),
                 tint = MaterialTheme.colorScheme.error,
                 modifier = Modifier.size(36.dp)
             )
@@ -2545,11 +2544,11 @@ fun SettingsDialog(
                 // --- COPIAS DE SEGURIDAD ---
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "Copias de Seguridad",
+                        text = stringResource(R.string.settings_backup_title),
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     Text(
-                        text = "Guarda tus pacientes e imágenes localmente en un archivo para no perderlos.",
+                        text = stringResource(R.string.settings_backup_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -2597,7 +2596,7 @@ fun SettingsDialog(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "Desarrollador",
+                        text = stringResource(R.string.settings_developer),
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     Button(
@@ -2651,7 +2650,7 @@ fun SettingsDialog(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "Política de Privacidad",
+                        text = stringResource(R.string.settings_privacy),
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     OutlinedButton(
@@ -2659,7 +2658,7 @@ fun SettingsDialog(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Ver Política de Privacidad")
+                        Text(stringResource(R.string.settings_privacy_view))
                     }
                 }
 
@@ -2929,7 +2928,7 @@ private fun SizeInputCard(
                 ) {
                     Icon(
                         imageVector = androidx.compose.material.icons.Icons.Rounded.CameraAlt,
-                        contentDescription = "Measure with AR",
+                        contentDescription = stringResource(R.string.cd_measure_ar),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.size(28.dp)
                     )
@@ -3159,13 +3158,13 @@ private fun SafetyAlertsCard(alerts: List<String>) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = androidx.compose.material.icons.Icons.Rounded.Warning,
-                    contentDescription = "Alerta Clínica",
+                    contentDescription = null,
                     tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Alertas de Seguridad Clínica",
+                    text = stringResource(R.string.safety_alerts_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.error
@@ -3309,19 +3308,19 @@ fun DeveloperInfoDialog(onDismiss: () -> Unit) {
                 ) {
                     androidx.compose.foundation.Image(
                         painter = painterResource(id = com.ferlagod.miscuras.R.drawable.perfil_rrss),
-                        contentDescription = "Foto de perfil de ferlagod",
+                        contentDescription = stringResource(R.string.cd_developer_photo),
                         modifier = Modifier.fillMaxSize(),
                         contentScale = androidx.compose.ui.layout.ContentScale.Crop
                     )
                 }
                 Text(
-                    text = "ferlagod (Fernando Lago) | Enfermero y desarrollador de software libre.",
+                    text = stringResource(R.string.developer_name_line),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    text = "Apasionado por la tecnología independiente, la privacidad y la lectura. Desarrollo herramientas nacidas de mis propias aficiones y necesidades profesionales, como BiblioHouse, Mis Curas y Rocinante.",
+                    text = stringResource(R.string.developer_bio),
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
                 )
@@ -3369,10 +3368,10 @@ private fun ExpertModeView(
         containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Modo Experto", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.expert_mode_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onToggleExpertMode) {
-                        Icon(imageVector = Icons.Rounded.Close, contentDescription = "Cerrar Modo Experto")
+                        Icon(imageVector = Icons.Rounded.Close, contentDescription = stringResource(R.string.expert_mode_close))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
@@ -3397,7 +3396,7 @@ private fun ExpertModeView(
                         } else {
                             Icon(imageVector = Icons.Rounded.Search, contentDescription = null, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = "Generar Recomendación", style = MaterialTheme.typography.labelLarge)
+                            Text(text = stringResource(R.string.generate_recommendation), style = MaterialTheme.typography.labelLarge)
                         }
                     }
                 }
@@ -3418,7 +3417,7 @@ private fun ExpertModeView(
             item {
                 val optionsEtiologyTrans = WoundViewModel.opcionesEtiologia.map { ClinicalTermMapper.translateClinicalTerm(it, context) }.sorted()
                 val currentEtiologyTrans = ClinicalTermMapper.translateClinicalTerm(wizardState.selectedEtiology, context)
-                ExpertExpandableSection("Etiología", currentEtiologyTrans) {
+                ExpertExpandableSection(stringResource(R.string.etiology_label), currentEtiologyTrans) {
                     ChipGroupCard(label = stringResource(R.string.etiology_label), description = "", options = optionsEtiologyTrans, selectedOption = currentEtiologyTrans, onOptionSelected = {
                         onEtiologyChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesEtiologia))
                     }, chipType = "etiology", required = true)
@@ -3431,7 +3430,7 @@ private fun ExpertModeView(
                     "Sacro" -> context.getString(R.string.location_sacrum)
                     else -> stringResource(R.string.location_none)
                 }
-                ExpertExpandableSection("Dimensiones y Localización", "${wizardState.woundLength}x${wizardState.woundWidth} - $currentLocationTrans") {
+                ExpertExpandableSection(stringResource(R.string.wizard_step_size), "${wizardState.woundLength}x${wizardState.woundWidth} - $currentLocationTrans") {
                     SizeInputCard(
                         lengthValue = wizardState.woundLength,
                         widthValue = wizardState.woundWidth,
@@ -3461,8 +3460,8 @@ private fun ExpertModeView(
             item {
                 val currentLechoTrans = ClinicalTermMapper.translateClinicalTerm(wizardState.selectedLecho, context)
                 val optionsLechoTrans = WoundViewModel.opcionesLecho.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
-                ExpertExpandableSection("Lecho", currentLechoTrans) {
-                    ChipGroupCard(label = "Estado del Lecho", description = "", options = optionsLechoTrans, selectedOption = currentLechoTrans, onOptionSelected = {
+                ExpertExpandableSection(stringResource(R.string.expert_section_bed), currentLechoTrans) {
+                    ChipGroupCard(label = stringResource(R.string.bed_state_label), description = "", options = optionsLechoTrans, selectedOption = currentLechoTrans, onOptionSelected = {
                         onLechoChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesLecho))
                     }, chipType = "tissue", required = true)
                 }
@@ -3472,14 +3471,14 @@ private fun ExpertModeView(
                 if (wizardState.selectedLecho != "Piel Intacta (Prevención)") {
                     val currentExudadoTrans = ClinicalTermMapper.translateClinicalTerm(wizardState.selectedExudado, context)
                     val optionsExudadoTrans = WoundViewModel.opcionesExudado.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
-                    ExpertExpandableSection("Exudado", currentExudadoTrans) {
-                        ChipGroupCard(label = "Nivel de Exudado", description = "", options = optionsExudadoTrans, selectedOption = currentExudadoTrans, onOptionSelected = {
+                    ExpertExpandableSection(stringResource(R.string.wizard_step_exudate), currentExudadoTrans) {
+                        ChipGroupCard(label = stringResource(R.string.exudate_level_label), description = "", options = optionsExudadoTrans, selectedOption = currentExudadoTrans, onOptionSelected = {
                             onExudadoChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesExudado))
                         }, chipType = "exudate", required = true)
                         
                         val currentTypeTrans = ClinicalTermMapper.translateClinicalTerm(wizardState.selectedExudateType, context)
                         val optionsTypeTrans = WoundViewModel.opcionesTipoExudado.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
-                        ChipGroupCard(label = "Tipo de Exudado", description = "", options = optionsTypeTrans, selectedOption = currentTypeTrans, onOptionSelected = {
+                        ChipGroupCard(label = stringResource(R.string.exudate_type_label), description = "", options = optionsTypeTrans, selectedOption = currentTypeTrans, onOptionSelected = {
                             onExudateTypeChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesTipoExudado))
                         }, chipType = "exudate", enabled = wizardState.selectedExudado.isNotEmpty() && wizardState.selectedExudado != "Nulo", required = wizardState.selectedExudado.isNotEmpty() && wizardState.selectedExudado != "Nulo")
                     }
@@ -3492,12 +3491,12 @@ private fun ExpertModeView(
                     val optionsBordesTrans = WoundViewModel.opcionesBordes.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
                     val currentPeriTrans = ClinicalTermMapper.translateClinicalTerm(wizardState.selectedPerilesional, context)
                     val optionsPeriTrans = WoundViewModel.opcionesPerilesional.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
-                    ExpertExpandableSection("Bordes y Piel Perilesional", "$currentBordesTrans - $currentPeriTrans") {
+                    ExpertExpandableSection(stringResource(R.string.wizard_step_edges), "$currentBordesTrans - $currentPeriTrans") {
                         PainCard(painLevel = wizardState.painLevel, onPainChange = onPainLevelChanged)
-                        ChipGroupCard(label = "Estado de la piel perilesional", description = "", options = optionsPeriTrans, selectedOption = currentPeriTrans, onOptionSelected = {
+                        ChipGroupCard(label = stringResource(R.string.perilesional_label), description = "", options = optionsPeriTrans, selectedOption = currentPeriTrans, onOptionSelected = {
                             onPerilesionalChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesPerilesional))
                         }, chipType = "perilesional", required = true)
-                        ChipGroupCard(label = "Estado de los bordes", description = "", options = optionsBordesTrans, selectedOption = currentBordesTrans, onOptionSelected = {
+                        ChipGroupCard(label = stringResource(R.string.edges_label), description = "", options = optionsBordesTrans, selectedOption = currentBordesTrans, onOptionSelected = {
                             onBordesChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesBordes))
                         }, chipType = "edge", required = true)
                     }
@@ -3506,8 +3505,8 @@ private fun ExpertModeView(
             // INFECTION
             item {
                 if (wizardState.selectedLecho != "Piel Intacta (Prevención)") {
-                    val isInfected = if (wizardState.selectedInfeccion) "Sí" else "No"
-                    ExpertExpandableSection("Infección", isInfected) {
+                    val isInfected = if (wizardState.selectedInfeccion) stringResource(R.string.yes) else stringResource(R.string.no)
+                    ExpertExpandableSection(stringResource(R.string.expert_section_infection), isInfected) {
                         InfectionCard(checked = wizardState.selectedInfeccion, onCheckedChange = onInfeccionChanged, enabled = true)
                         if (wizardState.selectedInfeccion) {
                             val germOptionsTrans = listOf(

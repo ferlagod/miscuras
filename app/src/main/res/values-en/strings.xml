@@ -341,4 +341,147 @@
     <string name="chart_area_single">Initial area: %1$s cm². At least two measurements are needed to show progress.</string>
 
     <string name="ar_undo_button">Undo</string>
+
+    <string name="cd_logo">Mis Curas logo</string>
+    <string name="cd_catalog">Dressing catalogue</string>
+    <string name="cd_resvech">RESVECH 2.0 scale</string>
+    <string name="cd_braden">Braden scale</string>
+    <string name="cd_glossary">Glossary</string>
+    <string name="search_patient_hint">Search by name or room…</string>
+    <string name="cd_clear">Clear search</string>
+    <string name="cd_back">Back</string>
+    <string name="action_delete">Delete</string>
+    <string name="delete_patient_title">Delete patient?</string>
+    <string name="delete_patient_text">Patient “%1$s” will be deleted together with all their wounds, evaluations and clinical photos. This cannot be undone.</string>
+    <string name="cd_delete_patient">Delete patient</string>
+    <string name="delete_wound_title">Delete wound?</string>
+    <string name="delete_wound_text">Wound “%1$s” and its whole history of evaluations and photos will be deleted. This cannot be undone.</string>
+    <string name="cd_delete_wound">Delete wound</string>
+    <string name="cd_compare_photos">Compare photos</string>
+    <string name="share_report_chooser">Share progress report</string>
+    <string name="pdf_error">Error generating the PDF report</string>
+    <string name="cd_export_pdf">Export PDF report</string>
+    <string name="delete_eval_title">Delete evaluation?</string>
+    <string name="delete_eval_text">This clinical evaluation and its photo will be permanently deleted.</string>
+    <string name="cd_delete_eval">Delete evaluation</string>
+    <string name="catalog_title">SAS dressing formulary</string>
+    <string name="catalog_search_hint">Search by name, family, manufacturer or code…</string>
+    <string name="catalog_all">All (%1$d)</string>
+    <string name="catalog_empty_title">No dressings found</string>
+    <string name="catalog_empty_text">Try another term or clear the filters.</string>
+    <string name="catalog_cn_copied">Code %1$s copied</string>
+    <string name="cd_copy_cn">Copy code</string>
+    <string name="cd_view_full_image">View full image</string>
+    <string name="catalog_mechanism">Mechanism of action and indications:</string>
+    <string name="catalog_formats">Available sizes and formats:</string>
+    <string name="catalog_cn_by_format">National codes by format:</string>
+    <string name="cd_copy_item">Copy %1$s</string>
+    <string name="catalog_type">Dressing type:</string>
+    <string name="catalog_precautions">Precautions and incompatibilities:</string>
+    <string name="photo_compare_title">Progress comparison</string>
+    <string name="cd_photo_before">Earlier photo</string>
+    <string name="cd_photo_after">Latest photo</string>
+
+    <plurals name="catalog_count">
+        <item quantity="one">%1$d product</item>
+        <item quantity="other">%1$d products</item>
+    </plurals>
+
+    <string name="resvech_c1_title">1. Wound size</string>
+    <string name="resvech_c1_sub">Area (greatest length x width)</string>
+    <string name="resvech_c1_o0">Area = 0 cm²</string>
+    <string name="resvech_c1_o1">Area &lt; 4 cm²</string>
+    <string name="resvech_c1_o2">Area = 4 – &lt; 16 cm²</string>
+    <string name="resvech_c1_o3">Area = 16 – &lt; 36 cm²</string>
+    <string name="resvech_c1_o4">Area = 36 – &lt; 64 cm²</string>
+    <string name="resvech_c1_o5">Area = 64 – &lt; 100 cm²</string>
+    <string name="resvech_c1_o6">Area ≥ 100 cm²</string>
+    <string name="resvech_c2_title">2. Depth / tissues involved</string>
+    <string name="resvech_c2_sub">Deepest structure involved</string>
+    <string name="resvech_c2_o0">Intact, healed skin</string>
+    <string name="resvech_c2_o1">Dermis-epidermis involvement</string>
+    <string name="resvech_c2_o2">Subcutaneous tissue involvement (adipose tissue, not reaching the muscle fascia)</string>
+    <string name="resvech_c2_o3">Muscle involvement</string>
+    <string name="resvech_c2_o4">Bone and/or adjacent tissue involvement (tendons, ligaments, joint capsule) or black eschar hiding the tissue beneath</string>
+    <string name="resvech_c3_title">3. Edges</string>
+    <string name="resvech_c3_sub">Condition of the wound edges</string>
+    <string name="resvech_c3_o0">Not distinguishable (no wound)</string>
+    <string name="resvech_c3_o1">Diffuse</string>
+    <string name="resvech_c3_o2">Well defined</string>
+    <string name="resvech_c3_o3">Damaged</string>
+    <string name="resvech_c3_o4">Thickened (“aged”, “everted”)</string>
+    <string name="resvech_c4_title">4. Tissue type in the wound bed</string>
+    <string name="resvech_c4_sub">Worst-prognosis tissue present</string>
+    <string name="resvech_c4_o0">Closed / healed</string>
+    <string name="resvech_c4_o1">Epithelial tissue</string>
+    <string name="resvech_c4_o2">Granulation tissue</string>
+    <string name="resvech_c4_o3">Necrotic tissue and/or slough in the bed</string>
+    <string name="resvech_c4_o4">Necrotic (dry or wet black eschar)</string>
+    <string name="resvech_c5_title">5. Exudate</string>
+    <string name="resvech_c5_sub">Moisture level of the bed</string>
+    <string name="resvech_c5_o0">Moist</string>
+    <string name="resvech_c5_o1">Wet</string>
+    <string name="resvech_c5_o2">Saturated</string>
+    <string name="resvech_c5_o3">Leaking exudate</string>
+    <string name="resvech_c5_o4">Dry</string>
+    <string name="resvech_c6_title">6. Infection / inflammation (signs of biofilm)</string>
+    <string name="resvech_c6_sub">Tick every sign present (1 point each)</string>
+    <string name="resvech_s1">Increasing pain</string>
+    <string name="resvech_s2">Periwound erythema</string>
+    <string name="resvech_s3">Periwound oedema</string>
+    <string name="resvech_s4">Increased temperature</string>
+    <string name="resvech_s5">Increasing exudate</string>
+    <string name="resvech_s6">Purulent exudate</string>
+    <string name="resvech_s7">Friable tissue or bleeds easily</string>
+    <string name="resvech_s8">Stalled wound, not progressing</string>
+    <string name="resvech_s9">Tissue consistent with biofilm</string>
+    <string name="resvech_s10">Odour</string>
+    <string name="resvech_s11">Hypergranulation</string>
+    <string name="resvech_s12">Wound size increasing</string>
+    <string name="resvech_s13">Satellite lesions</string>
+    <string name="resvech_s14">Tissue pallor</string>
+    <string name="resvech_incomplete">Incomplete (%1$d/%2$d items)</string>
+    <string name="resvech_incomplete_desc">Answer every item to get the total score.</string>
+    <string name="resvech_healed">Healed wound</string>
+    <string name="resvech_healed_desc">Score 0: wound closed.</string>
+    <string name="resvech_low">Low score (indicative)</string>
+    <string name="resvech_low_desc">Compare with previous assessments: a falling score indicates progress towards healing.</string>
+    <string name="resvech_mid">Intermediate score (indicative)</string>
+    <string name="resvech_mid_desc">Compare with previous assessments. If the score does not fall, review the care plan (debridement, bacterial load, exudate).</string>
+    <string name="resvech_high">High score (indicative)</string>
+    <string name="resvech_high_desc">Severely affected wound. If it does not improve between assessments, consider a multidisciplinary approach and specialist care.</string>
+    <string name="resvech_subtitle">Objective healing monitoring</string>
+    <string name="resvech_copy_summary">--- RESVECH 2.0 SCALE ---\nTotal score: %1$d / 35\nStatus: %2$s\n%3$s\n(RESVECH 2.0 has no validated cut-off points; bands are indicative.)</string>
+    <string name="cd_copy_summary">Copy summary</string>
+
+    <string name="expert_mode_title">Expert mode</string>
+    <string name="expert_mode_close">Close expert mode</string>
+    <string name="pain_none">No pain</string>
+    <string name="pain_mild">Mild</string>
+    <string name="pain_moderate">Moderate</string>
+    <string name="pain_severe">Severe</string>
+    <string name="pain_title">Sensitivity / Pain (S)</string>
+    <string name="pain_desc">VAS (0-10) at dressing change</string>
+    <string name="camera_permission_denied">Camera permission denied</string>
+    <string name="cd_alert">Alert</string>
+    <string name="braden_high_risk_text">High or very high risk patient. Proactively recommend hyperoxygenated fatty acids (HOFA), multilayer polyurethane foams on sacrum and heels, and a pressure-redistributing support surface (alternating air mattress).</string>
+    <string name="cd_expand_collapse">Expand or collapse</string>
+    <string name="cd_wound_photo">Wound photo</string>
+    <string name="product_manufacturer">Manufacturer: %1$s</string>
+    <string name="settings_backup_title">Backups</string>
+    <string name="settings_backup_desc">Save your patients and images to an encrypted file so you don’t lose them.</string>
+    <string name="settings_developer">Developer</string>
+    <string name="settings_privacy">Privacy policy</string>
+    <string name="settings_privacy_view">View privacy policy</string>
+    <string name="cd_measure_ar">Measure with augmented reality</string>
+    <string name="safety_alerts_title">Clinical safety alerts</string>
+    <string name="cd_developer_photo">ferlagod profile photo</string>
+    <string name="developer_name_line">ferlagod (Fernando Lago) | Nurse and free software developer.</string>
+    <string name="developer_bio">Passionate about independent technology, privacy and reading. I build tools born from my own hobbies and professional needs, such as BiblioHouse, Mis Curas and Rocinante.</string>
+    <string name="generate_recommendation">Generate recommendation</string>
+    <string name="expert_section_bed">Wound bed</string>
+    <string name="expert_section_infection">Infection</string>
+
+    <string name="resvech_total_label">TOTAL SCORE</string>
+    <string name="rep_cavitation_format">- Undermining/tunnelling: %1$s</string>
 </resources>

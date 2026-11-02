@@ -17,6 +17,9 @@
  */
 package com.ferlagod.miscuras.ui.screens
 
+import androidx.compose.ui.res.stringResource
+import com.ferlagod.miscuras.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -86,14 +89,14 @@ fun PhotoCompareDialog(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            "Comparador Evolutivo",
+                            stringResource(R.string.photo_compare_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                     }
 
                     IconButton(onClick = onDismiss) {
-                        Icon(Icons.Rounded.Close, contentDescription = "Cerrar")
+                        Icon(Icons.Rounded.Close, contentDescription = stringResource(R.string.close_button))
                     }
                 }
 
@@ -142,7 +145,7 @@ fun PhotoCompareDialog(
                             ) {
                                 AsyncImage(
                                     model = beforeEval.photoPath?.let { File(it) },
-                                    contentDescription = "Foto inicial",
+                                    contentDescription = stringResource(R.string.cd_photo_before),
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop
                                 )
@@ -186,7 +189,7 @@ fun PhotoCompareDialog(
                             ) {
                                 AsyncImage(
                                     model = afterEval.photoPath?.let { File(it) },
-                                    contentDescription = "Foto actual",
+                                    contentDescription = stringResource(R.string.cd_photo_after),
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop
                                 )

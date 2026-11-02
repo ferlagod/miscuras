@@ -168,7 +168,7 @@ fun DashboardScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
                             painter = painterResource(id = R.drawable.logo_symbol),
-                            contentDescription = "Logo Mis Curas",
+                            contentDescription = stringResource(R.string.cd_logo),
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
@@ -181,25 +181,25 @@ fun DashboardScreen(
                     IconButton(onClick = onNavigateToCatalog) {
                         Icon(
                             imageVector = Icons.Rounded.MedicalServices,
-                            contentDescription = "Catálogo SAS"
+                            contentDescription = stringResource(R.string.cd_catalog)
                         )
                     }
                     IconButton(onClick = onNavigateToResvech) {
                         Icon(
                             imageVector = Icons.Rounded.BarChart,
-                            contentDescription = "Escala RESVECH 2.0"
+                            contentDescription = stringResource(R.string.cd_resvech)
                         )
                     }
                     IconButton(onClick = onNavigateToBraden) {
                         Icon(
                             imageVector = Icons.Rounded.Warning,
-                            contentDescription = "Calculadora Braden"
+                            contentDescription = stringResource(R.string.cd_braden)
                         )
                     }
                     IconButton(onClick = onNavigateToGlossary) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Rounded.MenuBook,
-                            contentDescription = "Glosario / Biblioteca"
+                            contentDescription = stringResource(R.string.cd_glossary)
                         )
                     }
                     IconButton(onClick = { showSettings = true }) {
@@ -356,12 +356,12 @@ fun DashboardScreen(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Buscar paciente por nombre o habitación...") },
+                    placeholder = { Text(stringResource(R.string.search_patient_hint)) },
                     leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
                     trailingIcon = {
                         if (searchQuery.isNotEmpty()) {
                             IconButton(onClick = { searchQuery = "" }) {
-                                Icon(Icons.Rounded.Clear, contentDescription = "Limpiar")
+                                Icon(Icons.Rounded.Clear, contentDescription = stringResource(R.string.cd_clear))
                             }
                         }
                     },
@@ -482,8 +482,8 @@ fun DashboardScreen(
         AlertDialog(
             onDismissRequest = { patientToDelete = null },
             icon = { Icon(Icons.Rounded.DeleteForever, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("¿Eliminar paciente?") },
-            text = { Text("Se eliminará al paciente \"${patientToDelete?.anonymizedName}\" junto con todas sus heridas, evaluaciones y fotografías clínicas asociadas. Esta acción no se puede deshacer.") },
+            title = { Text(stringResource(R.string.delete_patient_title)) },
+            text = { Text(stringResource(R.string.delete_patient_text, patientToDelete?.anonymizedName.orEmpty())) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -492,12 +492,12 @@ fun DashboardScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Eliminar")
+                    Text(stringResource(R.string.action_delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { patientToDelete = null }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.cancel_button))
                 }
             }
         )
@@ -663,7 +663,7 @@ private fun PatientCard(
                 IconButton(onClick = onDeleteClick) {
                     Icon(
                         imageVector = Icons.Rounded.DeleteOutline,
-                        contentDescription = "Eliminar paciente",
+                        contentDescription = stringResource(R.string.cd_delete_patient),
                         tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                         modifier = Modifier.size(20.dp)
                     )
