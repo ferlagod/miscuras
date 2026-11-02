@@ -116,13 +116,39 @@ fun DashboardScreen(
         }
     }
 
+    // Contraseña de la copia cifrada: se pide antes de abrir el selector de archivos
+    var backupPasswordMode by remember { mutableStateOf<String?>(null) } // "create" | "restore"
+    var pendingBackupPassword by remember { mutableStateOf("") }
+
     val createDocumentLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/zip")
-    ) { uri -> uri?.let { woundViewModel.createBackup(it) } }
+        androidx.activity.result.contract.ActivityResultContracts.CreateDocument("application/octet-stream")
+    ) { uri ->
+        uri?.let { woundViewModel.createBackup(it, pendingBackupPassword) }
+        pendingBackupPassword = ""
+    }
 
     val openDocumentLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.OpenDocument()
-    ) { uri -> uri?.let { woundViewModel.restoreBackup(it) } }
+    ) { uri ->
+        uri?.let { woundViewModel.restoreBackup(it, pendingBackupPassword) }
+        pendingBackupPassword = ""
+    }
+
+    backupPasswordMode?.let { mode ->
+        BackupPasswordDialog(
+            isCreate = mode == "create",
+            onDismiss = { backupPasswordMode = null },
+            onConfirm = { password ->
+                pendingBackupPassword = password
+                backupPasswordMode = null
+                if (mode == "create") {
+                    createDocumentLauncher.launch("miscuras_backup.mcbk")
+                } else {
+                    openDocumentLauncher.launch(arrayOf("application/octet-stream", "application/zip", "application/x-zip-compressed", "multipart/x-zip", "*/*"))
+                }
+            }
+        )
+    }
 
     val context = LocalContext.current
     val lang = configState.currentLanguage
@@ -489,10 +515,12 @@ fun DashboardScreen(
                 woundViewModel.setAddProductDialogVisibility(true)
             },
             onBackupClick = {
-                createDocumentLauncher.launch("miscuras_backup.zip")
+                showSettings = false
+                backupPasswordMode = "create"
             },
             onRestoreClick = {
-                openDocumentLauncher.launch(arrayOf("application/zip", "application/octet-stream", "application/x-zip-compressed", "multipart/x-zip"))
+                showSettings = false
+                backupPasswordMode = "restore"
             }
         )
     }

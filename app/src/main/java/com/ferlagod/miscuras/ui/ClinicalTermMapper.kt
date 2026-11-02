@@ -73,6 +73,17 @@ object ClinicalTermMapper {
         }
     }
 
+    /**
+     * Convierte un término traducido al término de BD buscando SOLO entre las opciones de su
+     * categoría. Evita colisiones cuando dos categorías comparten traducción
+     * (p. ej. en inglés "Macerated" es tanto borde como piel perilesional).
+     */
+    fun mapToDbTerm(translatedTerm: String, context: Context, candidates: List<String>): String {
+        val trimmed = translatedTerm.trim()
+        return candidates.firstOrNull { translateClinicalTerm(it, context).trim() == trimmed }
+            ?: mapToDbTerm(translatedTerm, context)
+    }
+
     fun mapToDbTerm(translatedTerm: String, context: Context): String {
         return when (translatedTerm.trim()) {
             context.getString(R.string.etiology_not_specified) -> "No especificada"

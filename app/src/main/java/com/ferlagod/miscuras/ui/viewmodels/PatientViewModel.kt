@@ -60,6 +60,7 @@ class PatientViewModel(private val patientDao: PatientDao) : ViewModel() {
 
     private var woundsJob: Job? = null
     private var evaluationsJob: Job? = null
+    private var woundJob: Job? = null
 
     fun loadWoundsForPatient(patientId: Long) {
         woundsJob?.cancel()
@@ -74,8 +75,19 @@ class PatientViewModel(private val patientDao: PatientDao) : ViewModel() {
 
     fun loadEvaluationsForWound(woundId: Long) {
         evaluationsJob?.cancel()
+        woundJob?.cancel()
+        // Vaciar el estado anterior para no mostrar (ni actuar sobre) la herida abierta previamente
+        if (_currentWound.value?.id != woundId) {
+            _currentWound.value = null
+            _currentWoundEvaluations.value = emptyList()
+        }
+        // Observación reactiva: el alta/reapertura se refleja al instante
+        woundJob = viewModelScope.launch(Dispatchers.IO) {
+            patientDao.getWoundByIdFlow(woundId)
+                .catch { e -> e.printStackTrace() }
+                .collect { _currentWound.value = it }
+        }
         evaluationsJob = viewModelScope.launch(Dispatchers.IO) {
-            _currentWound.value = patientDao.getWoundById(woundId)
             patientDao.getEvaluationsForWound(woundId)
                 .catch { e -> e.printStackTrace() }
                 .collect { list ->
@@ -147,6 +159,15 @@ class PatientViewModel(private val patientDao: PatientDao) : ViewModel() {
                 try { java.io.File(path).delete() } catch (e: Exception) { e.printStackTrace() }
             }
             patientDao.deleteEvaluationById(evaluationId)
+        }
+    }
+
+    fun reopenWound(woundId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val wound = patientDao.getWoundById(woundId)
+            if (wound != null) {
+                patientDao.updateWound(wound.copy(isDischarged = false, dischargedAt = null))
+            }
         }
     }
 

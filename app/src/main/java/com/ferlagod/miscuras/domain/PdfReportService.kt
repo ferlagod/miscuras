@@ -35,6 +35,32 @@ class PdfReportService(private val context: Context) {
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
     private val shortDateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
+    /** Divide un texto en líneas que caben en [maxWidth] puntos con la fuente de [paint]. */
+    private fun wrapText(text: String, paint: Paint, maxWidth: Float): List<String> {
+        val result = mutableListOf<String>()
+        text.split("\n").forEach { paragraph ->
+            var line = ""
+            paragraph.split(" ").forEach { word ->
+                val candidate = if (line.isEmpty()) word else "$line $word"
+                if (paint.measureText(candidate) <= maxWidth) {
+                    line = candidate
+                } else {
+                    if (line.isNotEmpty()) result.add(line)
+                    // Palabras más largas que el ancho disponible: cortar a la fuerza
+                    var rest = word
+                    while (paint.measureText(rest) > maxWidth && rest.length > 1) {
+                        val n = paint.breakText(rest, true, maxWidth, null).coerceAtLeast(1)
+                        result.add(rest.take(n))
+                        rest = rest.drop(n)
+                    }
+                    line = rest
+                }
+            }
+            if (line.isNotEmpty()) result.add(line)
+        }
+        return result
+    }
+
     suspend fun generateWoundReport(
         patient: PatientEntity,
         wound: WoundEntity,
@@ -121,11 +147,22 @@ class PdfReportService(private val context: Context) {
                 canvas.drawText("ÚLTIMA EVALUACIÓN CLÍNICA (${dateFormat.format(Date(latestEval.timestamp))})", 30f, y, paint)
                 y += 15f
 
+                // Texto de tratamiento y productos con ajuste de línea (máx. 6 + 3 líneas)
+                textPaint.textSize = 9.5f
+                textPaint.isFakeBoldText = false
+                val treatLines = latestEval.recommendedTreatment.split("\n").filter { it.isNotBlank() }
+                    .flatMap { wrapText(it.trim(), textPaint, 500f) }
+                    .let { if (it.size > 6) it.take(5) + "(…) Ver detalle completo en la aplicación." else it }
+                val productLines = latestEval.selectedProducts?.takeIf { it.isNotBlank() }
+                    ?.let { wrapText(it.split(",").joinToString(", ") { p -> p.trim() }, textPaint, 380f).take(3) }
+                    ?: emptyList()
+                val boxHeight = 106f + treatLines.size * 14f + (if (productLines.isNotEmpty()) 20f + productLines.size * 13f else 0f)
+
                 paint.color = surfaceBg
-                canvas.drawRoundRect(30f, y, 565f, y + 160f, 8f, 8f, paint)
+                canvas.drawRoundRect(30f, y, 565f, y + boxHeight, 8f, 8f, paint)
                 paint.color = dividerColor
                 paint.style = Paint.Style.STROKE
-                canvas.drawRoundRect(30f, y, 565f, y + 160f, 8f, 8f, paint)
+                canvas.drawRoundRect(30f, y, 565f, y + boxHeight, 8f, 8f, paint)
                 paint.style = Paint.Style.FILL
 
                 var evalY = y + 20f
@@ -183,21 +220,22 @@ class PdfReportService(private val context: Context) {
                 textPaint.isFakeBoldText = true
                 canvas.drawText("Tratamiento Recomendado:", 42f, evalY, textPaint)
                 textPaint.isFakeBoldText = false
-                val treatLines = latestEval.recommendedTreatment.split("\n").filter { it.isNotBlank() }
-                for (line in treatLines.take(2)) {
-                    canvas.drawText(line.take(85), 42f, evalY + 14f, textPaint)
+                for (line in treatLines) {
+                    canvas.drawText(line, 42f, evalY + 14f, textPaint)
                     evalY += 14f
                 }
 
-                if (!latestEval.selectedProducts.isNullOrBlank()) {
-                    evalY += 6f
+                if (productLines.isNotEmpty()) {
+                    evalY += 20f
                     textPaint.isFakeBoldText = true
                     canvas.drawText("Productos Aplicados:", 42f, evalY, textPaint)
                     textPaint.isFakeBoldText = false
-                    canvas.drawText(latestEval.selectedProducts.take(80), 160f, evalY, textPaint)
+                    productLines.forEachIndexed { i, line ->
+                        canvas.drawText(line, 160f, evalY + i * 13f, textPaint)
+                    }
                 }
 
-                y += 175f
+                y += boxHeight + 15f
             }
 
             // --- History Table (Last 6 evaluations) ---
@@ -225,7 +263,9 @@ class PdfReportService(private val context: Context) {
 
                 y += 20f
 
-                val recentEvals = evaluations.takeLast(6)
+                // Solo las filas que caben antes del pie de página
+                val maxRows = ((750f - y) / 18f).toInt().coerceIn(0, 6)
+                val recentEvals = evaluations.takeLast(maxRows)
                 for (ev in recentEvals) {
                     textPaint.textSize = 8f
                     textPaint.isFakeBoldText = false
@@ -252,7 +292,9 @@ class PdfReportService(private val context: Context) {
 
             textPaint.textSize = 8f
             textPaint.color = Color.rgb(120, 130, 140)
-            canvas.drawText("Documento generado por Mis Curas — No sustituye el juicio clínico del profesional sanitario.", 30f, footerY + 15f, textPaint)
+            // Aviso legal en la columna izquierda, sin invadir el área de firma (x ≥ 370)
+            wrapText("Documento generado por Mis Curas — No sustituye el juicio clínico del profesional sanitario.", textPaint, 325f)
+                .forEachIndexed { i, line -> canvas.drawText(line, 30f, footerY + 15f + i * 11f, textPaint) }
 
             paint.color = Color.rgb(70, 80, 90)
             paint.textSize = 8.5f

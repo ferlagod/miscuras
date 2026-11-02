@@ -55,7 +55,10 @@ val appModule = module {
     single { NetworkClient.formSubmitApi }
 
     // Repositories
-    single { ApositosRepository(get(), get()) }
+    single {
+        val ctx = androidContext()
+        ApositosRepository(get(), get(), seed = { AppDatabase.ensureSeeded(ctx) })
+    }
     single { FeedbackRepository(get()) }
 
     // Use Cases & Engines

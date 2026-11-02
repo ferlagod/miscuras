@@ -66,7 +66,10 @@ data class WizardState(
     val selectedBordes: String = "Sanos/Íntegros",
     val selectedPerilesional: String = "Sana",
     val painLevel: Float = 0f,
-    val photoPath: String? = null
+    val photoPath: String? = null,
+    // Datos del paciente relevantes para la seguridad (vacíos en evaluación rápida)
+    val patientAllergies: String = "",
+    val patientHistory: String = ""
 )
 
 /**
@@ -126,6 +129,11 @@ class WoundViewModel(
 
     private val _configState = MutableStateFlow(ConfigState())
     val configState: StateFlow<ConfigState> = _configState.asStateFlow()
+
+    private var aiJob: kotlinx.coroutines.Job? = null
+
+    /** Foto tomada en la evaluación en curso que aún no pertenece a ninguna evaluación guardada. */
+    private var pendingPhotoPath: String? = null
 
     private val _backupState = MutableStateFlow<BackupState>(BackupState.Idle)
     val backupState: StateFlow<BackupState> = _backupState.asStateFlow()
@@ -351,6 +359,7 @@ class WoundViewModel(
 
         val bradenText = if (eval.bradenScore != null) {
             val riskText = when {
+                eval.bradenScore >= 19 -> context.getString(R.string.braden_risk_none)
                 eval.bradenScore >= 15 -> context.getString(R.string.braden_risk_low)
                 eval.bradenScore in 13..14 -> context.getString(R.string.braden_risk_moderate)
                 eval.bradenScore in 10..12 -> context.getString(R.string.braden_risk_high)
@@ -359,7 +368,7 @@ class WoundViewModel(
             "\n            ${context.getString(R.string.rep_braden_title)}\n            ${String.format(context.getString(R.string.rep_braden_score_format), eval.bradenScore, riskText)}\n"
         } else ""
 
-        val bradenPrevencion = if (eval.bradenScore != null && eval.bradenScore < 12) {
+        val bradenPrevencion = if (eval.bradenScore != null && eval.bradenScore <= 12) {
             "\n            ${context.getString(R.string.rep_braden_preventive_title)}\n            ${context.getString(R.string.rep_braden_preventive_text)}\n"
         } else ""
 
@@ -387,13 +396,18 @@ class WoundViewModel(
      */
     fun buscarAposito() {
         _evaluationState.update { it.copy(isLoading = true, noMatchFound = false) }
+        aiJob?.cancel()
 
         viewModelScope.launch(Dispatchers.IO) {
-            val result = evaluateWoundUseCase.getClinicalRecommendation(_wizardState.value)
+            val wizardSnapshot = _wizardState.value
+            val result = evaluateWoundUseCase.getClinicalRecommendation(wizardSnapshot)
 
             if (result.familiaRecomendada != null) {
+                val nombresDisponibles = result.productos.map { it.nombreComercial }.toSet()
                 _evaluationState.update {
                     it.copy(
+                        // Conservar solo productos seleccionados que siguen en la recomendación actual
+                        selectedTreatmentProducts = it.selectedTreatmentProducts.intersect(nombresDisponibles),
                         familiaRecomendada = result.familiaRecomendada,
                         cureFrequency = result.cureFrequency,
                         productos = result.productos,
@@ -406,9 +420,12 @@ class WoundViewModel(
                     )
                 }
 
-                viewModelScope.launch(Dispatchers.IO) {
-                    val respuesta = evaluateWoundUseCase.getAiExplanation(_wizardState.value, result.familiaRecomendada)
-                    _evaluationState.update { it.copy(aiResponse = respuesta, isAiLoading = false) }
+                aiJob = viewModelScope.launch(Dispatchers.IO) {
+                    val respuesta = evaluateWoundUseCase.getAiExplanation(wizardSnapshot, result.familiaRecomendada)
+                    // Evitar que una respuesta tardía de una búsqueda anterior sobrescriba la actual
+                    if (kotlinx.coroutines.currentCoroutineContext()[kotlinx.coroutines.Job]?.isActive == true) {
+                        _evaluationState.update { it.copy(aiResponse = respuesta, isAiLoading = false) }
+                    }
                 }
             } else {
                 _evaluationState.update {
@@ -416,6 +433,7 @@ class WoundViewModel(
                         familiaRecomendada = null,
                         cureFrequency = null,
                         productos = emptyList(),
+                        selectedTreatmentProducts = emptySet(),
                         safetyAlerts = result.safetyAlerts,
                         showResults = true,
                         isLoading = false,
@@ -440,6 +458,7 @@ class WoundViewModel(
                 familiaRecomendada = null,
                 cureFrequency = null,
                 productos = emptyList(),
+                selectedTreatmentProducts = emptySet(),
                 noMatchFound = false
             )
         }
@@ -539,6 +558,8 @@ class WoundViewModel(
         val wizard = _wizardState.value
         val eval = _evaluationState.value
         val config = _configState.value
+        // La foto pasa a pertenecer a la evaluación guardada: ya no se debe borrar como huérfana
+        pendingPhotoPath = null
         viewModelScope.launch(Dispatchers.IO) {
             val evaluation = EvaluationEntity(
                 woundId = woundId,
@@ -567,7 +588,28 @@ class WoundViewModel(
     }
 
     fun setPhotoPath(path: String?) {
-        _wizardState.update { it.copy(photoPath = path?.takeIf { p -> p.isNotBlank() }) }
+        val newPath = path?.takeIf { p -> p.isNotBlank() }
+        // Si se sustituye o elimina una foto aún no guardada, borrar el archivo para no dejar
+        // imágenes clínicas huérfanas en el almacenamiento interno.
+        discardPendingPhoto(except = newPath)
+        pendingPhotoPath = newPath
+        _wizardState.update { it.copy(photoPath = newPath) }
+    }
+
+    private fun discardPendingPhoto(except: String? = null) {
+        val old = pendingPhotoPath ?: return
+        if (old == except) return
+        pendingPhotoPath = null
+        viewModelScope.launch(Dispatchers.IO) {
+            try { java.io.File(old).delete() } catch (e: Exception) { e.printStackTrace() }
+        }
+    }
+
+    override fun onCleared() {
+        pendingPhotoPath?.let { path ->
+            try { java.io.File(path).delete() } catch (e: Exception) { e.printStackTrace() }
+        }
+        super.onCleared()
     }
 
     fun resetWizard(woundId: Long = -1L) {
@@ -575,7 +617,9 @@ class WoundViewModel(
         val currentTheme = _configState.value.currentTheme
         val seenDisclaimer = _configState.value.hasSeenDisclaimer
         val currentExpertMode = _configState.value.isExpertMode
-        
+
+        aiJob?.cancel()
+        discardPendingPhoto()
         _wizardState.value = WizardState()
         _evaluationState.value = EvaluationState()
         _configState.value = ConfigState(
@@ -588,6 +632,16 @@ class WoundViewModel(
 
         if (woundId != -1L) {
             viewModelScope.launch(Dispatchers.IO) {
+                // Alergias y antecedentes del paciente para el filtrado de seguridad
+                val wound = patientDao.getWoundById(woundId)
+                val patient = wound?.let { patientDao.getPatientById(it.patientId) }
+                _wizardState.update {
+                    it.copy(
+                        patientAllergies = patient?.allergies.orEmpty(),
+                        patientHistory = listOfNotNull(patient?.medicalHistory, patient?.medication).joinToString(" ")
+                    )
+                }
+
                 val latestEval = patientDao.getLatestEvaluationForWound(woundId)
                 if (latestEval != null) {
                     _wizardState.update {
@@ -634,17 +688,17 @@ class WoundViewModel(
 
     // --- Backup & Restore ---
 
-    fun createBackup(uri: Uri) {
+    fun createBackup(uri: Uri, password: String) {
         viewModelScope.launch {
-            backupService.createBackup(uri).collect { state ->
+            backupService.createBackup(uri, password).collect { state ->
                 _backupState.value = state
             }
         }
     }
 
-    fun restoreBackup(uri: Uri) {
+    fun restoreBackup(uri: Uri, password: String) {
         viewModelScope.launch {
-            backupService.restoreBackup(uri).collect { state ->
+            backupService.restoreBackup(uri, password).collect { state ->
                 _backupState.value = state
                 if (state is BackupState.Success) {
                     resetWizard() // Refresh UI state after restoring DB

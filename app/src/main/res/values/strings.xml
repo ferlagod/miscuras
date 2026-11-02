@@ -169,7 +169,8 @@
     <string name="braden_copied_snackbar">Plan preventivo copiado al portapapeles</string>
     <string name="braden_ok">OK</string>
     <string name="braden_points">Puntos</string>
-    <string name="braden_risk_low">Riesgo Bajo / Sin Riesgo</string>
+    <string name="braden_risk_low">Riesgo Bajo</string>
+    <string name="braden_risk_none">Sin Riesgo</string>
     <string name="braden_risk_moderate">Riesgo Moderado</string>
     <string name="braden_risk_high">Riesgo Alto</string>
     <string name="braden_risk_very_high">Riesgo Muy Alto</string>
@@ -204,7 +205,14 @@
     <string name="braden_friction3">No hay problema aparente (3)</string>
     <string name="braden_suggested_plan">Plan Preventivo Sugerido:</string>
     <string name="braden_copy_clipboard">Copiar al Portapapeles</string>
-    <string name="braden_rec_low">• Cuidados básicos de la piel.\n• Fomentar la movilidad.</string>
+    <string name="braden_rec_low">• Cambios posturales al menos cada 4 horas si está encamado.
+• AGHO en zonas de apoyo.
+• Protección de talones y prominencias óseas.
+• Control de humedad e hidratación de la piel.
+• Fomentar la movilidad.</string>
+    <string name="braden_rec_none">• Cuidados básicos de la piel.
+• Fomentar la movilidad.
+• Reevaluar ante cambios en el estado del paciente.</string>
     <string name="braden_rec_moderate">• Cambios posturales regulares.\n• Aplicación de Ácidos Grasos Hiperoxigenados (AGHO).\n• Vigilancia estrecha de puntos de apoyo.</string>
     <string name="braden_rec_high">• Cambios posturales cada 2-3 horas.\n• Uso de Superficies Especiales de Manejo de la Presión (SEMP) estáticas/dinámicas.\n• AGHO diarios.\n• Suplementación nutricional si procede.</string>
     <string name="braden_rec_very_high">• Cambios posturales estrictos cada 2 horas.\n• Uso de SEMP dinámicas de alta gama (colchón de aire alternante).\n• Elevación de talones.\n• Protección proactiva con apósitos multicapa.</string>
@@ -301,4 +309,15 @@
     <string name="settings_backup_restore">Restaurar</string>
     <string name="backup_success">Operación completada con éxito</string>
     <string name="backup_error_prefix">Error: %1$s</string>
-<string name="patient_allergies_label">Alergias: %1$s</string><string name="patient_medication_label">Medicación: %1$s</string><string name="patient_medical_history_label">Antecedentes: %1$s</string><string name="wounds_active_title">Activas</string><string name="wounds_discharged_title">Dadas de alta</string><string name="wound_discharged_date_format">Alta: %1$s</string><string name="action_discharge_wound">Dar de alta</string><string name="content_desc_edit">Editar</string><string name="content_desc_patient_photo">Foto del paciente</string><string name="add_photo">Añadir foto</string><string name="patient_allergies_hint">Alergias (opcional)</string><string name="patient_medication_hint">Medicación (opcional)</string><string name="patient_medical_history_hint">Antecedentes médicos (opcional)</string><string name="save_changes">Guardar cambios</string><string name="edit_patient_title">Editar Ficha del Paciente</string></resources>
+<string name="patient_allergies_label">Alergias: %1$s</string><string name="patient_medication_label">Medicación: %1$s</string><string name="patient_medical_history_label">Antecedentes: %1$s</string><string name="wounds_active_title">Activas</string><string name="wounds_discharged_title">Dadas de alta</string><string name="wound_discharged_date_format">Alta: %1$s</string><string name="action_discharge_wound">Dar de alta</string><string name="content_desc_edit">Editar</string><string name="content_desc_patient_photo">Foto del paciente</string><string name="add_photo">Añadir foto</string><string name="patient_allergies_hint">Alergias (opcional)</string><string name="patient_medication_hint">Medicación (opcional)</string><string name="patient_medical_history_hint">Antecedentes médicos (opcional)</string><string name="save_changes">Guardar cambios</string><string name="edit_patient_title">Editar Ficha del Paciente</string>
+    <string name="discharge_confirm_title">¿Dar de alta la herida?</string>
+    <string name="discharge_confirm_text">La herida pasará a «Dadas de alta» y no admitirá nuevas evaluaciones. Podrás reabrirla desde su detalle si fuera necesario.</string>
+    <string name="action_reopen_wound">Reabrir</string>
+    <string name="backup_password_title">Contraseña de la copia</string>
+    <string name="backup_password_create_text">La copia contiene datos clínicos y se cifrará con esta contraseña. Guárdala: sin ella no podrás restaurar la copia.</string>
+    <string name="backup_password_restore_text">Introduce la contraseña con la que se cifró la copia. Si es una copia antigua sin cifrar, deja el campo vacío.</string>
+    <string name="backup_password_hint">Contraseña</string>
+    <string name="backup_password_confirm_hint">Repite la contraseña</string>
+    <string name="backup_password_too_short">Mínimo 8 caracteres</string>
+    <string name="backup_password_mismatch">Las contraseñas no coinciden</string>
+</resources>

@@ -31,7 +31,8 @@ import com.ferlagod.miscuras.data.entities.ApositoEntity
  */
 class ApositosRepository(
     private val apositoDao: ApositoDao,
-    private val aiCacheDao: AiCacheDao
+    private val aiCacheDao: AiCacheDao,
+    private val seed: () -> Unit = {}
 ) {
 
     /**
@@ -42,6 +43,8 @@ class ApositosRepository(
     fun preCargarBaseDeDatos() {
         // Ejecuta una consulta ligera para forzar la creación de la BD y su prepoblación
         apositoDao.obtenerCantidadReglas()
+        // Carga síncrona de los CSV para que la primera evaluación tras instalar/migrar no salga vacía
+        seed()
     }
 
     /**

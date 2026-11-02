@@ -57,7 +57,7 @@ import java.io.InputStreamReader
         WoundEntity::class,
         EvaluationEntity::class
     ],
-    version = 35,
+    version = 36,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -72,6 +72,11 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun patientDao(): PatientDao
 
     companion object {
+        /** Garantiza (de forma síncrona) que reglas y productos estén cargados. */
+        fun ensureSeeded(context: Context) {
+            DatabaseCallback.ensureSeeded(context, getDatabase(context))
+        }
+
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
@@ -173,7 +178,7 @@ abstract class AppDatabase : RoomDatabase() {
                         // Limpiamos reglas y productos para que onOpen recargue los CSV actualizados
                         // (nuevos productos, códigos CN corregidos, advertencias clínicas, nuevas familias)
                         db.execSQL("DELETE FROM ReglasClinicas")
-                        db.execSQL("DELETE FROM Productos")
+                        db.execSQL("DELETE FROM ProductosApositos")
                     }
                 }
 
@@ -215,12 +220,23 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
 
+                val MIGRATION_35_36 = object : androidx.room.migration.Migration(35, 36) {
+                    override fun migrate(db: SupportSQLiteDatabase) {
+                        // Recarga de CSV corregidos (TPN fuera de necrosis, fabricantes, Miel Médica)
+                        db.execSQL("DELETE FROM ReglasClinicas")
+                        db.execSQL("DELETE FROM ProductosApositos")
+                    }
+                }
+
                 val builder = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     dbName
                 )
-                    .addMigrations(MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31, MIGRATION_31_32, MIGRATION_32_33, MIGRATION_33_34, MIGRATION_34_35)
+                    .addMigrations(MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31, MIGRATION_31_32, MIGRATION_32_33, MIGRATION_33_34, MIGRATION_34_35, MIGRATION_35_36)
+                    // Versiones anteriores a la 25 no tienen ruta de migración: sin esto la app
+                    // no podría abrirse nunca. Se recrea la BD (antes de la v25 no había historial clínico estable).
+                    .fallbackToDestructiveMigrationFrom(*(1..24).toList().toIntArray())
                     .addCallback(DatabaseCallback(context)) // Disparador para la primera ejecución
                 
                 if (useEncryption) {
@@ -241,28 +257,22 @@ abstract class AppDatabase : RoomDatabase() {
      * Se usa para leer los archivos CSV la primera vez que se crea el archivo físico.
      */
     private class DatabaseCallback(private val context: Context) : RoomDatabase.Callback() {
-        override fun onOpen(db: SupportSQLiteDatabase) {
-            super.onOpen(db)
+        companion object {
+            private val seedLock = Any()
 
-            // Ejecutar la lectura de los CSV en un hilo secundario si las tablas están vacías
-            CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
-                val database = getDatabase(context)
-                
-                // B2: Limpiar la caché de IA con más de 7 días (TTL)
-                val sevenDaysInMillis = 7L * 24 * 60 * 60 * 1000
-                val threshold = System.currentTimeMillis() - sevenDaysInMillis
-                database.aiCacheDao().deleteOldCacheEntries(threshold)
-
-                val dao = database.apositoDao()
-
-                if (dao.obtenerCantidadReglas() == 0 || dao.obtenerCantidadProductos() == 0) {
-                    database.runInTransaction {
-                        kotlinx.coroutines.runBlocking {
-                            if (dao.obtenerCantidadReglas() == 0) {
-                                cargarReglasClinicas(context, dao)
-                            }
-                            if (dao.obtenerCantidadProductos() == 0) {
-                                cargarProductosApositos(context, dao)
+            /**
+             * Carga los CSV si las tablas están vacías. Sincronizado para que la llamada
+             * desde el splash y la de onOpen no inserten duplicados.
+             */
+            fun ensureSeeded(context: Context, database: AppDatabase) {
+                synchronized(seedLock) {
+                    val dao = database.apositoDao()
+                    if (dao.obtenerCantidadReglas() == 0 || dao.obtenerCantidadProductos() == 0) {
+                        database.runInTransaction {
+                            kotlinx.coroutines.runBlocking {
+                                val loader = DatabaseCallback(context)
+                                if (dao.obtenerCantidadReglas() == 0) loader.cargarReglasClinicas(context, dao)
+                                if (dao.obtenerCantidadProductos() == 0) loader.cargarProductosApositos(context, dao)
                             }
                         }
                     }
@@ -270,10 +280,25 @@ abstract class AppDatabase : RoomDatabase() {
             }
         }
 
+        override fun onOpen(db: SupportSQLiteDatabase) {
+            super.onOpen(db)
+
+            CoroutineScope(Dispatchers.IO + SupervisorJob()).launch {
+                val database = getDatabase(context)
+
+                // B2: Limpiar la caché de IA con más de 7 días (TTL)
+                val sevenDaysInMillis = 7L * 24 * 60 * 60 * 1000
+                val threshold = System.currentTimeMillis() - sevenDaysInMillis
+                database.aiCacheDao().deleteOldCacheEntries(threshold)
+
+                ensureSeeded(context, database)
+            }
+        }
+
         /**
          * Lee el archivo `reglas_clinicas.csv` y guarda sus registros en la tabla.
          */
-        private suspend fun cargarReglasClinicas(context: Context, dao: ApositoDao) {
+        suspend fun cargarReglasClinicas(context: Context, dao: ApositoDao) {
             // Abrir el archivo CSV
             val inputStream = context.resources.openRawResource(R.raw.reglas_clinicas)
             val reader = BufferedReader(InputStreamReader(inputStream))
@@ -303,7 +328,7 @@ abstract class AppDatabase : RoomDatabase() {
         /**
          * Lee el archivo `productos_apositos.csv` y guarda los productos disponibles.
          */
-        private suspend fun cargarProductosApositos(context: Context, dao: ApositoDao) {
+        suspend fun cargarProductosApositos(context: Context, dao: ApositoDao) {
             val inputStream = context.resources.openRawResource(R.raw.productos_apositos)
             val reader = BufferedReader(InputStreamReader(inputStream))
             val productos = mutableListOf<ApositoEntity>()

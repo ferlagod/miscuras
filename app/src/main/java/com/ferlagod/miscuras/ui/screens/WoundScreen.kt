@@ -129,13 +129,39 @@ fun WoundScreen(
     var showSettings by remember { mutableStateOf(false) }
     var context = LocalContext.current
 
+    // Contraseña de la copia cifrada: se pide antes de abrir el selector de archivos
+    var backupPasswordMode by remember { mutableStateOf<String?>(null) } // "create" | "restore"
+    var pendingBackupPassword by remember { mutableStateOf("") }
+
     val createDocumentLauncher = rememberLauncherForActivityResult(
-        ActivityResultContracts.CreateDocument("application/zip")
-    ) { uri -> uri?.let { viewModel.createBackup(it) } }
+        ActivityResultContracts.CreateDocument("application/octet-stream")
+    ) { uri ->
+        uri?.let { viewModel.createBackup(it, pendingBackupPassword) }
+        pendingBackupPassword = ""
+    }
 
     val openDocumentLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
-    ) { uri -> uri?.let { viewModel.restoreBackup(it) } }
+    ) { uri ->
+        uri?.let { viewModel.restoreBackup(it, pendingBackupPassword) }
+        pendingBackupPassword = ""
+    }
+
+    backupPasswordMode?.let { mode ->
+        BackupPasswordDialog(
+            isCreate = mode == "create",
+            onDismiss = { backupPasswordMode = null },
+            onConfirm = { password ->
+                pendingBackupPassword = password
+                backupPasswordMode = null
+                if (mode == "create") {
+                    createDocumentLauncher.launch("miscuras_backup.mcbk")
+                } else {
+                    openDocumentLauncher.launch(arrayOf("application/octet-stream", "application/zip", "application/x-zip-compressed", "multipart/x-zip", "*/*"))
+                }
+            }
+        )
+    }
 
     if (!configState.showSplash && !configState.hasSeenDisclaimer) {
         DisclaimerDialog(
@@ -171,10 +197,12 @@ fun WoundScreen(
                 viewModel.setAddProductDialogVisibility(true)
             },
             onBackupClick = {
-                createDocumentLauncher.launch("miscuras_backup.zip")
+                showSettings = false
+                backupPasswordMode = "create"
             },
             onRestoreClick = {
-                openDocumentLauncher.launch(arrayOf("application/zip", "application/octet-stream", "application/x-zip-compressed", "multipart/x-zip"))
+                showSettings = false
+                backupPasswordMode = "restore"
             }
         )
     }
@@ -669,7 +697,7 @@ private fun SelectionContent(
                     selectedOption = currentEtiologyTrans,
                     options = optionsEtiologyTrans,
                     onOptionSelected = { 
-                        onEtiologyChanged(ClinicalTermMapper.mapToDbTerm(it, context))
+                        onEtiologyChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesEtiologia))
                     },
                     chipType = "etiology"
                 )
@@ -683,7 +711,7 @@ private fun SelectionContent(
                     selectedOption = currentLechoTrans,
                     options = optionsLechoTrans,
                     onOptionSelected = { 
-                        onLechoChanged(ClinicalTermMapper.mapToDbTerm(it, context)) 
+                        onLechoChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesLecho)) 
                     },
                     chipType = "tissue"
                 )
@@ -745,7 +773,7 @@ private fun SelectionContent(
                     selectedOption = currentExudadoTrans,
                     options = optionsExudadoTrans,
                     onOptionSelected = { 
-                        val dbTerm = ClinicalTermMapper.mapToDbTerm(it, context)
+                        val dbTerm = ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesExudado)
                         onExudadoChanged(dbTerm) 
                         if (dbTerm == "Nulo") {
                             coroutineScope.launch {
@@ -767,7 +795,7 @@ private fun SelectionContent(
                         selectedOption = currentExuTypeTrans,
                         options = optionsExuTypeTrans,
                         onOptionSelected = { 
-                            onExudateTypeChanged(ClinicalTermMapper.mapToDbTerm(it, context)) 
+                            onExudateTypeChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesTipoExudado)) 
                         },
                         enabled = wizardState.selectedExudado != "Nulo",
                         chipType = "exudate"
@@ -784,7 +812,7 @@ private fun SelectionContent(
                     selectedOption = currentBordesTrans,
                     options = optionsBordesTrans,
                     onOptionSelected = { 
-                        onBordesChanged(ClinicalTermMapper.mapToDbTerm(it, context)) 
+                        onBordesChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesBordes)) 
                     },
                     chipType = "edge"
                 )
@@ -798,7 +826,7 @@ private fun SelectionContent(
                     selectedOption = currentPeriTrans,
                     options = optionsPeriTrans,
                     onOptionSelected = { 
-                        onPerilesionalChanged(ClinicalTermMapper.mapToDbTerm(it, context)) 
+                        onPerilesionalChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesPerilesional)) 
                     },
                     
                     chipType = "edge"
@@ -1152,7 +1180,11 @@ private fun ResultsContent(
     ) { success ->
         if (success && currentPhotoFile != null) {
             onPhotoPathChanged(currentPhotoFile!!.absolutePath)
+        } else {
+            // Captura cancelada: algunas apps de cámara dejan un archivo vacío
+            currentPhotoFile?.let { f -> if (f.exists()) f.delete() }
         }
+        currentPhotoFile = null
     }
 
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
@@ -1256,14 +1288,25 @@ private fun ResultsContent(
     ) { innerPadding ->
         if (evaluationState.noMatchFound) {
             // — Sin resultados —
-            NoMatchContent(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding),
-                lecho = wizardState.selectedLecho,
-                exudado = wizardState.selectedExudado,
-                infeccion = wizardState.selectedInfeccion,
+                    .padding(innerPadding)
+                    .verticalScroll(androidx.compose.foundation.rememberScrollState())
+            ) {
+                // Las alertas de seguridad deben verse aunque no haya productos que mostrar
+                if (evaluationState.safetyAlerts.isNotEmpty()) {
+                    Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
+                        SafetyAlertsCard(alerts = evaluationState.safetyAlerts)
+                    }
+                }
+                NoMatchContent(
+                    modifier = Modifier.fillMaxWidth(),
+                    lecho = wizardState.selectedLecho,
+                    exudado = wizardState.selectedExudado,
+                    infeccion = wizardState.selectedInfeccion,
                 )
+            }
         } else {
             // — Con resultados —
             LazyColumn(
@@ -1310,7 +1353,7 @@ private fun ResultsContent(
                 }
 
                 // Alerta Preventiva Braden
-                if (evaluationState.bradenScore != null && evaluationState.bradenScore!! < 12) {
+                if (evaluationState.bradenScore != null && evaluationState.bradenScore!! <= 12) {
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -3235,7 +3278,8 @@ private fun ExpertModeView(
                         onClick = onFindApositoClick,
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = RoundedCornerShape(16.dp),
-                        enabled = !evaluationState.isLoading,
+                        enabled = !evaluationState.isLoading &&
+                            wizardState.selectedEtiology.isNotEmpty() && wizardState.selectedLecho.isNotEmpty(),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
                         if (evaluationState.isLoading) {
@@ -3261,7 +3305,7 @@ private fun ExpertModeView(
                 val currentEtiologyTrans = ClinicalTermMapper.translateClinicalTerm(wizardState.selectedEtiology, context)
                 ExpertExpandableSection("Etiología", currentEtiologyTrans) {
                     ChipGroupCard(label = stringResource(R.string.etiology_label), description = "", options = optionsEtiologyTrans, selectedOption = currentEtiologyTrans, onOptionSelected = {
-                        onEtiologyChanged(ClinicalTermMapper.mapToDbTerm(it, context))
+                        onEtiologyChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesEtiologia))
                     }, chipType = "etiology")
                 }
             }
@@ -3304,7 +3348,7 @@ private fun ExpertModeView(
                 val optionsLechoTrans = WoundViewModel.opcionesLecho.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
                 ExpertExpandableSection("Lecho", currentLechoTrans) {
                     ChipGroupCard(label = "Estado del Lecho", description = "", options = optionsLechoTrans, selectedOption = currentLechoTrans, onOptionSelected = {
-                        onLechoChanged(ClinicalTermMapper.mapToDbTerm(it, context))
+                        onLechoChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesLecho))
                     }, chipType = "tissue")
                 }
             }
@@ -3315,13 +3359,13 @@ private fun ExpertModeView(
                     val optionsExudadoTrans = WoundViewModel.opcionesExudado.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
                     ExpertExpandableSection("Exudado", currentExudadoTrans) {
                         ChipGroupCard(label = "Nivel de Exudado", description = "", options = optionsExudadoTrans, selectedOption = currentExudadoTrans, onOptionSelected = {
-                            onExudadoChanged(ClinicalTermMapper.mapToDbTerm(it, context))
+                            onExudadoChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesExudado))
                         }, chipType = "exudate")
                         
                         val currentTypeTrans = ClinicalTermMapper.translateClinicalTerm(wizardState.selectedExudateType, context)
                         val optionsTypeTrans = WoundViewModel.opcionesTipoExudado.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
                         ChipGroupCard(label = "Tipo de Exudado", description = "", options = optionsTypeTrans, selectedOption = currentTypeTrans, onOptionSelected = {
-                            onExudateTypeChanged(ClinicalTermMapper.mapToDbTerm(it, context))
+                            onExudateTypeChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesTipoExudado))
                         }, chipType = "exudate")
                     }
                 }
@@ -3336,10 +3380,10 @@ private fun ExpertModeView(
                     ExpertExpandableSection("Bordes y Piel Perilesional", "$currentBordesTrans - $currentPeriTrans") {
                         PainCard(painLevel = wizardState.painLevel, onPainChange = onPainLevelChanged)
                         ChipGroupCard(label = "Estado de la piel perilesional", description = "", options = optionsPeriTrans, selectedOption = currentPeriTrans, onOptionSelected = {
-                            onPerilesionalChanged(ClinicalTermMapper.mapToDbTerm(it, context))
+                            onPerilesionalChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesPerilesional))
                         }, chipType = "perilesional")
                         ChipGroupCard(label = "Estado de los bordes", description = "", options = optionsBordesTrans, selectedOption = currentBordesTrans, onOptionSelected = {
-                            onBordesChanged(ClinicalTermMapper.mapToDbTerm(it, context))
+                            onBordesChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesBordes))
                         }, chipType = "edge")
                     }
                 }
@@ -3411,4 +3455,70 @@ fun ExpertExpandableSection(title: String, summary: String, content: @Composable
             }
         }
     }
+}
+
+/**
+ * Diálogo para introducir la contraseña de cifrado de la copia de seguridad.
+ * En creación exige confirmación y longitud mínima; en restauración admite vacío (copias antiguas sin cifrar).
+ */
+@Composable
+internal fun BackupPasswordDialog(
+    isCreate: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var password by remember { mutableStateOf("") }
+    var confirm by remember { mutableStateOf("") }
+    val minLen = com.ferlagod.miscuras.domain.BackupService.MIN_PASSWORD_LENGTH
+    val tooShort = isCreate && password.length < minLen
+    val mismatch = isCreate && password != confirm
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.backup_password_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    stringResource(if (isCreate) R.string.backup_password_create_text else R.string.backup_password_restore_text),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text(stringResource(R.string.backup_password_hint)) },
+                    singleLine = true,
+                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    isError = tooShort && password.isNotEmpty(),
+                    supportingText = if (tooShort && password.isNotEmpty()) {
+                        { Text(stringResource(R.string.backup_password_too_short)) }
+                    } else null,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (isCreate) {
+                    OutlinedTextField(
+                        value = confirm,
+                        onValueChange = { confirm = it },
+                        label = { Text(stringResource(R.string.backup_password_confirm_hint)) },
+                        singleLine = true,
+                        visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        isError = mismatch && confirm.isNotEmpty(),
+                        supportingText = if (mismatch && confirm.isNotEmpty()) {
+                            { Text(stringResource(R.string.backup_password_mismatch)) }
+                        } else null,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onConfirm(password) }, enabled = !tooShort && !mismatch) {
+                Text(stringResource(R.string.confirm_button))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel_button)) }
+        }
+    )
 }

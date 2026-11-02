@@ -80,8 +80,12 @@ fun WoundDetailScreen(
     onNewEvaluationClick: (Long) -> Unit,
     pdfReportService: PdfReportService = koinInject()
 ) {
-    val wound by patientViewModel.currentWound.collectAsState()
-    val evaluations by patientViewModel.currentWoundEvaluations.collectAsState()
+    val currentWoundState by patientViewModel.currentWound.collectAsState()
+    val currentEvaluations by patientViewModel.currentWoundEvaluations.collectAsState()
+    // Ignorar el estado de una herida abierta anteriormente mientras se carga la actual
+    val wound = currentWoundState?.takeIf { it.id == woundId }
+    val evaluations = if (wound != null) currentEvaluations.filter { it.woundId == woundId } else emptyList()
+    var showDischargeConfirm by remember { mutableStateOf(false) }
     val patients by patientViewModel.patients.collectAsState()
 
     val currentPatient = remember(wound, patients) {
@@ -110,9 +114,9 @@ fun WoundDetailScreen(
                 val w = eval.width.replace(",", ".").toFloatOrNull() ?: 0f
                 if (l > 0f && w > 0f) FloatEntry(x = index.toFloat(), y = l * w) else null
             }
-            if (areas.isNotEmpty()) {
-                modelProducer.setEntries(areas)
-            }
+            modelProducer.setEntries(areas)
+        } else {
+            modelProducer.setEntries(emptyList<FloatEntry>())
         }
     }
 
@@ -148,10 +152,11 @@ fun WoundDetailScreen(
                                 isGeneratingPdf = true
                                 coroutineScope.launch(kotlinx.coroutines.Dispatchers.IO) {
                                     val reportsDir = File(context.cacheDir, "reports").apply { mkdirs() }
-                                    val pdfFile = File(reportsDir, "Informe_${currentPatient.anonymizedName}_${wound?.name}.pdf")
+                                    val safeName = { t: String -> t.replace(Regex("[^\\p{L}\\p{N}_-]+"), "_").take(40) }
+                                    val pdfFile = File(reportsDir, "Informe_${safeName(currentPatient.anonymizedName)}_${safeName(wound.name)}.pdf")
                                     val success = pdfReportService.generateWoundReport(
                                         patient = currentPatient,
-                                        wound = wound!!,
+                                        wound = wound,
                                         evaluations = evaluations,
                                         outputFile = pdfFile
                                     )
@@ -185,13 +190,16 @@ fun WoundDetailScreen(
                     }
 
                     if (wound?.isDischarged == false) {
-                        TextButton(onClick = { 
-                            wound?.id?.let { patientViewModel.dischargeWound(it) }
-                            onBackClick()
-                        }) {
+                        TextButton(onClick = { showDischargeConfirm = true }) {
                             Icon(Icons.Rounded.CheckCircle, contentDescription = null)
                             Spacer(Modifier.width(4.dp))
                             Text(stringResource(R.string.action_discharge_wound))
+                        }
+                    } else if (wound?.isDischarged == true) {
+                        TextButton(onClick = { patientViewModel.reopenWound(wound.id) }) {
+                            Icon(Icons.Rounded.Refresh, contentDescription = null)
+                            Spacer(Modifier.width(4.dp))
+                            Text(stringResource(R.string.action_reopen_wound))
                         }
                     }
                 }
@@ -309,6 +317,29 @@ fun WoundDetailScreen(
         PhotoCompareDialog(
             evaluationsWithPhotos = evaluationsWithPhotos,
             onDismiss = { showPhotoCompare = false }
+        )
+    }
+
+    if (showDischargeConfirm && wound != null) {
+        AlertDialog(
+            onDismissRequest = { showDischargeConfirm = false },
+            icon = { Icon(Icons.Rounded.CheckCircle, contentDescription = null) },
+            title = { Text(stringResource(R.string.discharge_confirm_title)) },
+            text = { Text(stringResource(R.string.discharge_confirm_text)) },
+            confirmButton = {
+                Button(onClick = {
+                    showDischargeConfirm = false
+                    patientViewModel.dischargeWound(wound.id)
+                    onBackClick()
+                }) {
+                    Text(stringResource(R.string.action_discharge_wound))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDischargeConfirm = false }) {
+                    Text(stringResource(R.string.cancel_button))
+                }
+            }
         )
     }
 

@@ -79,15 +79,24 @@ object CryptoManager {
         }
 
         // 3. Generar nueva passphrase (instalación nueva)
-        // Si la base de datos ya existe, significa que perdimos la clave (ej. por Auto Backup / Reinstalación).
-        // La base de datos es irrecuperable y causará un crash (code 26: file is not a database). Debemos borrarla.
+        // Si la base de datos ya existe, la clave se ha perdido (Keystore borrado, restauración en otro
+        // dispositivo...). La BD no se puede abrir con una passphrase nueva, pero NO la borramos:
+        // la apartamos con otro nombre para no destruir datos clínicos de forma irreversible.
         val dbFile = context.getDatabasePath("mis_curas_database")
         if (dbFile.exists()) {
-            Log.e(TAG, "Passphrase perdida (Keystore no disponible tras restore). Borrando base de datos inaccesible.")
-            dbFile.delete()
-            context.getDatabasePath("mis_curas_database-journal").delete()
-            context.getDatabasePath("mis_curas_database-shm").delete()
-            context.getDatabasePath("mis_curas_database-wal").delete()
+            val suffix = "lost_${System.currentTimeMillis()}"
+            Log.e(TAG, "Passphrase no disponible. Se aparta la base de datos inaccesible como *.$suffix")
+            // Conservar también la passphrase cifrada antigua por si el Keystore vuelve a estar disponible
+            prefs.getString(KEY_ENCRYPTED_PASSPHRASE, null)?.let { enc ->
+                prefs.edit()
+                    .putString("${KEY_ENCRYPTED_PASSPHRASE}_$suffix", enc)
+                    .putString("${KEY_IV}_$suffix", prefs.getString(KEY_IV, null))
+                    .commit()
+            }
+            listOf("", "-journal", "-shm", "-wal").forEach { ext ->
+                val f = context.getDatabasePath("mis_curas_database$ext")
+                if (f.exists()) f.renameTo(java.io.File(f.parentFile, "${f.name}.$suffix"))
+            }
         }
 
         val newPassphrase = ByteArray(32)
@@ -135,8 +144,7 @@ object CryptoManager {
             cipher.doFinal(encrypted)
         } catch (e: Exception) {
             Log.e(TAG, "Error al descifrar passphrase del nuevo almacenamiento", e)
-            // Si la clave del Keystore se corrompió, borrar y regenerar
-            prefs.edit().clear().apply()
+            // No se borran las preferencias: getDatabasePassphrase conserva una copia antes de regenerar.
             null
         }
     }
@@ -151,7 +159,7 @@ object CryptoManager {
         prefs.edit()
             .putString(KEY_ENCRYPTED_PASSPHRASE, Base64.encodeToString(encrypted, Base64.DEFAULT))
             .putString(KEY_IV, Base64.encodeToString(iv, Base64.DEFAULT))
-            .apply()
+            .commit() // síncrono: perder la passphrase por un cierre inesperado haría la BD ilegible
     }
 
     // ── Migración desde EncryptedSharedPreferences (legacy) ──

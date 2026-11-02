@@ -50,7 +50,9 @@ private data class ResvechCategory(
     val title: String,
     val subtitle: String,
     val icon: androidx.compose.ui.graphics.vector.ImageVector,
-    val options: List<ResvechOption>
+    val options: List<ResvechOption>,
+    /** Ítem 6 (signos de infección/inflamación): cada signo presente suma 1 punto. */
+    val multiSelect: Boolean = false
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,108 +63,120 @@ fun ResvechScreen(
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
 
+    // RESVECH 2.0 (Restrepo-Medrano JC, Verdú Soriano J, 2011). 6 ítems, rango 0-35.
     val categories = remember {
         listOf(
             ResvechCategory(
-                title = "1. Dimensiones / Superficie",
-                subtitle = "Área calculada de la lesión (Largo x Ancho)",
+                title = "1. Dimensiones de la lesión",
+                subtitle = "Superficie (largo x ancho mayores)",
                 icon = Icons.Rounded.Straighten,
                 options = listOf(
-                    ResvechOption("Cicatrizada / < 1 cm²", 0),
-                    ResvechOption("1 a 4 cm²", 1),
-                    ResvechOption("4 a 16 cm²", 2),
-                    ResvechOption("16 a 36 cm²", 3),
-                    ResvechOption("36 a 64 cm²", 4),
-                    ResvechOption("64 a 100 cm²", 5),
-                    ResvechOption("> 100 cm²", 6)
+                    ResvechOption("Superficie = 0 cm²", 0),
+                    ResvechOption("Superficie < 4 cm²", 1),
+                    ResvechOption("Superficie = 4 – < 16 cm²", 2),
+                    ResvechOption("Superficie = 16 – < 36 cm²", 3),
+                    ResvechOption("Superficie = 36 – < 64 cm²", 4),
+                    ResvechOption("Superficie = 64 – < 100 cm²", 5),
+                    ResvechOption("Superficie ≥ 100 cm²", 6)
                 )
             ),
             ResvechCategory(
-                title = "2. Tejidos en el Lecho",
-                subtitle = "Tipo de tejido predominante o de peor pronóstico",
+                title = "2. Profundidad / Tejidos afectados",
+                subtitle = "Estructura más profunda afectada",
                 icon = Icons.Rounded.Layers,
                 options = listOf(
-                    ResvechOption("Tejido de epitelización", 0),
-                    ResvechOption("Tejido de granulación limpio y brillante", 1),
-                    ResvechOption("Esfacelos < 25% del lecho", 2),
-                    ResvechOption("Esfacelos 25% - 75% del lecho", 3),
-                    ResvechOption("Esfacelos > 75% del lecho", 4),
-                    ResvechOption("Tejido necrótico / Escara < 25%", 5),
-                    ResvechOption("Tejido necrótico / Escara > 25%", 6)
+                    ResvechOption("Piel intacta cicatrizada", 0),
+                    ResvechOption("Afectación de la dermis-epidermis", 1),
+                    ResvechOption("Afectación del tejido subcutáneo (tejido adiposo sin llegar a la fascia del músculo)", 2),
+                    ResvechOption("Afectación del músculo", 3),
+                    ResvechOption("Afectación del hueso y/o tejidos anexos (tendones, ligamentos, cápsula articular) o escara negra que no permite ver los tejidos debajo de ella", 4)
                 )
             ),
             ResvechCategory(
-                title = "3. Bordes de la Herida",
-                subtitle = "Estado de los bordes perilesionales",
+                title = "3. Bordes",
+                subtitle = "Estado de los bordes de la herida",
                 icon = Icons.Rounded.CropFree,
                 options = listOf(
-                    ResvechOption("Difuso / Sano / En fase de avance epitelial", 0),
-                    ResvechOption("Delimitado / Definido pero sin avance", 1),
-                    ResvechOption("Dañado / Macerado por exceso de exudado", 2),
-                    ResvechOption("Engrosado / Hiperqueratósico / Epibólico", 3),
-                    ResvechOption("Socavado / Cavitado / Fondo de saco", 4)
+                    ResvechOption("No distinguibles (no hay herida)", 0),
+                    ResvechOption("Difusos", 1),
+                    ResvechOption("Delimitados", 2),
+                    ResvechOption("Dañados", 3),
+                    ResvechOption("Engrosados (\"envejecidos\", \"evertidos\")", 4)
                 )
             ),
             ResvechCategory(
-                title = "4. Exudado / Nivel de Humedad",
-                subtitle = "Cantidad de fluido generado en 24h",
+                title = "4. Tipo de tejido en el lecho",
+                subtitle = "Tejido de peor pronóstico presente",
+                icon = Icons.Rounded.Healing,
+                options = listOf(
+                    ResvechOption("Cerrada / cicatrizada", 0),
+                    ResvechOption("Tejido epitelial", 1),
+                    ResvechOption("Tejido de granulación", 2),
+                    ResvechOption("Tejido necrótico y/o esfacelos en el lecho", 3),
+                    ResvechOption("Necrótico (escara negra seca o húmeda)", 4)
+                )
+            ),
+            ResvechCategory(
+                title = "5. Exudado",
+                subtitle = "Nivel de humedad del lecho",
                 icon = Icons.Rounded.WaterDrop,
                 options = listOf(
-                    ResvechOption("Nulo / Lecho seco", 0),
-                    ResvechOption("Bajo / Humedad adecuada", 1),
-                    ResvechOption("Moderado / Apósito saturado al 50%", 2),
-                    ResvechOption("Alto / Muy abundante / Fuga o saturación rápida", 3)
+                    ResvechOption("Húmedo", 0),
+                    ResvechOption("Mojado", 1),
+                    ResvechOption("Saturado", 2),
+                    ResvechOption("Con fuga de exudado", 3),
+                    ResvechOption("Seco", 3)
                 )
             ),
             ResvechCategory(
-                title = "5. Infección / Carga Bacteriana",
-                subtitle = "Signos de contaminación, colonización o infección activa",
+                title = "6. Infección / Inflamación (signos de biofilm)",
+                subtitle = "Marque todos los signos presentes (1 punto cada uno)",
                 icon = Icons.Rounded.Coronavirus,
+                multiSelect = true,
                 options = listOf(
-                    ResvechOption("Sin signos de infección", 0),
-                    ResvechOption("Contaminación / Colonización normal", 1),
-                    ResvechOption("Colonización crítica / Sospecha de Biofilm", 2),
-                    ResvechOption("Infección local activa (calor, rubor, dolor, exudado purulento)", 3),
-                    ResvechOption("Infección diseminada / Celulitis / Afectación sistémica", 5)
-                )
-            ),
-            ResvechCategory(
-                title = "6. Dolor Local (Escala EVA)",
-                subtitle = "Intensidad del dolor referido por el paciente",
-                icon = Icons.Rounded.SentimentDissatisfied,
-                options = listOf(
-                    ResvechOption("Sin dolor (EVA 0)", 0),
-                    ResvechOption("Dolor leve (EVA 1 - 3)", 1),
-                    ResvechOption("Dolor moderado (EVA 4 - 6)", 2),
-                    ResvechOption("Dolor severo / Incontrolado (EVA 7 - 10)", 3)
-                )
-            ),
-            ResvechCategory(
-                title = "7. Piel Perilesional",
-                subtitle = "Estado de los tejidos adyacentes a la lesión",
-                icon = Icons.Rounded.Shield,
-                options = listOf(
-                    ResvechOption("Piel íntegra y sana", 0),
-                    ResvechOption("Eritema no blanqueable o edema leve", 1),
-                    ResvechOption("Maceración / Eccematización perilesional", 2),
-                    ResvechOption("Descamación intensa / Fragilidad dérmica", 3),
-                    ResvechOption("Induración / Calor o celulitis circundante", 4)
-                )
+                    "Dolor que va en aumento",
+                    "Eritema en la perilesión",
+                    "Edema en la perilesión",
+                    "Aumento de la temperatura",
+                    "Exudado que va en aumento",
+                    "Exudado purulento",
+                    "Tejido friable o que sangra con facilidad",
+                    "Herida estancada, que no progresa",
+                    "Tejido compatible con biofilm",
+                    "Olor",
+                    "Hipergranulación",
+                    "Aumento del tamaño de la herida",
+                    "Lesiones satélite",
+                    "Palidez del tejido"
+                ).map { ResvechOption(it, 1) }
             )
         )
     }
 
-    val selectedAnswers = remember { mutableStateMapOf<Int, Int>().apply {
-        categories.indices.forEach { this[it] = 0 }
-    }}
+    // Índice de la opción elegida en cada ítem de respuesta única (null = sin responder)
+    val selectedAnswers = remember { mutableStateMapOf<Int, Int>() }
+    // Signos marcados en los ítems de selección múltiple: catIndex -> índices de opción
+    val multiAnswers = remember { mutableStateMapOf<Int, Set<Int>>() }
 
-    val totalScore = selectedAnswers.values.sum()
+    val totalScore = categories.indices.sumOf { catIndex ->
+        val category = categories[catIndex]
+        if (category.multiSelect) {
+            (multiAnswers[catIndex] ?: emptySet()).sumOf { category.options[it].points }
+        } else {
+            selectedAnswers[catIndex]?.let { category.options[it].points } ?: 0
+        }
+    }
+    val answeredItems = categories.indices.count { selectedAnswers.containsKey(it) || categories[it].multiSelect }
+    val isComplete = answeredItems == categories.size
 
+    // RESVECH 2.0 no define puntos de corte validados: la interpretación es evolutiva
+    // (la puntuación debe descender hacia 0 a medida que la herida cicatriza).
     val (severityText, severityColor, severityDescription) = when {
-        totalScore <= 5 -> Triple("Excelente evolución / Fase final", Color(0xFF43A047), "La lesión muestra signos de cicatrización avanzada. Priorizar protección y apósitos no adherentes.")
-        totalScore in 6..14 -> Triple("Evolución Favorable", Color(0xFF1E88E5), "Preparación del lecho adecuada. Mantener cura en ambiente húmedo y control de factores predisponentes.")
-        totalScore in 15..24 -> Triple("Estancamiento / Riesgo Moderado", Color(0xFFFB8C00), "Carga de exudado o esfacelos elevada. Reevaluar desbridamiento, protección de bordes y control de carga bacteriana.")
-        else -> Triple("Herida Compleja / Alto Riesgo", Color(0xFFE53935), "Carga bacteriana elevada, tejido necrótico o exudado severo. Requiere abordaje interdisciplinar, cura especializada y valoración médica.")
+        !isComplete -> Triple("Incompleta ($answeredItems/${categories.size} ítems)", Color(0xFF757575), "Responda todos los ítems para obtener la puntuación total de la escala.")
+        totalScore == 0 -> Triple("Herida cicatrizada", Color(0xFF43A047), "Puntuación 0: lesión cerrada.")
+        totalScore <= 11 -> Triple("Puntuación baja (orientativo)", Color(0xFF1E88E5), "Compare con valoraciones anteriores: un descenso de la puntuación indica evolución hacia la cicatrización.")
+        totalScore <= 23 -> Triple("Puntuación intermedia (orientativo)", Color(0xFFFB8C00), "Compare con valoraciones anteriores. Si la puntuación no desciende, reevalúe el plan de cuidados (desbridamiento, carga bacteriana, exudado).")
+        else -> Triple("Puntuación alta (orientativo)", Color(0xFFE53935), "Lesión con gran afectación. Si no mejora entre valoraciones, valore abordaje interdisciplinar y cura especializada.")
     }
 
     Scaffold(
@@ -186,6 +200,7 @@ fun ResvechScreen(
                             Puntuación Total: $totalScore / 35 puntos
                             Estado: $severityText
                             $severityDescription
+                            (RESVECH 2.0 no tiene puntos de corte validados; las bandas son orientativas.)
                         """.trimIndent()
                         clipboardManager.setText(AnnotatedString(summary))
                         Toast.makeText(context, "Resumen copiado al portapapeles", Toast.LENGTH_SHORT).show()
@@ -294,8 +309,12 @@ fun ResvechScreen(
 
                             Spacer(modifier = Modifier.height(12.dp))
 
-                            category.options.forEach { option ->
-                                val isSelected = selectedAnswers[catIndex] == option.points
+                            category.options.forEachIndexed { optIndex, option ->
+                                val isSelected = if (category.multiSelect) {
+                                    multiAnswers[catIndex]?.contains(optIndex) == true
+                                } else {
+                                    selectedAnswers[catIndex] == optIndex
+                                }
                                 val itemBg = if (isSelected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f)
                                 val itemTextColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
 
@@ -305,7 +324,14 @@ fun ResvechScreen(
                                         .padding(vertical = 3.dp)
                                         .clip(RoundedCornerShape(10.dp))
                                         .background(itemBg)
-                                        .clickable { selectedAnswers[catIndex] = option.points }
+                                        .clickable {
+                                            if (category.multiSelect) {
+                                                val current = multiAnswers[catIndex] ?: emptySet()
+                                                multiAnswers[catIndex] = if (optIndex in current) current - optIndex else current + optIndex
+                                            } else {
+                                                selectedAnswers[catIndex] = optIndex
+                                            }
+                                        }
                                         .padding(horizontal = 12.dp, vertical = 10.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.SpaceBetween

@@ -64,7 +64,9 @@ fun BradenScreen(
         }
     }
 
+    // Braden-Bergstrom: ≥19 sin riesgo · 15-18 bajo · 13-14 moderado · 10-12 alto · ≤9 muy alto
     val riskLevel = when {
+        totalScore >= 19 -> stringResource(R.string.braden_risk_none)
         totalScore >= 15 -> stringResource(R.string.braden_risk_low)
         totalScore in 13..14 -> stringResource(R.string.braden_risk_moderate)
         totalScore in 10..12 -> stringResource(R.string.braden_risk_high)
@@ -72,12 +74,14 @@ fun BradenScreen(
     }
 
     val colorRisk = when {
-        totalScore >= 15 -> androidx.compose.ui.graphics.Color(0xFF4CAF50)
+        totalScore >= 19 -> androidx.compose.ui.graphics.Color(0xFF4CAF50)
+        totalScore >= 15 -> androidx.compose.ui.graphics.Color(0xFF8BC34A)
         totalScore in 13..14 -> androidx.compose.ui.graphics.Color(0xFFFF9800)
         else -> MaterialTheme.colorScheme.error
     }
 
     val recommendations = when {
+        totalScore >= 19 -> stringResource(R.string.braden_rec_none)
         totalScore >= 15 -> stringResource(R.string.braden_rec_low)
         totalScore in 13..14 -> stringResource(R.string.braden_rec_moderate)
         totalScore in 10..12 -> stringResource(R.string.braden_rec_high)

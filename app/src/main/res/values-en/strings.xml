@@ -169,7 +169,8 @@
     <string name="braden_copied_snackbar">Preventive plan copied to clipboard</string>
     <string name="braden_ok">OK</string>
     <string name="braden_points">Points</string>
-    <string name="braden_risk_low">Low Risk / No Risk</string>
+    <string name="braden_risk_low">Low Risk</string>
+    <string name="braden_risk_none">No Risk</string>
     <string name="braden_risk_moderate">Moderate Risk</string>
     <string name="braden_risk_high">High Risk</string>
     <string name="braden_risk_very_high">Very High Risk</string>
@@ -204,7 +205,14 @@
     <string name="braden_friction3">No apparent problem (3)</string>
     <string name="braden_suggested_plan">Suggested Preventive Plan:</string>
     <string name="braden_copy_clipboard">Copy to Clipboard</string>
-    <string name="braden_rec_low">• Basic skin care.\n• Encourage mobility.</string>
+    <string name="braden_rec_low">• Repositioning at least every 4 hours if bedbound.
+• HOFA on pressure areas.
+• Heel and bony prominence protection.
+• Moisture control and skin hydration.
+• Encourage mobility.</string>
+    <string name="braden_rec_none">• Basic skin care.
+• Encourage mobility.
+• Reassess if the patient condition changes.</string>
     <string name="braden_rec_moderate">• Regular positional changes.\n• Application of Hyperoxygenated Fatty Acids (HOFA).\n• Close monitoring of pressure points.</string>
     <string name="braden_rec_high">• Positional changes every 2-3 hours.\n• Use of static/dynamic pressure-relieving surfaces.\n• Daily HOFA.\n• Nutritional supplementation if applicable.</string>
     <string name="braden_rec_very_high">• Strict positional changes every 2 hours.\n• Use of high-end dynamic pressure-relieving surfaces (alternating air mattress).\n• Heel elevation.\n• Proactive protection with multi-layer dressings.</string>
@@ -301,4 +309,15 @@
     <string name="settings_backup_restore">Restore</string>
     <string name="backup_success">Operation completed successfully</string>
     <string name="backup_error_prefix">Error: %1$s</string>
-<string name="patient_allergies_label">Allergies: %1$s</string><string name="patient_medication_label">Medication: %1$s</string><string name="patient_medical_history_label">Medical History: %1$s</string><string name="wounds_active_title">Active</string><string name="wounds_discharged_title">Discharged</string><string name="wound_discharged_date_format">Discharged: %1$s</string><string name="action_discharge_wound">Discharge</string><string name="content_desc_edit">Edit</string><string name="content_desc_patient_photo">Patient photo</string><string name="add_photo">Add photo</string><string name="patient_allergies_hint">Allergies (optional)</string><string name="patient_medication_hint">Medication (optional)</string><string name="patient_medical_history_hint">Medical history (optional)</string><string name="save_changes">Save changes</string><string name="edit_patient_title">Edit Patient Details</string></resources>
+<string name="patient_allergies_label">Allergies: %1$s</string><string name="patient_medication_label">Medication: %1$s</string><string name="patient_medical_history_label">Medical History: %1$s</string><string name="wounds_active_title">Active</string><string name="wounds_discharged_title">Discharged</string><string name="wound_discharged_date_format">Discharged: %1$s</string><string name="action_discharge_wound">Discharge</string><string name="content_desc_edit">Edit</string><string name="content_desc_patient_photo">Patient photo</string><string name="add_photo">Add photo</string><string name="patient_allergies_hint">Allergies (optional)</string><string name="patient_medication_hint">Medication (optional)</string><string name="patient_medical_history_hint">Medical history (optional)</string><string name="save_changes">Save changes</string><string name="edit_patient_title">Edit Patient Details</string>
+    <string name="discharge_confirm_title">Discharge this wound?</string>
+    <string name="discharge_confirm_text">The wound will move to “Discharged” and will not accept new evaluations. You can reopen it from its detail screen if needed.</string>
+    <string name="action_reopen_wound">Reopen</string>
+    <string name="backup_password_title">Backup password</string>
+    <string name="backup_password_create_text">The backup contains clinical data and will be encrypted with this password. Keep it safe: without it the backup cannot be restored.</string>
+    <string name="backup_password_restore_text">Enter the password used to encrypt the backup. If it is an old unencrypted backup, leave the field empty.</string>
+    <string name="backup_password_hint">Password</string>
+    <string name="backup_password_confirm_hint">Repeat password</string>
+    <string name="backup_password_too_short">At least 8 characters</string>
+    <string name="backup_password_mismatch">Passwords do not match</string>
+</resources>

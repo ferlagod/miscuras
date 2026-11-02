@@ -72,32 +72,25 @@ class EvaluateWoundUseCase(
             val wLength = state.woundLength.replace(",", ".").toFloatOrNull()
             val wWidth = state.woundWidth.replace(",", ".").toFloatOrNull()
             
+            // Seguridad del paciente: alergias, antecedentes y antibióticos tópicos sin infección
+            val safety = rulesEngine.filterProductsByPatientSafety(productosBrutos, state)
+            alerts.addAll(safety.alerts)
+            val productosSeguros = safety.productos
+
             var productos = rulesEngine.filterProductsByDimensions(
-                products = productosBrutos,
+                products = productosSeguros,
                 woundLength = wLength,
                 woundWidth = wWidth,
                 specialLocation = state.specialLocation
             ).sortedByDescending { producto ->
-                val dimStr = producto.dimensiones.lowercase()
-                val nomStr = producto.nombreComercial.lowercase()
-                val loc = state.specialLocation.lowercase()
-                val isAnatomicMatch = when (loc) {
-                    "talón", "talon" -> dimStr.contains("talon") || dimStr.contains("talón") || dimStr.contains("heel") || nomStr.contains("talon") || nomStr.contains("talón") || nomStr.contains("heel")
-                    "sacro" -> dimStr.contains("sacro") || dimStr.contains("sacrum") || nomStr.contains("sacro") || nomStr.contains("sacrum")
-                    "codos/rodillas" -> dimStr.contains("multisite") || dimStr.contains("flex") || dimStr.contains("borde") || dimStr.contains("lite") || nomStr.contains("multisite") || nomStr.contains("flex")
-                    else -> false
-                }
-                if (isAnatomicMatch) 1 else 0
+                if (rulesEngine.matchesAnatomicLocation(producto, state.specialLocation)) 1 else 0
             }
 
             // Fallback para heridas gigantes
-            if (productos.isEmpty() && productosBrutos.isNotEmpty() && wLength != null && wWidth != null) {
+            if (productos.isEmpty() && productosSeguros.isNotEmpty() && wLength != null && wWidth != null) {
                 // Recuperar los apósitos más grandes disponibles que no sean genéricos
-                productos = productosBrutos.filter { p ->
-                    val d = p.dimensiones.lowercase()
-                    !(d.contains("pomada") || d.contains("crema") || d.contains("gel") || d.contains("ml") || 
-                      d.contains("spray") || Regex("\\d+g").containsMatchIn(d) || d.contains("solucion") || 
-                      d.contains("venda") || d.contains("kit"))
+                productos = productosSeguros.filter { p ->
+                    !rulesEngine.isGenericFormat(RulesEngine.normalize(p.dimensiones))
                 }.sortedByDescending { p ->
                     val matches = Regex("(\\d+(?:[,.]\\d+)?)\\s*x\\s*(\\d+(?:[,.]\\d+)?)").findAll(p.dimensiones.lowercase())
                     matches.map { match ->
@@ -106,7 +99,7 @@ class EvaluateWoundUseCase(
                         l * w
                     }.maxOrNull() ?: 0f
                 }.take(3) // Tomar los 3 más grandes
-                
+
                 if (productos.isNotEmpty()) {
                     alerts.add("Aviso: Las dimensiones de la herida superan el apósito máximo disponible. Considere utilizar múltiples apósitos solapados.")
                 }
@@ -137,7 +130,7 @@ class EvaluateWoundUseCase(
     }
 
     suspend fun getAiExplanation(state: WizardState, familiaFormateada: String): String? = withContext(Dispatchers.IO) {
-        val rawKey = "${state.selectedLecho}|${state.selectedExudado}|${state.selectedExudateType}|${state.selectedInfeccion}|${state.infectionGerm}|${state.woundLength}|${state.woundWidth}|${state.woundDepth}|${state.hasCavitation}|${state.cavitationDetails}|${state.selectedBordes}|${state.selectedPerilesional}|${familiaFormateada}|${state.painLevel.toInt()}|${state.specialLocation}"
+        val rawKey = "v2|${state.selectedEtiology}|${state.selectedLecho}|${state.selectedExudado}|${state.selectedExudateType}|${state.selectedInfeccion}|${state.infectionGerm}|${state.woundLength}|${state.woundWidth}|${state.woundDepth}|${state.hasCavitation}|${state.cavitationDetails}|${state.selectedBordes}|${state.selectedPerilesional}|${familiaFormateada}|${state.painLevel.toInt()}|${state.specialLocation}"
         val cacheKey = rawKey.sha256()
         val cachedResponse = repository.getCachedAiResponse(cacheKey)
 
@@ -145,7 +138,7 @@ class EvaluateWoundUseCase(
             return@withContext cachedResponse
         }
 
-        val respuesta = AsistenteIA.obtenerExplicacionEducativa(
+        val (respuesta, esFallback) = AsistenteIA.obtenerExplicacionEducativa(
             etiologia = state.selectedEtiology,
             lecho = state.selectedLecho,
             exudado = state.selectedExudado,
@@ -164,7 +157,9 @@ class EvaluateWoundUseCase(
             dolor = state.painLevel.toInt()
         )
         
-        if (respuesta.isNotBlank()) {
+        // Solo se cachean respuestas reales de la IA: el texto de contingencia offline no debe
+        // bloquear durante 7 días la explicación cuando vuelva la conexión.
+        if (respuesta.isNotBlank() && !esFallback) {
             repository.saveCachedAiResponse(cacheKey, respuesta)
         }
         

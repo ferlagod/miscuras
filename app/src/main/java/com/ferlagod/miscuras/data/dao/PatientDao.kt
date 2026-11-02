@@ -48,6 +48,9 @@ interface PatientDao {
     @Query("SELECT * FROM heridas WHERE id = :woundId")
     fun getWoundById(woundId: Long): WoundEntity?
 
+    @Query("SELECT * FROM heridas WHERE id = :woundId")
+    fun getWoundByIdFlow(woundId: Long): Flow<WoundEntity?>
+
     @Insert
     fun insertEvaluation(evaluation: EvaluationEntity): Long
 

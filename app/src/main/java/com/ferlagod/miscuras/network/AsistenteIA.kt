@@ -67,6 +67,7 @@ object AsistenteIA {
 
     /**
      * Envía los datos locales de tu app a Gemini para que redacte la explicación.
+     * @return Par (texto, esFallback). esFallback = true si el texto es la explicación local de contingencia.
      */
     suspend fun obtenerExplicacionEducativa(
         etiologia: String,
@@ -85,7 +86,7 @@ object AsistenteIA {
         pielPerilesional: String,
         recomendacionBD: String,
         dolor: Int
-    ): String {
+    ): Pair<String, Boolean> {
         val infText = if (infeccion) "Sí (Germen: $germen)" else "No"
         val depthStr = if (tamanoProfundidad.isNotEmpty()) " x $tamanoProfundidad" else ""
         val tamText = if (tamanoLargo.isNotEmpty() && tamanoAncho.isNotEmpty()) "${tamanoLargo}x${tamanoAncho}$depthStr cm" else "No especificado"
@@ -119,14 +120,17 @@ object AsistenteIA {
                    "Consejo Clínico: Evaluar regularmente el estado de la piel perilesional y aplicar barrera protectora si es necesario."
         }
 
-        return try {
+        var fallback = false
+        fun fallbackText(): String { fallback = true; return construirFallback() }
+
+        val texto = try {
             val response = generativeModel.generateContent(promptUsuario)
             val textoIA = response.text
             if (textoIA.isNullOrBlank()) {
                 if (BuildConfig.DEBUG) {
                     Log.e("AsistenteIA", "Error en IA (Respuesta nula o bloqueada)")
                 }
-                construirFallback()
+                fallbackText()
             } else {
                 try {
                     // Limpiar markdown residual si Gemini lo devuelve a pesar del mimeType
@@ -141,7 +145,7 @@ object AsistenteIA {
                         if (BuildConfig.DEBUG) {
                             Log.e("AsistenteIA", "Error en IA (JSON incompleto)")
                         }
-                        construirFallback()
+                        fallbackText()
                     } else {
                         val formattedResponse = "Objetivo TIME: $objetivo\n\nJustificación: $justificacion\n\nConsejo Clínico: $consejo"
                         
@@ -149,7 +153,7 @@ object AsistenteIA {
                             if (BuildConfig.DEBUG) {
                                 Log.e("AsistenteIA", "Error en IA (Respuesta escueta)")
                             }
-                            construirFallback()
+                            fallbackText()
                         } else {
                             formattedResponse
                         }
@@ -158,14 +162,15 @@ object AsistenteIA {
                     if (BuildConfig.DEBUG) {
                         Log.e("AsistenteIA", "Error en IA (Fallo de parseo)")
                     }
-                    construirFallback()
+                    fallbackText()
                 }
             }
         } catch (e: Exception) {
             if (BuildConfig.DEBUG) {
                 Log.e("AsistenteIA", "Error en IA (Excepción de red o API)")
             }
-            construirFallback()
+            fallbackText()
         }
+        return texto to fallback
     }
 }

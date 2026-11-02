@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older than API 31
-   See https://developer.android.com/about/versions/12/backup-restore
+   Reglas de Auto Backup (Android 11 e inferiores).
+   Los datos clínicos NUNCA deben salir del dispositivo por la copia automática de Google:
+   - La BD está cifrada con una clave del Android Keystore que no se restaura en otro dispositivo,
+     por lo que restaurarla solo provocaría su borrado.
+   - Las fotos de heridas se guardan sin cifrar en filesDir.
+   Para migrar datos se usa la copia cifrada manual (Ajustes > Copia de seguridad).
 -->
 <full-backup-content>
-    <exclude domain="database" path="miscuras_db"/>
+    <exclude domain="database" path="mis_curas_database"/>
+    <exclude domain="database" path="mis_curas_database-journal"/>
+    <exclude domain="database" path="mis_curas_database-shm"/>
+    <exclude domain="database" path="mis_curas_database-wal"/>
+    <exclude domain="sharedpref" path="mis_curas_db_prefs.xml"/>
+    <exclude domain="sharedpref" path="mis_curas_secure_prefs.xml"/>
+    <exclude domain="file" path="."/>
 </full-backup-content>
