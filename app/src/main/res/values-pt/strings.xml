@@ -484,4 +484,29 @@
 
     <string name="resvech_total_label">PONTUAÇÃO TOTAL</string>
     <string name="rep_cavitation_format">- Cavitações: %1$s</string>
+
+    <plurals name="active_wounds_count">
+        <item quantity="one">%1$d ferida ativa</item>
+        <item quantity="other">%1$d feridas ativas</item>
+    </plurals>
+
+    <plurals name="overdue_cures_count">
+        <item quantity="one">%1$d penso em atraso</item>
+        <item quantity="other">%1$d pensos em atraso</item>
+    </plurals>
+
+    <plurals name="unevaluated_wounds_count">
+        <item quantity="one">%1$d sem avaliação</item>
+        <item quantity="other">%1$d sem avaliação</item>
+    </plurals>
+
+    <string name="next_cure_format">Próximo penso %1$s</string>
+    <string name="last_cure_format">Última avaliação %1$s</string>
+    <string name="tool_catalog">Catálogo</string>
+    <string name="tool_braden">Braden</string>
+    <string name="tool_resvech">RESVECH</string>
+    <string name="tool_glossary">Glossário</string>
+
+    <string name="wound_not_evaluated">Sem avaliação</string>
+    <string name="cure_overdue_format">Penso em atraso (%1$s)</string>
 </resources>

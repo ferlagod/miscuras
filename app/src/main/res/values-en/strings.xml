@@ -484,4 +484,29 @@
 
     <string name="resvech_total_label">TOTAL SCORE</string>
     <string name="rep_cavitation_format">- Undermining/tunnelling: %1$s</string>
+
+    <plurals name="active_wounds_count">
+        <item quantity="one">%1$d active wound</item>
+        <item quantity="other">%1$d active wounds</item>
+    </plurals>
+
+    <plurals name="overdue_cures_count">
+        <item quantity="one">%1$d dressing overdue</item>
+        <item quantity="other">%1$d dressings overdue</item>
+    </plurals>
+
+    <plurals name="unevaluated_wounds_count">
+        <item quantity="one">%1$d not assessed</item>
+        <item quantity="other">%1$d not assessed</item>
+    </plurals>
+
+    <string name="next_cure_format">Next dressing %1$s</string>
+    <string name="last_cure_format">Last assessment %1$s</string>
+    <string name="tool_catalog">Catalogue</string>
+    <string name="tool_braden">Braden</string>
+    <string name="tool_resvech">RESVECH</string>
+    <string name="tool_glossary">Glossary</string>
+
+    <string name="wound_not_evaluated">Not assessed</string>
+    <string name="cure_overdue_format">Dressing overdue (%1$s)</string>
 </resources>

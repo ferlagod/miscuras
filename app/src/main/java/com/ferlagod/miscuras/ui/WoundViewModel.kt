@@ -94,6 +94,8 @@ data class WizardState(
  */
 data class EvaluationState(
     val bradenScore: Int? = null,
+    val resvechScore: Int? = null,
+    val cureIntervalHours: Int? = null,
     val familiaRecomendada: String? = null,
     val productos: List<ApositoEntity> = emptyList(),
     val selectedTreatmentProducts: Set<String> = emptySet(),
@@ -114,6 +116,7 @@ data class ConfigState(
     val showSplash: Boolean = true,
     val showArMeasure: Boolean = false,
     val showBraden: Boolean = false,
+    val showResvech: Boolean = false,
     val showGlossary: Boolean = false,
     val currentLanguage: String = "es",
     val currentTheme: String = "system",
@@ -371,6 +374,18 @@ class WoundViewModel(
         _evaluationState.update { it.copy(bradenScore = score) }
     }
 
+    fun onResvechScoreUpdated(score: Int) {
+        _evaluationState.update { it.copy(resvechScore = score) }
+    }
+
+    fun showResvech() {
+        _configState.update { it.copy(showResvech = true) }
+    }
+
+    fun hideResvech() {
+        _configState.update { it.copy(showResvech = false) }
+    }
+
     /**
      * Genera un resumen clínico estructurado basado en los criterios TIME
      */
@@ -441,6 +456,7 @@ class WoundViewModel(
                         selectedTreatmentProducts = it.selectedTreatmentProducts.intersect(nombresDisponibles),
                         familiaRecomendada = result.familiaRecomendada,
                         cureFrequency = result.cureFrequency,
+                        cureIntervalHours = result.cureIntervalHours,
                         productos = result.productos,
                         safetyAlerts = result.safetyAlerts,
                         showResults = true,
@@ -611,7 +627,10 @@ class WoundViewModel(
                 recommendedTreatment = "${eval.familiaRecomendada ?: ""}\n\nPauta recomendada: ${eval.cureFrequency ?: ""}",
                 aiExplanation = eval.aiResponse ?: "",
                 photoPath = wizard.photoPath,
-                selectedProducts = eval.selectedTreatmentProducts.joinToString(",")
+                selectedProducts = eval.selectedTreatmentProducts.joinToString(","),
+                cureIntervalHours = eval.cureIntervalHours,
+                bradenScore = eval.bradenScore,
+                resvechScore = eval.resvechScore
             )
             patientDao.insertEvaluation(evaluation)
             _evaluationState.update { it.copy(isSaved = true) }

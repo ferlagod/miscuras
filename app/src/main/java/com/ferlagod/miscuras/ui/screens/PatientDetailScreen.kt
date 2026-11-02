@@ -79,6 +79,9 @@ fun PatientDetailScreen(
     var woundToDelete by remember { mutableStateOf<com.ferlagod.miscuras.data.entities.WoundEntity?>(null) }
 
     val patient = patients.find { it.id == patientId }
+    val cureStatusList by patientViewModel.cureStatus.collectAsState()
+    val cureByWound = remember(cureStatusList) { cureStatusList.associateBy { it.woundId } }
+    val now by com.ferlagod.miscuras.ui.components.rememberCurrentTimeMillis()
     
     LaunchedEffect(patientId) {
         patientViewModel.loadWoundsForPatient(patientId)
@@ -209,6 +212,8 @@ fun PatientDetailScreen(
                         }
                         itemsIndexed(activeWounds, key = { _, w -> "active_${w.id}" }) { index, wound ->
                             WoundAnimatedItem(
+                                cureStatus = cureByWound[wound.id],
+                                now = now,
                                 wound = wound,
                                 index = index,
                                 onWoundClick = onWoundClick,
@@ -425,7 +430,9 @@ private fun PatientInfoHeader(
 private fun WoundCard(
     wound: com.ferlagod.miscuras.data.entities.WoundEntity,
     onClick: () -> Unit,
-    onDeleteClick: (() -> Unit)? = null
+    onDeleteClick: (() -> Unit)? = null,
+    cureStatus: com.ferlagod.miscuras.data.models.WoundCureStatus? = null,
+    now: Long = System.currentTimeMillis()
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -492,6 +499,29 @@ private fun WoundCard(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (!isDischarged && cureStatus != null) {
+                    val due = cureStatus.nextCureDueAt
+                    Spacer(modifier = Modifier.height(4.dp))
+                    when {
+                        cureStatus.lastEvaluationAt == null -> com.ferlagod.miscuras.ui.components.StatusPill(
+                            text = stringResource(R.string.wound_not_evaluated),
+                            container = MaterialTheme.colorScheme.surfaceVariant,
+                            content = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        due != null && now > due -> com.ferlagod.miscuras.ui.components.StatusPill(
+                            text = stringResource(R.string.cure_overdue_format, com.ferlagod.miscuras.ui.components.relativeTime(due, now)),
+                            container = MaterialTheme.colorScheme.errorContainer,
+                            content = MaterialTheme.colorScheme.onErrorContainer,
+                            icon = Icons.Rounded.Alarm
+                        )
+                        due != null -> com.ferlagod.miscuras.ui.components.StatusPill(
+                            text = stringResource(R.string.next_cure_format, com.ferlagod.miscuras.ui.components.relativeTime(due, now)),
+                            container = MaterialTheme.colorScheme.tertiaryContainer,
+                            content = MaterialTheme.colorScheme.onTertiaryContainer,
+                            icon = Icons.Rounded.Schedule
+                        )
+                    }
+                }
             }
             if (onDeleteClick != null) {
                 IconButton(onClick = onDeleteClick) {
@@ -658,7 +688,9 @@ private fun WoundAnimatedItem(
     index: Int,
     onWoundClick: (Long) -> Unit,
     isDischarged: Boolean = false,
-    onDeleteClick: (() -> Unit)? = null
+    onDeleteClick: (() -> Unit)? = null,
+    cureStatus: com.ferlagod.miscuras.data.models.WoundCureStatus? = null,
+    now: Long = System.currentTimeMillis()
 ) {
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(wound.id) {
@@ -680,7 +712,9 @@ private fun WoundAnimatedItem(
         WoundCard(
             wound = wound,
             onClick = { onWoundClick(wound.id) },
-            onDeleteClick = onDeleteClick
+            onDeleteClick = onDeleteClick,
+            cureStatus = cureStatus,
+            now = now
         )
     }
 }

@@ -45,10 +45,19 @@ class PatientViewModel(private val patientDao: PatientDao) : ViewModel() {
     private val _currentWoundEvaluations = MutableStateFlow<List<EvaluationEntity>>(emptyList())
     val currentWoundEvaluations: StateFlow<List<EvaluationEntity>> = _currentWoundEvaluations.asStateFlow()
     
+    /** Estado de cura de las heridas activas, agrupado por herida y por paciente. */
+    private val _cureStatus = MutableStateFlow<List<com.ferlagod.miscuras.data.models.WoundCureStatus>>(emptyList())
+    val cureStatus: StateFlow<List<com.ferlagod.miscuras.data.models.WoundCureStatus>> = _cureStatus.asStateFlow()
+
     private val _currentWound = MutableStateFlow<WoundEntity?>(null)
     val currentWound: StateFlow<WoundEntity?> = _currentWound.asStateFlow()
 
     init {
+        viewModelScope.launch(Dispatchers.IO) {
+            patientDao.getActiveWoundCureStatus()
+                .catch { e -> e.printStackTrace() }
+                .collect { _cureStatus.value = it }
+        }
         viewModelScope.launch(Dispatchers.IO) {
             patientDao.getAllPatients()
                 .catch { e -> e.printStackTrace() }
