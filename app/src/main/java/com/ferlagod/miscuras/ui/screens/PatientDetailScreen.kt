@@ -38,6 +38,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,7 +54,6 @@ import androidx.compose.ui.platform.LocalContext
 import com.ferlagod.miscuras.R
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import com.airbnb.lottie.compose.*
 import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.*
@@ -80,6 +80,9 @@ fun PatientDetailScreen(
     var woundToDelete by remember { mutableStateOf<com.ferlagod.miscuras.data.entities.WoundEntity?>(null) }
 
     val patient = patients.find { it.id == patientId }
+    val cureStatusList by patientViewModel.cureStatus.collectAsState()
+    val cureByWound = remember(cureStatusList) { cureStatusList.associateBy { it.woundId } }
+    val now by com.ferlagod.miscuras.ui.components.rememberCurrentTimeMillis()
     
     LaunchedEffect(patientId) {
         patientViewModel.loadWoundsForPatient(patientId)
@@ -97,7 +100,7 @@ fun PatientDetailScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -161,14 +164,7 @@ fun PatientDetailScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier.padding(horizontal = 32.dp)
                     ) {
-                        val composition by rememberLottieComposition(
-                            LottieCompositionSpec.Url("https://lottie.host/c4d6ed1a-69da-4f94-adf0-62a774e63b10/WKoRcxUJt0.lottie")
-                        )
-                        LottieAnimation(
-                            composition = composition,
-                            iterations = LottieConstants.IterateForever,
-                            modifier = Modifier.size(160.dp)
-                        )
+                        com.ferlagod.miscuras.ui.components.EmptyStateIllustration(icon = Icons.Rounded.Healing)
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = stringResource(R.string.empty_wounds_title),
@@ -217,6 +213,8 @@ fun PatientDetailScreen(
                         }
                         itemsIndexed(activeWounds, key = { _, w -> "active_${w.id}" }) { index, wound ->
                             WoundAnimatedItem(
+                                cureStatus = cureByWound[wound.id],
+                                now = now,
                                 wound = wound,
                                 index = index,
                                 onWoundClick = onWoundClick,
@@ -253,8 +251,8 @@ fun PatientDetailScreen(
         AlertDialog(
             onDismissRequest = { woundToDelete = null },
             icon = { Icon(Icons.Rounded.DeleteForever, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("¿Eliminar herida?") },
-            text = { Text("Se eliminará la herida \"${woundToDelete?.name}\" y todo su historial de evaluaciones y fotografías. Esta acción es irreversible.") },
+            title = { Text(stringResource(R.string.delete_wound_title)) },
+            text = { Text(stringResource(R.string.delete_wound_text, woundToDelete?.name.orEmpty())) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -263,12 +261,12 @@ fun PatientDetailScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Eliminar")
+                    Text(stringResource(R.string.action_delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { woundToDelete = null }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.cancel_button))
                 }
             }
         )
@@ -341,7 +339,7 @@ private fun PatientInfoHeader(
                 if (patient.photoUri != null) {
                     AsyncImage(
                         model = patient.photoUri,
-                        contentDescription = "Foto",
+                        contentDescription = stringResource(R.string.content_desc_patient_photo),
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
@@ -433,7 +431,9 @@ private fun PatientInfoHeader(
 private fun WoundCard(
     wound: com.ferlagod.miscuras.data.entities.WoundEntity,
     onClick: () -> Unit,
-    onDeleteClick: (() -> Unit)? = null
+    onDeleteClick: (() -> Unit)? = null,
+    cureStatus: com.ferlagod.miscuras.data.models.WoundCureStatus? = null,
+    now: Long = System.currentTimeMillis()
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -500,12 +500,35 @@ private fun WoundCard(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (!isDischarged && cureStatus != null) {
+                    val due = cureStatus.nextCureDueAt
+                    Spacer(modifier = Modifier.height(4.dp))
+                    when {
+                        cureStatus.lastEvaluationAt == null -> com.ferlagod.miscuras.ui.components.StatusPill(
+                            text = stringResource(R.string.wound_not_evaluated),
+                            container = MaterialTheme.colorScheme.surfaceVariant,
+                            content = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        due != null && now > due -> com.ferlagod.miscuras.ui.components.StatusPill(
+                            text = stringResource(R.string.cure_overdue_format, com.ferlagod.miscuras.ui.components.relativeTime(due, now)),
+                            container = MaterialTheme.colorScheme.errorContainer,
+                            content = MaterialTheme.colorScheme.onErrorContainer,
+                            icon = Icons.Rounded.Alarm
+                        )
+                        due != null -> com.ferlagod.miscuras.ui.components.StatusPill(
+                            text = stringResource(R.string.next_cure_format, com.ferlagod.miscuras.ui.components.relativeTime(due, now)),
+                            container = MaterialTheme.colorScheme.tertiaryContainer,
+                            content = MaterialTheme.colorScheme.onTertiaryContainer,
+                            icon = Icons.Rounded.Schedule
+                        )
+                    }
+                }
             }
             if (onDeleteClick != null) {
                 IconButton(onClick = onDeleteClick) {
                     Icon(
                         imageVector = Icons.Rounded.DeleteOutline,
-                        contentDescription = "Eliminar herida",
+                        contentDescription = stringResource(R.string.cd_delete_wound),
                         tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                         modifier = Modifier.size(20.dp)
                     )
@@ -666,11 +689,13 @@ private fun WoundAnimatedItem(
     index: Int,
     onWoundClick: (Long) -> Unit,
     isDischarged: Boolean = false,
-    onDeleteClick: (() -> Unit)? = null
+    onDeleteClick: (() -> Unit)? = null,
+    cureStatus: com.ferlagod.miscuras.data.models.WoundCureStatus? = null,
+    now: Long = System.currentTimeMillis()
 ) {
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(wound.id) {
-        delay(index * 60L)
+        delay(index.coerceAtMost(8) * 60L)
         visible = true
     }
 
@@ -688,7 +713,9 @@ private fun WoundAnimatedItem(
         WoundCard(
             wound = wound,
             onClick = { onWoundClick(wound.id) },
-            onDeleteClick = onDeleteClick
+            onDeleteClick = onDeleteClick,
+            cureStatus = cureStatus,
+            now = now
         )
     }
 }
@@ -707,22 +734,27 @@ private fun EditPatientBottomSheet(
     var medicalHistory by remember { mutableStateOf(patient.medicalHistory ?: "") }
     
     val context = androidx.compose.ui.platform.LocalContext.current
+    val photoScope = rememberCoroutineScope()
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         if (uri != null) {
-            try {
-                val inputStream = context.contentResolver.openInputStream(uri)
-                val fileName = "patient_photo_${System.currentTimeMillis()}.jpg"
-                val file = java.io.File(context.filesDir, fileName)
-                val outputStream = java.io.FileOutputStream(file)
-                inputStream?.copyTo(outputStream)
-                inputStream?.close()
-                outputStream.close()
-                photoUri = file.absolutePath
-            } catch (e: Exception) {
-                e.printStackTrace()
-                photoUri = uri.toString()
+            photoScope.launch {
+                try {
+                    val file = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        val target = java.io.File(context.filesDir, "patient_photo_${System.currentTimeMillis()}.jpg")
+                        context.contentResolver.openInputStream(uri)?.use { input ->
+                            java.io.FileOutputStream(target).use { output -> input.copyTo(output) }
+                        }
+                        target
+                    }
+                    // Foto de perfil: basta con 1024 px
+                    com.ferlagod.miscuras.domain.ImageCompressor.compressInPlace(file, maxSide = 1024)
+                    photoUri = file.absolutePath
+                } catch (e: Exception) {
+                    // No se guarda la URI temporal del selector: deja de ser accesible al cerrar la app
+                    e.printStackTrace()
+                }
             }
         }
     }

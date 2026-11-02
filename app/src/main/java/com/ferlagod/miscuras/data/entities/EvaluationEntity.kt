@@ -97,5 +97,12 @@ data class EvaluationEntity(
     val photoPath: String? = null,
     
     // Tratamiento Seleccionado por el Profesional
-    val selectedProducts: String? = null
+    val selectedProducts: String? = null,
+
+    // Intervalo máximo recomendado hasta la siguiente cura (horas). Permite avisar de curas pendientes.
+    val cureIntervalHours: Int? = null,
+
+    // Escalas asociadas a esta evaluación (null si no se valoraron)
+    val bradenScore: Int? = null,
+    val resvechScore: Int? = null
 )

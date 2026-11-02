@@ -40,7 +40,7 @@ val GreyLight = Color(0xFFE0E0E0)
 
 // Surfaces (Modo claro)
 val SurfaceLight = Color(0xFFF9FAFB) // App background
-val SurfaceVariantLight = Color(0xFFFFFFFF) // White cards
+val SurfaceVariantLight = Color(0xFFEEF2F7) // Azul grisáceo muy claro: distingue zonas secundarias del blanco de las tarjetas
 val OutlineLight = Color(0xFFE0E0E0)
 
 // Surfaces (Modo oscuro) - Premium Dark Mode
@@ -77,3 +77,24 @@ val ChipEdgeSelectedDark = Color(0xFFF59E0B) // Vibrant Amber
 val CardBackground = Color(0xFFFFFFFF)
 val CardBackgroundDark = Color(0xFF111827) // Elevación sutil para tarjetas en modo oscuro
 val InfectionBadge = Color(0xFFD93025)
+// --- Terciario (Turquesa clínico): información complementaria (pautas, IA, comparador) ---
+val TealTertiary = Color(0xFF00677A)
+val TealTertiaryContainer = Color(0xFFD3F1F7)
+val OnTealTertiaryContainer = Color(0xFF001F26)
+val TealTertiaryDark = Color(0xFF5FD4EA)
+val TealTertiaryContainerDark = Color(0xFF004E5C)
+val OnTealTertiaryContainerDark = Color(0xFFCDF4FB)
+
+// --- Contenedores de superficie (Material 3) alineados con la paleta azul marino ---
+// Sin definirlos, Material usa sus tonos lila por defecto en diálogos, hojas inferiores y tarjetas.
+val SurfaceContainerLowestLight = Color(0xFFFFFFFF)
+val SurfaceContainerLowLight = Color(0xFFF7F9FC)
+val SurfaceContainerLight = Color(0xFFF1F4F9)
+val SurfaceContainerHighLight = Color(0xFFEBEFF5)
+val SurfaceContainerHighestLight = Color(0xFFE4E9F1)
+
+val SurfaceContainerLowestDark = Color(0xFF070C18)
+val SurfaceContainerLowDark = Color(0xFF0F1626)
+val SurfaceContainerDark = Color(0xFF131B2C)
+val SurfaceContainerHighDark = Color(0xFF1A2335)
+val SurfaceContainerHighestDark = Color(0xFF222C40)

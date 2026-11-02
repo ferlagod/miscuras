@@ -320,4 +320,203 @@
     <string name="backup_password_confirm_hint">Repite la contraseña</string>
     <string name="backup_password_too_short">Mínimo 8 caracteres</string>
     <string name="backup_password_mismatch">Las contraseñas no coinciden</string>
+
+    <string name="wizard_required_badge">Obligatorio</string>
+
+    <string name="allergy_banner_title">Alergias del paciente</string>
+    <string name="wizard_step_format">Paso %1$d de %2$d · %3$s</string>
+    <string name="wizard_step_etiology">Etiología y tejido</string>
+    <string name="wizard_step_size">Tamaño y localización</string>
+    <string name="wizard_step_exudate">Exudado</string>
+    <string name="wizard_step_edges">Bordes y piel</string>
+    <string name="wizard_step_infection">Infección y dolor</string>
+    <string name="wizard_exit">Salir de la evaluación</string>
+    <string name="wizard_back">Paso anterior</string>
+    <string name="wizard_incomplete_hint">Completa los campos obligatorios para continuar</string>
+
+    <string name="product_use_both">Uso primario o secundario</string>
+
+    <string name="chart_area_unit">Área (cm²)</string>
+    <string name="chart_area_change">%1$s cm² → %2$s cm² (%3$s)</string>
+    <string name="chart_area_single">Área inicial: %1$s cm². Se necesitan al menos dos mediciones para ver la evolución.</string>
+
+    <string name="ar_undo_button">Deshacer</string>
+
+    <string name="cd_logo">Logotipo de Mis Curas</string>
+    <string name="cd_catalog">Catálogo de apósitos</string>
+    <string name="cd_resvech">Escala RESVECH 2.0</string>
+    <string name="cd_braden">Escala de Braden</string>
+    <string name="cd_glossary">Glosario</string>
+    <string name="search_patient_hint">Buscar por nombre o habitación…</string>
+    <string name="cd_clear">Borrar búsqueda</string>
+    <string name="cd_back">Volver</string>
+    <string name="action_delete">Eliminar</string>
+    <string name="delete_patient_title">¿Eliminar paciente?</string>
+    <string name="delete_patient_text">Se eliminará al paciente «%1$s» junto con todas sus heridas, evaluaciones y fotografías clínicas asociadas. Esta acción no se puede deshacer.</string>
+    <string name="cd_delete_patient">Eliminar paciente</string>
+    <string name="delete_wound_title">¿Eliminar herida?</string>
+    <string name="delete_wound_text">Se eliminará la herida «%1$s» y todo su historial de evaluaciones y fotografías. Esta acción es irreversible.</string>
+    <string name="cd_delete_wound">Eliminar herida</string>
+    <string name="cd_compare_photos">Comparar fotos</string>
+    <string name="share_report_chooser">Compartir informe de evolución</string>
+    <string name="pdf_error">Error al generar el informe PDF</string>
+    <string name="cd_export_pdf">Exportar informe PDF</string>
+    <string name="delete_eval_title">¿Eliminar evaluación?</string>
+    <string name="delete_eval_text">Se eliminará esta evaluación clínica y su fotografía asociada de forma permanente.</string>
+    <string name="cd_delete_eval">Eliminar evaluación</string>
+    <string name="catalog_title">Vademécum de apósitos SAS</string>
+    <string name="catalog_search_hint">Buscar por nombre, familia, fabricante o CN…</string>
+    <string name="catalog_all">Todos (%1$d)</string>
+    <string name="catalog_empty_title">No se encontraron apósitos</string>
+    <string name="catalog_empty_text">Prueba con otro término o quita los filtros.</string>
+    <string name="catalog_cn_copied">Código CN %1$s copiado</string>
+    <string name="cd_copy_cn">Copiar CN</string>
+    <string name="cd_view_full_image">Ver imagen completa</string>
+    <string name="catalog_mechanism">Mecanismo de acción e indicaciones:</string>
+    <string name="catalog_formats">Medidas y formatos disponibles:</string>
+    <string name="catalog_cn_by_format">Códigos Nacionales (CN) según formato:</string>
+    <string name="cd_copy_item">Copiar %1$s</string>
+    <string name="catalog_type">Tipo de apósito:</string>
+    <string name="catalog_precautions">Precauciones e incompatibilidades:</string>
+    <string name="photo_compare_title">Comparador evolutivo</string>
+    <string name="cd_photo_before">Foto inicial</string>
+    <string name="cd_photo_after">Foto actual</string>
+
+    <plurals name="catalog_count">
+        <item quantity="one">%1$d producto</item>
+        <item quantity="other">%1$d productos</item>
+    </plurals>
+
+    <string name="resvech_c1_title">1. Dimensiones de la lesión</string>
+    <string name="resvech_c1_sub">Superficie (largo x ancho mayores)</string>
+    <string name="resvech_c1_o0">Superficie = 0 cm²</string>
+    <string name="resvech_c1_o1">Superficie &lt; 4 cm²</string>
+    <string name="resvech_c1_o2">Superficie = 4 – &lt; 16 cm²</string>
+    <string name="resvech_c1_o3">Superficie = 16 – &lt; 36 cm²</string>
+    <string name="resvech_c1_o4">Superficie = 36 – &lt; 64 cm²</string>
+    <string name="resvech_c1_o5">Superficie = 64 – &lt; 100 cm²</string>
+    <string name="resvech_c1_o6">Superficie ≥ 100 cm²</string>
+    <string name="resvech_c2_title">2. Profundidad / Tejidos afectados</string>
+    <string name="resvech_c2_sub">Estructura más profunda afectada</string>
+    <string name="resvech_c2_o0">Piel intacta cicatrizada</string>
+    <string name="resvech_c2_o1">Afectación de la dermis-epidermis</string>
+    <string name="resvech_c2_o2">Afectación del tejido subcutáneo (tejido adiposo sin llegar a la fascia del músculo)</string>
+    <string name="resvech_c2_o3">Afectación del músculo</string>
+    <string name="resvech_c2_o4">Afectación del hueso y/o tejidos anexos (tendones, ligamentos, cápsula articular) o escara negra que no permite ver los tejidos debajo de ella</string>
+    <string name="resvech_c3_title">3. Bordes</string>
+    <string name="resvech_c3_sub">Estado de los bordes de la herida</string>
+    <string name="resvech_c3_o0">No distinguibles (no hay herida)</string>
+    <string name="resvech_c3_o1">Difusos</string>
+    <string name="resvech_c3_o2">Delimitados</string>
+    <string name="resvech_c3_o3">Dañados</string>
+    <string name="resvech_c3_o4">Engrosados (\"envejecidos\", \"evertidos\")</string>
+    <string name="resvech_c4_title">4. Tipo de tejido en el lecho</string>
+    <string name="resvech_c4_sub">Tejido de peor pronóstico presente</string>
+    <string name="resvech_c4_o0">Cerrada / cicatrizada</string>
+    <string name="resvech_c4_o1">Tejido epitelial</string>
+    <string name="resvech_c4_o2">Tejido de granulación</string>
+    <string name="resvech_c4_o3">Tejido necrótico y/o esfacelos en el lecho</string>
+    <string name="resvech_c4_o4">Necrótico (escara negra seca o húmeda)</string>
+    <string name="resvech_c5_title">5. Exudado</string>
+    <string name="resvech_c5_sub">Nivel de humedad del lecho</string>
+    <string name="resvech_c5_o0">Húmedo</string>
+    <string name="resvech_c5_o1">Mojado</string>
+    <string name="resvech_c5_o2">Saturado</string>
+    <string name="resvech_c5_o3">Con fuga de exudado</string>
+    <string name="resvech_c5_o4">Seco</string>
+    <string name="resvech_c6_title">6. Infección / Inflamación (signos de biofilm)</string>
+    <string name="resvech_c6_sub">Marque todos los signos presentes (1 punto cada uno)</string>
+    <string name="resvech_s1">Dolor que va en aumento</string>
+    <string name="resvech_s2">Eritema en la perilesión</string>
+    <string name="resvech_s3">Edema en la perilesión</string>
+    <string name="resvech_s4">Aumento de la temperatura</string>
+    <string name="resvech_s5">Exudado que va en aumento</string>
+    <string name="resvech_s6">Exudado purulento</string>
+    <string name="resvech_s7">Tejido friable o que sangra con facilidad</string>
+    <string name="resvech_s8">Herida estancada, que no progresa</string>
+    <string name="resvech_s9">Tejido compatible con biofilm</string>
+    <string name="resvech_s10">Olor</string>
+    <string name="resvech_s11">Hipergranulación</string>
+    <string name="resvech_s12">Aumento del tamaño de la herida</string>
+    <string name="resvech_s13">Lesiones satélite</string>
+    <string name="resvech_s14">Palidez del tejido</string>
+    <string name="resvech_incomplete">Incompleta (%1$d/%2$d ítems)</string>
+    <string name="resvech_incomplete_desc">Responde todos los ítems para obtener la puntuación total de la escala.</string>
+    <string name="resvech_healed">Herida cicatrizada</string>
+    <string name="resvech_healed_desc">Puntuación 0: lesión cerrada.</string>
+    <string name="resvech_low">Puntuación baja (orientativo)</string>
+    <string name="resvech_low_desc">Compara con valoraciones anteriores: un descenso de la puntuación indica evolución hacia la cicatrización.</string>
+    <string name="resvech_mid">Puntuación intermedia (orientativo)</string>
+    <string name="resvech_mid_desc">Compara con valoraciones anteriores. Si la puntuación no desciende, reevalúa el plan de cuidados (desbridamiento, carga bacteriana, exudado).</string>
+    <string name="resvech_high">Puntuación alta (orientativo)</string>
+    <string name="resvech_high_desc">Lesión con gran afectación. Si no mejora entre valoraciones, valora un abordaje interdisciplinar y cura especializada.</string>
+    <string name="resvech_subtitle">Monitorización objetiva de la cicatrización</string>
+    <string name="resvech_copy_summary">--- ESCALA RESVECH 2.0 ---\nPuntuación total: %1$d / 35\nEstado: %2$s\n%3$s\n(RESVECH 2.0 no tiene puntos de corte validados; las bandas son orientativas.)</string>
+    <string name="cd_copy_summary">Copiar resumen</string>
+
+    <string name="expert_mode_title">Modo experto</string>
+    <string name="expert_mode_close">Cerrar modo experto</string>
+    <string name="pain_none">Sin dolor</string>
+    <string name="pain_mild">Leve</string>
+    <string name="pain_moderate">Moderado</string>
+    <string name="pain_severe">Intenso</string>
+    <string name="pain_title">Sensibilidad / Dolor (S)</string>
+    <string name="pain_desc">Escala EVA (0-10) al cambio de apósito</string>
+    <string name="camera_permission_denied">Permiso de cámara denegado</string>
+    <string name="cd_alert">Alerta</string>
+    <string name="braden_high_risk_text">Paciente con riesgo alto o muy alto. Recomienda de forma proactiva ácidos grasos hiperoxigenados (AGHO), espumas de poliuretano multicapa en sacro y talones, y una superficie especial de manejo de la presión (colchón de aire alternante).</string>
+    <string name="cd_expand_collapse">Expandir o contraer</string>
+    <string name="cd_wound_photo">Foto de la herida</string>
+    <string name="product_manufacturer">Fabricante: %1$s</string>
+    <string name="settings_backup_title">Copias de seguridad</string>
+    <string name="settings_backup_desc">Guarda tus pacientes e imágenes en un archivo cifrado para no perderlos.</string>
+    <string name="settings_developer">Desarrollador</string>
+    <string name="settings_privacy">Política de privacidad</string>
+    <string name="settings_privacy_view">Ver política de privacidad</string>
+    <string name="cd_measure_ar">Medir con realidad aumentada</string>
+    <string name="safety_alerts_title">Alertas de seguridad clínica</string>
+    <string name="cd_developer_photo">Foto de perfil de ferlagod</string>
+    <string name="developer_name_line">ferlagod (Fernando Lago) | Enfermero y desarrollador de software libre.</string>
+    <string name="developer_bio">Apasionado por la tecnología independiente, la privacidad y la lectura. Desarrollo herramientas nacidas de mis propias aficiones y necesidades profesionales, como BiblioHouse, Mis Curas y Rocinante.</string>
+    <string name="generate_recommendation">Generar recomendación</string>
+    <string name="expert_section_bed">Lecho</string>
+    <string name="expert_section_infection">Infección</string>
+
+    <string name="resvech_total_label">PUNTUACIÓN TOTAL</string>
+    <string name="rep_cavitation_format">- Cavitaciones: %1$s</string>
+
+    <plurals name="active_wounds_count">
+        <item quantity="one">%1$d herida activa</item>
+        <item quantity="other">%1$d heridas activas</item>
+    </plurals>
+
+    <plurals name="overdue_cures_count">
+        <item quantity="one">%1$d cura vencida</item>
+        <item quantity="other">%1$d curas vencidas</item>
+    </plurals>
+
+    <plurals name="unevaluated_wounds_count">
+        <item quantity="one">%1$d sin evaluar</item>
+        <item quantity="other">%1$d sin evaluar</item>
+    </plurals>
+
+    <string name="next_cure_format">Próxima cura %1$s</string>
+    <string name="last_cure_format">Última evaluación %1$s</string>
+    <string name="tool_catalog">Catálogo</string>
+    <string name="tool_braden">Braden</string>
+    <string name="tool_resvech">RESVECH</string>
+    <string name="tool_glossary">Glosario</string>
+
+    <string name="wound_not_evaluated">Sin evaluar</string>
+    <string name="cure_overdue_format">Cura vencida %1$s</string>
+
+    <string name="summary_tap_to_edit">Toca un dato para corregirlo</string>
+    <string name="summary_scale_not_done">Sin valorar · Añadir</string>
+    <string name="resvech_use_in_evaluation">Usar en la evaluación (%1$d / 35)</string>
+
+    <string name="photo_compare_side_by_side">Lado a lado</string>
+    <string name="photo_compare_overlay">Superpuesto</string>
+    <string name="photo_compare_hint">Pellizca para ampliar · Doble toque para restablecer</string>
+    <string name="photo_compare_before_format">Antes: %1$s</string>
+    <string name="photo_compare_after_format">Después: %1$s</string>
 </resources>

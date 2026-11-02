@@ -62,89 +62,10 @@ fun GlossaryScreen(
     currentLanguage: String
 ) {
     
-    // Datos hardcodeados según indicaciones GNEAUPP (completos)
-    val categories = listOf(
-        GlossaryCategory(
-            categoryName = "Estadios UPP (GNEAUPP)",
-            items = listOf(
-                GlossaryItem(
-                    title = "Categoría I",
-                    description = "Eritema no blanqueante",
-                    details = "Piel intacta con eritema no blanqueante de un área localizada, generalmente sobre una prominencia ósea. Decoloración de la piel, calor, edema, endurecimiento o dolor también pueden estar presentes. Indica afectación exclusiva de la Epidermis."
-                ),
-                GlossaryItem(
-                    title = "Categoría II",
-                    description = "Úlcera de espesor parcial",
-                    details = "Pérdida de espesor parcial de la dermis que se presenta como una úlcera abierta poco profunda con un lecho de la herida rojo-rosado, sin esfacelos. También puede presentarse como una flictena (ampolla) intacta o abierta/rota llena de suero. Afecta Epidermis y Dermis."
-                ),
-                GlossaryItem(
-                    title = "Categoría III",
-                    description = "Pérdida total del grosor de la piel",
-                    details = "Pérdida completa del grosor del tejido. La grasa subcutánea puede ser visible pero los huesos, tendones o músculos NO están expuestos. Pueden aparecer esfacelos. Puede incluir cavitaciones y tunelizaciones. Afecta Epidermis, Dermis y Tejido Celular Subcutáneo (TCS)."
-                ),
-                GlossaryItem(
-                    title = "Categoría IV",
-                    description = "Pérdida total del grosor de los tejidos",
-                    details = "Pérdida total del espesor del tejido con hueso, tendón o músculo expuesto. Pueden aparecer esfacelos o escaras. A menudo incluye cavitaciones y tunelizaciones. La profundidad varía según la ubicación anatómica. Afecta Epidermis, Dermis, TCS, Fascia, Músculo y/o Hueso."
-                )
-            )
-        ),
-        GlossaryCategory(
-            categoryName = "Tipos de Desbridamiento",
-            items = listOf(
-                GlossaryItem(
-                    title = "Desbridamiento Autolítico",
-                    description = "Proceso natural mediado por enzimas endógenas",
-                    details = "Uso de apósitos que retienen la humedad (como hidrogeles o hidrocoloides) para facilitar que las propias enzimas del cuerpo y los fagocitos licúen la necrosis y los esfacelos. Es muy selectivo, indoloro, pero lento. Contraindicado si hay infección severa no controlada."
-                ),
-                GlossaryItem(
-                    title = "Desbridamiento Enzimático",
-                    description = "Aplicación tópica de enzimas",
-                    details = "Consiste en la aplicación de pomadas enzimáticas (como la Colagenasa) que degradan el colágeno del tejido necrótico. Requiere un ambiente húmedo para actuar. Es selectivo y más rápido que el autolítico. A menudo se combina con cortes transversales (en rejilla) en escaras secas para facilitar la penetración."
-                ),
-                GlossaryItem(
-                    title = "Desbridamiento Cortante / Quirúrgico",
-                    description = "Uso de bisturí, tijeras o cureta",
-                    details = "Es la escisión del tejido desvitalizado. Es el método más rápido pero no es selectivo y requiere habilidad y conocimientos de anatomía. Se realiza en el lecho de la herida para eliminar esfacelos y tejido necrótico. El quirúrgico se hace en quirófano; el cortante lo hace enfermería a pie de cama. Existe riesgo de sangrado y dolor."
-                ),
-                GlossaryItem(
-                    title = "Desbridamiento Osmótico",
-                    description = "Intercambio de fluidos por gradiente de concentración",
-                    details = "Se utilizan sustancias con alta osmolaridad (como la Miel Médica o apósitos de poliacrilato superabsorbente) que atraen agua y fluidos del lecho de la herida hacia el apósito, arrastrando el tejido desvitalizado, bacterias y exceso de exudado. Ayuda a reducir el mal olor y la carga bacteriana."
-                )
-            )
-        ),
-        GlossaryCategory(
-            categoryName = "Familias de Apósitos",
-            items = listOf(
-                GlossaryItem(
-                    title = "Alginatos",
-                    description = "Derivados de algas marinas, altamente absorbentes",
-                    details = "Absorben moderado a alto exudado formando un gel hidrofílico que mantiene el ambiente húmedo. Tienen propiedades hemostáticas (ayudan a parar sangrados leves). Requieren un apósito secundario. Ideales para heridas profundas, cavitadas o sangrantes."
-                ),
-                GlossaryItem(
-                    title = "Hidrofibras",
-                    description = "Fibras de carboximetilcelulosa (CMC)",
-                    details = "Absorben grandes cantidades de exudado directamente dentro de la fibra, gelificando y reteniendo el fluido de forma vertical, lo que evita la maceración de los bordes perilesionales. Excelentes para heridas altamente exudativas. Algunas incluyen Plata (Ag) para infección."
-                ),
-                GlossaryItem(
-                    title = "Espumas de Poliuretano (Foam)",
-                    description = "Apósitos de estructura celular (esponja)",
-                    details = "Proporcionan absorción térmica, protección mecánica (amortiguación) y gestión del exudado moderado-alto. No se adhieren al lecho de la herida húmedo. Muy usados en úlceras por presión, úlceras venosas y prevención en zonas de riesgo (talones, sacro)."
-                ),
-                GlossaryItem(
-                    title = "Hidrocoloides",
-                    description = "Carboximetilcelulosa con adhesivos (pectina, gelatina)",
-                    details = "Forman un gel al entrar en contacto con el exudado. Son oclusivos o semi-oclusivos, promoviendo el desbridamiento autolítico agresivo. Ideales para exudado nulo o bajo. Contraindicados en heridas infectadas o muy exudativas, ya que pueden retener bacterias y macerar."
-                ),
-                GlossaryItem(
-                    title = "Hidrogeles",
-                    description = "Alto contenido en agua (hasta un 90%)",
-                    details = "Aportan humedad a las heridas secas (necrosis seca, escaras). Fomentan el desbridamiento autolítico ablandando el tejido muerto. Tienen efecto calmante y refrescante. Requieren apósito secundario. Se usan en exudado nulo a escaso."
-                )
-            )
-        )
-    )
+    // Contenido según el idioma activo (antes siempre en español)
+    // Se usa el idioma real de los recursos (el mismo que el resto de textos de la interfaz)
+    val resourceLanguage = androidx.compose.ui.platform.LocalConfiguration.current.locales[0].language
+    val categories = remember(resourceLanguage, currentLanguage) { glossaryCategories(resourceLanguage.ifBlank { currentLanguage }) }
 
     Scaffold(
         topBar = {

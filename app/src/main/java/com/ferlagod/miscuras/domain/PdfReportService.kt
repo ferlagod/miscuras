@@ -179,7 +179,7 @@ class PdfReportService(private val context: Context) {
                 textPaint.isFakeBoldText = true
                 canvas.drawText("Exudado (M): ", 390f, evalY, textPaint)
                 textPaint.isFakeBoldText = false
-                canvas.drawText("${latestEval.exudateLevel} (${latestEval.exudateType})", 465f, evalY, textPaint)
+                canvas.drawText(latestEval.exudateLevel + (if (latestEval.exudateType.isNotBlank()) " (${latestEval.exudateType})" else ""), 465f, evalY, textPaint)
 
                 evalY += 18f
                 textPaint.isFakeBoldText = true
@@ -210,6 +210,17 @@ class PdfReportService(private val context: Context) {
                 canvas.drawText("Dolor EVA (S): ", 220f, evalY, textPaint)
                 textPaint.isFakeBoldText = false
                 canvas.drawText("${latestEval.painLevel.toInt()}/10", 300f, evalY, textPaint)
+
+                val scales = listOfNotNull(
+                    latestEval.bradenScore?.let { "Braden: $it/23" },
+                    latestEval.resvechScore?.let { "RESVECH: $it/35" }
+                )
+                if (scales.isNotEmpty()) {
+                    textPaint.isFakeBoldText = true
+                    canvas.drawText("Escalas: ", 390f, evalY, textPaint)
+                    textPaint.isFakeBoldText = false
+                    canvas.drawText(scales.joinToString(" · "), 435f, evalY, textPaint)
+                }
 
                 evalY += 22f
                 paint.color = dividerColor

@@ -32,6 +32,7 @@ import java.security.MessageDigest
 data class EvaluationResult(
     val familiaRecomendada: String?,
     val cureFrequency: String?,
+    val cureIntervalHours: Int? = null,
     val productos: List<ApositoEntity>,
     val safetyAlerts: List<String>
 )
@@ -111,6 +112,7 @@ class EvaluateWoundUseCase(
             EvaluationResult(
                 familiaRecomendada = familiaFormateada,
                 cureFrequency = recommendedFrequency,
+                cureIntervalHours = rulesEngine.determineCureIntervalHours(state),
                 productos = productos,
                 safetyAlerts = alerts
             )

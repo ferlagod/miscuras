@@ -106,7 +106,7 @@ import kotlinx.coroutines.delay
 // ============================================================
 
 private enum class ScreenState {
-    Splash, Selection, Results, Glossary, ArMeasure, Braden
+    Splash, Selection, Results, Glossary, ArMeasure, Braden, Resvech
 }
 
 /**
@@ -120,7 +120,8 @@ private enum class ScreenState {
 fun WoundScreen(
     viewModel: WoundViewModel,
     woundIdForSave: Long? = null,
-    onBackToDashboard: () -> Unit = {}
+    onBackToDashboard: () -> Unit = {},
+    onExit: () -> Unit = onBackToDashboard
 ) {
     val wizardState by viewModel.wizardState.collectAsStateWithLifecycle()
     val evaluationState by viewModel.evaluationState.collectAsStateWithLifecycle()
@@ -172,10 +173,16 @@ fun WoundScreen(
     val currentScreenState = when {
         configState.showSplash -> ScreenState.Splash
         configState.showBraden -> ScreenState.Braden
+        configState.showResvech -> ScreenState.Resvech
         configState.showGlossary -> ScreenState.Glossary
         configState.showArMeasure -> ScreenState.ArMeasure
         evaluationState.showResults -> ScreenState.Results
         else -> ScreenState.Selection
+    }
+
+    // Atrás desde una escala abierta dentro de la evaluación vuelve a la evaluación
+    BackHandler(enabled = currentScreenState == ScreenState.Braden || currentScreenState == ScreenState.Resvech) {
+        if (currentScreenState == ScreenState.Braden) viewModel.hideBraden() else viewModel.hideResvech()
     }
 
     BackHandler(
@@ -302,7 +309,8 @@ fun WoundScreen(
                         onGlossaryClick = { viewModel.showGlossary() },
                         onArMeasureClick = { viewModel.showArMeasure() },
                         onBradenClick = { viewModel.showBraden() },
-                        onToggleExpertMode = { viewModel.toggleExpertMode() }
+                        onToggleExpertMode = { viewModel.toggleExpertMode() },
+                        onExit = onExit
                     )
                 }
             }
@@ -321,7 +329,10 @@ fun WoundScreen(
                     onCopyProductSummary = { productoNombre -> viewModel.generarResumenEvolutivo(productoNombre, context) },
                     onToggleProductSelection = { codigoCn -> viewModel.toggleProductSelection(codigoCn) },
                     onPhotoPathChanged = { viewModel.setPhotoPath(it) },
-                    context = context
+                    context = context,
+                    onEditStep = { step -> viewModel.goToStep(step) },
+                    onOpenBraden = { viewModel.showBraden() },
+                    onOpenResvech = { viewModel.showResvech() }
                 )
             }
             ScreenState.Glossary -> {
@@ -335,6 +346,12 @@ fun WoundScreen(
                     onBackClick = { viewModel.hideBraden() },
                     onScoreCalculated = { score -> viewModel.onBradenScoreUpdated(score) },
                     )
+            }
+            ScreenState.Resvech -> {
+                com.ferlagod.miscuras.ui.screens.ResvechScreen(
+                    onBackClick = { viewModel.hideResvech() },
+                    onScoreCalculated = { score -> viewModel.onResvechScoreUpdated(score) }
+                )
             }
             ScreenState.ArMeasure -> {
                 com.ferlagod.miscuras.ui.screens.ARMeasureScreen(
@@ -421,7 +438,7 @@ private fun SplashContent() {
         ) {
             Image(
                 painter = painterResource(id = R.drawable.logo),
-                contentDescription = "Logo",
+                contentDescription = stringResource(R.string.cd_logo),
                 modifier = Modifier
                     .size(240.dp)
                     .clip(CircleShape)
@@ -489,7 +506,8 @@ private fun SelectionContent(
     onGlossaryClick: () -> Unit,
     onArMeasureClick: () -> Unit,
     onBradenClick: () -> Unit,
-    onToggleExpertMode: () -> Unit
+    onToggleExpertMode: () -> Unit,
+    onExit: () -> Unit = {}
 ) {
     val coroutineScope = rememberCoroutineScope()
     // Gestor de permisos de cámara
@@ -516,15 +534,30 @@ private fun SelectionContent(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Image(
                                 painter = painterResource(id = R.drawable.logo),
-                                contentDescription = "Logo",
+                                contentDescription = stringResource(R.string.cd_logo),
                                 modifier = Modifier.size(36.dp).clip(CircleShape)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = stringResource(R.string.selection_header_title),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Column {
+                                Text(
+                                    text = stringResource(R.string.selection_header_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                val stepNames = listOf(
+                                    stringResource(R.string.wizard_step_etiology),
+                                    stringResource(R.string.wizard_step_size),
+                                    stringResource(R.string.wizard_step_exudate),
+                                    stringResource(R.string.wizard_step_edges),
+                                    stringResource(R.string.wizard_step_infection)
+                                )
+                                val stepIndex = wizardState.currentWizardStep.ordinal
+                                Text(
+                                    text = stringResource(R.string.wizard_step_format, stepIndex + 1, stepNames.size, stepNames[stepIndex]),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     },
                     navigationIcon = {
@@ -532,7 +565,14 @@ private fun SelectionContent(
                             IconButton(onClick = onPreviousStep) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Atrás"
+                                    contentDescription = stringResource(R.string.wizard_back)
+                                )
+                            }
+                        } else {
+                            IconButton(onClick = onExit) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Close,
+                                    contentDescription = stringResource(R.string.wizard_exit)
                                 )
                             }
                         }
@@ -541,19 +581,19 @@ private fun SelectionContent(
                         IconButton(onClick = onToggleExpertMode) {
                             Icon(
                                 imageVector = if (configState.isExpertMode) Icons.Rounded.List else Icons.Rounded.AutoAwesome,
-                                contentDescription = "Modo Experto"
+                                contentDescription = stringResource(R.string.expert_mode_title)
                             )
                         }
                         IconButton(onClick = onBradenClick) {
                             Icon(
                                 imageVector = Icons.Rounded.Warning,
-                                contentDescription = "Calculadora Braden"
+                                contentDescription = stringResource(R.string.cd_braden)
                             )
                         }
                         IconButton(onClick = onGlossaryClick) {
                             Icon(
                                 imageVector = Icons.Rounded.MenuBook,
-                                contentDescription = "Glosario / Biblioteca"
+                                contentDescription = stringResource(R.string.cd_glossary)
                             )
                         }
                         IconButton(onClick = onSettingsClick) {
@@ -586,7 +626,6 @@ private fun SelectionContent(
                 com.ferlagod.miscuras.ui.WizardStep.EDGES -> true
                 else -> false
             }
-            val isEtiologyStepComplete = wizardState.selectedEtiology.isNotEmpty() && wizardState.selectedLecho.isNotEmpty()
 
             if (!configState.isExpertMode && (showSearchButton || showNextButton)) {
                 Surface(
@@ -594,15 +633,25 @@ private fun SelectionContent(
                     shadowElevation = 8.dp,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Box(modifier = Modifier.padding(16.dp)) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        val stepReady = if (showSearchButton) wizardState.isComplete else wizardState.isStepComplete(wizardState.currentWizardStep)
+                        if (!stepReady) {
+                            Text(
+                                text = stringResource(R.string.wizard_incomplete_hint),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                            )
+                        }
                         Button(
                             onClick = if (showSearchButton) onFindApositoClick else onNextStep,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp),
                             shape = RoundedCornerShape(16.dp),
-                            enabled = !evaluationState.isLoading && 
-                                (wizardState.currentWizardStep != com.ferlagod.miscuras.ui.WizardStep.ETIOLOGY || isEtiologyStepComplete),
+                            enabled = !evaluationState.isLoading &&
+                                (if (showSearchButton) wizardState.isComplete else wizardState.isStepComplete(wizardState.currentWizardStep)),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary
                             )
@@ -663,6 +712,11 @@ private fun SelectionContent(
                 verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
                 contentPadding = PaddingValues(vertical = 32.dp)
             ) {
+                if (wizardState.patientAllergies.isNotBlank()) {
+                    item(key = "allergy_banner") {
+                        com.ferlagod.miscuras.ui.components.AllergyBanner(wizardState.patientAllergies)
+                    }
+                }
                 when (step) {
                     com.ferlagod.miscuras.ui.WizardStep.ETIOLOGY -> {
                         item {
@@ -679,14 +733,14 @@ private fun SelectionContent(
                         Text(
                             text = stringResource(R.string.welcome_title),
                             style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
                             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = stringResource(R.string.welcome_desc),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
                 }
@@ -699,7 +753,8 @@ private fun SelectionContent(
                     onOptionSelected = { 
                         onEtiologyChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesEtiologia))
                     },
-                    chipType = "etiology"
+                    chipType = "etiology",
+                    required = true
                 )
             }
                         item {
@@ -713,7 +768,8 @@ private fun SelectionContent(
                     onOptionSelected = { 
                         onLechoChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesLecho)) 
                     },
-                    chipType = "tissue"
+                    chipType = "tissue",
+                    required = true
                 )
             }
                     }
@@ -773,17 +829,11 @@ private fun SelectionContent(
                     selectedOption = currentExudadoTrans,
                     options = optionsExudadoTrans,
                     onOptionSelected = { 
-                        val dbTerm = ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesExudado)
-                        onExudadoChanged(dbTerm) 
-                        if (dbTerm == "Nulo") {
-                            coroutineScope.launch {
-                                kotlinx.coroutines.delay(800)
-                                onNextStep()
-                            }
-                        }
+                        // Sin avance automático: el usuario confirma con "Siguiente"
+                        onExudadoChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesExudado))
                     },
-                    
-                    chipType = "exudate"
+                    chipType = "exudate",
+                    required = true
                 )
             }
                         item {
@@ -797,8 +847,9 @@ private fun SelectionContent(
                         onOptionSelected = { 
                             onExudateTypeChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesTipoExudado)) 
                         },
-                        enabled = wizardState.selectedExudado != "Nulo",
-                        chipType = "exudate"
+                        enabled = wizardState.selectedExudado.isNotEmpty() && wizardState.selectedExudado != "Nulo",
+                        chipType = "exudate",
+                        required = wizardState.selectedExudado.isNotEmpty() && wizardState.selectedExudado != "Nulo"
                     )
                 }
                     }
@@ -814,7 +865,8 @@ private fun SelectionContent(
                     onOptionSelected = { 
                         onBordesChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesBordes)) 
                     },
-                    chipType = "edge"
+                    chipType = "edge",
+                    required = true
                 )
             }
                         item {
@@ -829,7 +881,8 @@ private fun SelectionContent(
                         onPerilesionalChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesPerilesional)) 
                     },
                     
-                    chipType = "edge"
+                    chipType = "perilesional",
+                    required = true
                 )
             }
                     }
@@ -902,6 +955,23 @@ private fun SelectionContent(
 // COMPONENTE — Tarjeta con Dropdown selector
 // ============================================================
 
+/** Colores semánticos de cada categoría de chip: (fondo seleccionado, color de acento). */
+@Composable
+private fun chipCategoryColors(chipType: String): Pair<Color, Color> {
+    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    return when (chipType) {
+        "tissue" -> if (dark) com.ferlagod.miscuras.ui.theme.ChipTissueDark to com.ferlagod.miscuras.ui.theme.ChipTissueSelectedDark
+                    else com.ferlagod.miscuras.ui.theme.ChipTissue to com.ferlagod.miscuras.ui.theme.ChipTissueSelected
+        "exudate" -> if (dark) com.ferlagod.miscuras.ui.theme.ChipExudateDark to com.ferlagod.miscuras.ui.theme.ChipExudateSelectedDark
+                     else com.ferlagod.miscuras.ui.theme.ChipExudate to com.ferlagod.miscuras.ui.theme.ChipExudateSelected
+        "edge", "perilesional" -> if (dark) com.ferlagod.miscuras.ui.theme.ChipEdgeDark to com.ferlagod.miscuras.ui.theme.ChipEdgeSelectedDark
+                                  else com.ferlagod.miscuras.ui.theme.ChipEdge to Color(0xFF9A6700) // ámbar oscuro: contraste AA sobre fondo claro
+        "infection" -> if (dark) com.ferlagod.miscuras.ui.theme.ChipInfectionDark to com.ferlagod.miscuras.ui.theme.ChipInfectionSelectedDark
+                       else com.ferlagod.miscuras.ui.theme.ChipInfection to com.ferlagod.miscuras.ui.theme.ChipInfectionSelected
+        else -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.primary
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun ChipGroupCard(
@@ -911,64 +981,96 @@ private fun ChipGroupCard(
     options: List<String>,
     onOptionSelected: (String) -> Unit,
     enabled: Boolean = true,
-    chipType: String = "default" // "tissue", "exudate", "edge", "infection"
+    chipType: String = "default", // "tissue", "exudate", "edge", "perilesional", "infection", "etiology"
+    required: Boolean = false
 ) {
+    val (selectedBg, accent) = chipCategoryColors(chipType)
+    val missing = required && enabled && selectedOption.isBlank()
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(28.dp),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
             containerColor = if (enabled) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (missing) MaterialTheme.colorScheme.primary.copy(alpha = 0.35f) else MaterialTheme.colorScheme.outlineVariant
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = com.ferlagod.miscuras.ui.theme.Dimens.ElevationNone)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.titleMedium,
-                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-            )
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            )
-            Spacer(modifier = Modifier.height(14.dp))
+        Column(modifier = Modifier.padding(com.ferlagod.miscuras.ui.theme.Dimens.CardPadding)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(width = 4.dp, height = 18.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(if (enabled) accent else accent.copy(alpha = 0.4f))
+                )
+                Spacer(modifier = Modifier.width(com.ferlagod.miscuras.ui.theme.Dimens.SpacingSm))
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    modifier = Modifier.weight(1f)
+                )
+                if (missing) {
+                    Text(
+                        text = stringResource(R.string.wizard_required_badge),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            if (description.isNotBlank()) {
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.padding(start = 12.dp, top = 2.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(com.ferlagod.miscuras.ui.theme.Dimens.SpacingMd))
 
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(com.ferlagod.miscuras.ui.theme.Dimens.SpacingSm),
+                verticalArrangement = Arrangement.spacedBy(com.ferlagod.miscuras.ui.theme.Dimens.SpacingSm)
             ) {
                 options.forEach { option ->
                     val isSelected = option == selectedOption
-                    
+
                     val interactionSource = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
                     val isPressed by interactionSource.collectIsPressedAsState()
                     val scale by androidx.compose.animation.core.animateFloatAsState(
-                        targetValue = if (isPressed) 0.95f else 1f, 
+                        targetValue = if (isPressed) 0.95f else 1f,
                         label = "scale"
                     )
-                    
-                    val textColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                    
+
                     FilterChip(
                         selected = isSelected,
                         onClick = { if (enabled) onOptionSelected(option) },
                         interactionSource = interactionSource,
-                        label = { 
+                        label = {
                             Text(
-                                text = option, 
+                                text = option,
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = textColor
-                            ) 
+                                color = if (isSelected) accent else MaterialTheme.colorScheme.onSurface
+                            )
                         },
+                        leadingIcon = if (isSelected) {
+                            { Icon(Icons.Rounded.Check, contentDescription = null, tint = accent, modifier = Modifier.size(18.dp)) }
+                        } else null,
                         colors = FilterChipDefaults.filterChipColors(
                             containerColor = MaterialTheme.colorScheme.surface,
-                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedContainerColor = selectedBg,
                             disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                         ),
-                        border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)),
+                        border = androidx.compose.foundation.BorderStroke(
+                            if (isSelected) 1.5.dp else 1.dp,
+                            if (isSelected) accent else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                        ),
                         shape = CircleShape,
                         enabled = enabled,
                         modifier = Modifier.defaultMinSize(minWidth = 48.dp, minHeight = 48.dp).scale(scale)
@@ -992,10 +1094,11 @@ private fun PainCard(
     enabled: Boolean = true
 ) {
     val painDescription = when {
-        painLevel == 0f -> "Sin Dolor"
-        painLevel <= 3f -> "Leve"
-        painLevel <= 7f -> "Moderado"
-        else -> "Severo"
+        // EVA: 0 sin dolor · 1-3 leve · 4-6 moderado · 7-10 intenso
+        painLevel == 0f -> stringResource(R.string.pain_none)
+        painLevel <= 3f -> stringResource(R.string.pain_mild)
+        painLevel <= 6f -> stringResource(R.string.pain_moderate)
+        else -> stringResource(R.string.pain_severe)
     }
 
     val painColor = when {
@@ -1024,12 +1127,12 @@ private fun PainCard(
             ) {
                 Column {
                     Text(
-                        text = "Sensibilidad / Dolor (S)",
+                        text = stringResource(R.string.pain_title),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Escala EVA (0-10) al cambio de apósito",
+                        text = stringResource(R.string.pain_desc),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1167,11 +1270,15 @@ private fun ResultsContent(
     onCopyProductSummary: (String) -> String,
     onToggleProductSelection: (String) -> Unit,
     onPhotoPathChanged: (String?) -> Unit,
-    context: android.content.Context
+    context: android.content.Context,
+    onEditStep: (com.ferlagod.miscuras.ui.WizardStep) -> Unit = {},
+    onOpenBraden: () -> Unit = {},
+    onOpenResvech: () -> Unit = {}
 ) {
     var selectedProduct by remember { mutableStateOf<ApositoEntity?>(null) }
 
     // Helpers para fotos
+    val photoScope = rememberCoroutineScope()
     var currentPhotoUri by remember { mutableStateOf<Uri?>(null) }
     var currentPhotoFile by remember { mutableStateOf<File?>(null) }
 
@@ -1179,7 +1286,11 @@ private fun ResultsContent(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success && currentPhotoFile != null) {
-            onPhotoPathChanged(currentPhotoFile!!.absolutePath)
+            val captured = currentPhotoFile!!
+            photoScope.launch {
+                com.ferlagod.miscuras.domain.ImageCompressor.compressInPlace(captured)
+                onPhotoPathChanged(captured.absolutePath)
+            }
         } else {
             // Captura cancelada: algunas apps de cámara dejan un archivo vacío
             currentPhotoFile?.let { f -> if (f.exists()) f.delete() }
@@ -1198,7 +1309,7 @@ private fun ResultsContent(
             val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", newFile)
             takePictureLauncher.launch(uri)
         } else {
-            android.widget.Toast.makeText(context, "Permiso de cámara denegado", android.widget.Toast.LENGTH_SHORT).show()
+            android.widget.Toast.makeText(context, context.getString(R.string.camera_permission_denied), android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -1206,21 +1317,24 @@ private fun ResultsContent(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         if (uri != null) {
-            // Copiar la imagen a nuestro almacenamiento interno
-            try {
-                val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
-                val photoFile = File(context.filesDir, "photos")
-                if (!photoFile.exists()) photoFile.mkdirs()
-                val newFile = File(photoFile, "IMG_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.jpg")
-                val outputStream = FileOutputStream(newFile)
-                inputStream?.copyTo(outputStream)
-                inputStream?.close()
-                outputStream.close()
-                
-                // Propagamos al ViewModel
-                onPhotoPathChanged(newFile.absolutePath)
-            } catch (e: Exception) {
-                e.printStackTrace()
+            // Copiar la imagen al almacenamiento interno y comprimirla, fuera del hilo principal
+            photoScope.launch {
+                try {
+                    val newFile = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        val photoFile = File(context.filesDir, "photos")
+                        if (!photoFile.exists()) photoFile.mkdirs()
+                        val target = File(photoFile, "IMG_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.jpg")
+                        context.contentResolver.openInputStream(uri)?.use { input ->
+                            FileOutputStream(target).use { output -> input.copyTo(output) }
+                        }
+                        target
+                    }
+                    com.ferlagod.miscuras.domain.ImageCompressor.compressInPlace(newFile)
+                    // Propagamos al ViewModel
+                    onPhotoPathChanged(newFile.absolutePath)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
         }
     }
@@ -1231,7 +1345,8 @@ private fun ResultsContent(
         .groupBy { it.familiaGenerica } 
     }
     val productosSecundariosAgrupados = remember(evaluationState.productos) { 
-        evaluationState.productos.filter { it.usoPrimarioSecundario.contains("Secundari", ignoreCase = true) || it.usoPrimarioSecundario.contains("Ambos", ignoreCase = true) }
+        // Los de uso mixto ("Ambos") ya aparecen en primarios con su indicación: no se duplican
+        evaluationState.productos.filter { it.usoPrimarioSecundario.contains("Secundari", ignoreCase = true) && !it.usoPrimarioSecundario.contains("Ambos", ignoreCase = true) }
         .groupBy { it.familiaGenerica } 
     }
     
@@ -1256,7 +1371,8 @@ private fun ResultsContent(
         ))
     }
 
-    var expandedFamiliesPrimary by remember(familiasPrimariasOrdenadas) { mutableStateOf(emptySet<String>()) }
+    // La primera familia (la de mayor prioridad) se muestra desplegada
+    var expandedFamiliesPrimary by remember(familiasPrimariasOrdenadas) { mutableStateOf(familiasPrimariasOrdenadas.take(1).toSet()) }
     var expandedFamiliesSecondary by remember(familiasSecundariasOrdenadas) { mutableStateOf(emptySet<String>()) }
 
     val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
@@ -1276,7 +1392,7 @@ private fun ResultsContent(
                     IconButton(onClick = onPreviousStep) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Volver"
+                            contentDescription = stringResource(R.string.cd_back)
                         )
                     }
                 },
@@ -1317,34 +1433,24 @@ private fun ResultsContent(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(top = 8.dp, bottom = 32.dp)
             ) {
-                // Imagen del lecho
+                // Resumen de la evaluación
                 item {
-                    val lechoImageResId = when(wizardState.selectedLecho) {
-                        "Necrosis" -> R.drawable.img_necrosis
-                        "Esfacelo" -> R.drawable.img_esfacelo
-                        "Granulación" -> R.drawable.img_granulacion
-                        "Epitelización" -> R.drawable.img_epitelial
-                        else -> null
-                    }
-                    if (lechoImageResId != null) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                painter = painterResource(id = lechoImageResId),
-                                contentDescription = wizardState.selectedLecho,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(16.dp)),
-                                contentScale = ContentScale.FillWidth
-                            )
-                        }
+                    EvaluationSummaryCard(
+                        wizardState = wizardState,
+                        evaluationState = evaluationState,
+                        onEditStep = onEditStep,
+                        onOpenBraden = onOpenBraden,
+                        onOpenResvech = onOpenResvech
+                    )
+                }
+
+                // Alergias del paciente
+                if (wizardState.patientAllergies.isNotBlank()) {
+                    item {
+                        com.ferlagod.miscuras.ui.components.AllergyBanner(wizardState.patientAllergies)
                     }
                 }
-                
+
                 // Alertas de Seguridad
                 if (evaluationState.safetyAlerts.isNotEmpty()) {
                     item {
@@ -1365,7 +1471,7 @@ private fun ResultsContent(
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         imageVector = Icons.Rounded.Warning,
-                                        contentDescription = "Alerta",
+                                        contentDescription = stringResource(R.string.cd_alert),
                                         tint = MaterialTheme.colorScheme.error,
                                         modifier = Modifier.size(24.dp)
                                     )
@@ -1379,31 +1485,13 @@ private fun ResultsContent(
                                 }
                                 Spacer(modifier = Modifier.height(8.dp))
                                 Text(
-                                    text = "Paciente con Riesgo Alto/Muy Alto. Recomendar proactivamente Ácidos Grasos Hiperoxigenados (AGHO), espumas de poliuretano sacras/talonares de cinco capas, y colchón de aire alternante (SEMP).",
+                                    text = stringResource(R.string.braden_high_risk_text),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onErrorContainer
                                 )
                             }
                         }
                     }
-                }
-
-                // AI Response
-                item {
-                    AiResponseCard(
-                        isLoading = evaluationState.isAiLoading,
-                        response = evaluationState.aiResponse,
-                        )
-                }
-
-                // Resumen de la evaluación
-                item {
-                    EvaluationSummaryCard(
-                        lecho = wizardState.selectedLecho,
-                        exudado = wizardState.selectedExudado,
-                        infeccion = wizardState.selectedInfeccion,
-                        lang = configState.currentLanguage
-                    )
                 }
 
                 // Familia recomendada
@@ -1467,7 +1555,7 @@ private fun ResultsContent(
                                 )
                                 androidx.compose.material3.Icon(
                                     imageVector = if (isExpanded) Icons.Rounded.ArrowDropUp else Icons.Rounded.ArrowDropDown,
-                                    contentDescription = "Expandir/Contraer",
+                                    contentDescription = stringResource(R.string.cd_expand_collapse),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -1495,7 +1583,7 @@ private fun ResultsContent(
                     }
                 }
 
-                item {
+                if (familiasSecundariasOrdenadas.isNotEmpty()) item {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = stringResource(R.string.secondary_dressing_category),
@@ -1538,7 +1626,7 @@ private fun ResultsContent(
                                 )
                                 androidx.compose.material3.Icon(
                                     imageVector = if (isExpanded) Icons.Rounded.ArrowDropUp else Icons.Rounded.ArrowDropDown,
-                                    contentDescription = "Expandir/Contraer",
+                                    contentDescription = stringResource(R.string.cd_expand_collapse),
                                     tint = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
@@ -1566,6 +1654,43 @@ private fun ResultsContent(
                     }
                 }
 
+                // AI Response
+                item {
+                    AiResponseCard(
+                        isLoading = evaluationState.isAiLoading,
+                        response = evaluationState.aiResponse,
+                        )
+                }
+
+                // Imagen del lecho
+                item {
+                    val lechoImageResId = when(wizardState.selectedLecho) {
+                        "Necrosis" -> R.drawable.img_necrosis
+                        "Esfacelo" -> R.drawable.img_esfacelo
+                        "Granulación" -> R.drawable.img_granulacion
+                        "Epitelización" -> R.drawable.img_epitelial
+                        else -> null
+                    }
+                    if (lechoImageResId != null) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = lechoImageResId),
+                                contentDescription = wizardState.selectedLecho,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(140.dp)
+                                    .clip(RoundedCornerShape(16.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    }
+                }
+                
                 // Sección de Foto (Opcional)
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
@@ -1590,7 +1715,7 @@ private fun ResultsContent(
                             if (!wizardState.photoPath.isNullOrBlank()) {
                                 AsyncImage(
                                     model = File(wizardState.photoPath),
-                                    contentDescription = "Foto de la herida",
+                                    contentDescription = stringResource(R.string.cd_wound_photo),
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .height(200.dp)
@@ -1623,7 +1748,7 @@ private fun ResultsContent(
                                             }
                                         }
                                     ) {
-                                        Icon(Icons.Rounded.CameraAlt, contentDescription = "Cámara")
+                                        Icon(Icons.Rounded.CameraAlt, contentDescription = null)
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Text(stringResource(R.string.take_photo_button))
                                     }
@@ -1668,7 +1793,7 @@ private fun ResultsContent(
                                 containerColor = MaterialTheme.colorScheme.primary
                             )
                         ) {
-                            Icon(androidx.compose.material.icons.Icons.Rounded.Save, contentDescription = "Guardar")
+                            Icon(androidx.compose.material.icons.Icons.Rounded.Save, contentDescription = null)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 stringResource(R.string.save_evaluation_button),
@@ -1694,42 +1819,130 @@ private fun ResultsContent(
 // COMPONENTE — Resumen de la evaluación
 // ============================================================
 
+/**
+ * Resumen completo de la evaluación antes de guardar. Cada fila lleva al paso del asistente
+ * donde se introdujo el dato para corregirlo; las escalas se abren directamente.
+ */
 @Composable
 private fun EvaluationSummaryCard(
-    lecho: String,
-    exudado: String,
-    infeccion: Boolean,
-    lang: String
+    wizardState: WizardState,
+    evaluationState: EvaluationState,
+    onEditStep: (com.ferlagod.miscuras.ui.WizardStep) -> Unit,
+    onOpenBraden: () -> Unit,
+    onOpenResvech: () -> Unit
 ) {
     val context = LocalContext.current
+    val t = { term: String -> if (term.isBlank()) "—" else ClinicalTermMapper.translateClinicalTerm(term, context) }
+    val step = com.ferlagod.miscuras.ui.WizardStep.entries
+    val size = if (wizardState.woundLength.isNotBlank() && wizardState.woundWidth.isNotBlank()) {
+        buildString {
+            append("${wizardState.woundLength} × ${wizardState.woundWidth}")
+            if (wizardState.woundDepth.isNotBlank()) append(" × ${wizardState.woundDepth}")
+            append(" cm")
+        }
+    } else stringResource(R.string.rep_unspecified)
+    val location = if (wizardState.specialLocation != "Ninguno") " · ${t(wizardState.specialLocation)}" else ""
+    val exudate = t(wizardState.selectedExudado) + if (wizardState.selectedExudateType.isNotBlank()) " (${t(wizardState.selectedExudateType)})" else ""
+    val infection = if (wizardState.selectedInfeccion) {
+        stringResource(R.string.yes) + if (wizardState.infectionGerm != "Desconocido") " · ${t(wizardState.infectionGerm)}" else ""
+    } else stringResource(R.string.no)
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        ),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = stringResource(R.string.evaluation_done),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+        Column(modifier = Modifier.padding(vertical = 8.dp)) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                SummaryChip(label = ClinicalTermMapper.translateClinicalTerm(lecho, context))
-                SummaryChip(label = ClinicalTermMapper.translateClinicalTerm(exudado, context))
-                if (infeccion) {
-                    SummaryChip(
-                        label = stringResource(R.string.infection_chip),
-                        isError = true
-                    )
-                }
+                Text(
+                    text = stringResource(R.string.evaluation_done),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    text = stringResource(R.string.summary_tap_to_edit),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
+            if (!wizardState.isPielIntacta) {
+                SummaryRow(stringResource(R.string.etiology_label), t(wizardState.selectedEtiology)) { onEditStep(step[0]) }
+            }
+            SummaryRow(stringResource(R.string.bed_state_label), t(wizardState.selectedLecho), accent = true) { onEditStep(step[0]) }
+            if (!wizardState.isPielIntacta) {
+                SummaryRow(stringResource(R.string.wizard_step_size), size + location) { onEditStep(step[1]) }
+                SummaryRow(stringResource(R.string.wizard_step_exudate), exudate) { onEditStep(step[2]) }
+                SummaryRow(stringResource(R.string.edges_label), t(wizardState.selectedBordes)) { onEditStep(step[3]) }
+                SummaryRow(stringResource(R.string.perilesional_label), t(wizardState.selectedPerilesional)) { onEditStep(step[3]) }
+                SummaryRow(stringResource(R.string.expert_section_infection), infection, isError = wizardState.selectedInfeccion) { onEditStep(step[4]) }
+                SummaryRow(stringResource(R.string.pain_title), "${wizardState.painLevel.toInt()}/10") { onEditStep(step[4]) }
+            }
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
+            SummaryRow(
+                stringResource(R.string.tool_braden),
+                evaluationState.bradenScore?.let { "$it / 23" } ?: stringResource(R.string.summary_scale_not_done),
+                trailingIcon = if (evaluationState.bradenScore == null) Icons.Rounded.Add else Icons.Rounded.Edit,
+                onClick = onOpenBraden
+            )
+            SummaryRow(
+                stringResource(R.string.tool_resvech),
+                evaluationState.resvechScore?.let { "$it / 35" } ?: stringResource(R.string.summary_scale_not_done),
+                trailingIcon = if (evaluationState.resvechScore == null) Icons.Rounded.Add else Icons.Rounded.Edit,
+                onClick = onOpenResvech
+            )
         }
+    }
+}
+
+@Composable
+private fun SummaryRow(
+    label: String,
+    value: String,
+    accent: Boolean = false,
+    isError: Boolean = false,
+    trailingIcon: androidx.compose.ui.graphics.vector.ImageVector = Icons.Rounded.Edit,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(0.42f)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = if (accent || isError) FontWeight.Bold else FontWeight.Medium,
+            color = when {
+                isError -> MaterialTheme.colorScheme.error
+                accent -> MaterialTheme.colorScheme.primary
+                else -> MaterialTheme.colorScheme.onSurface
+            },
+            modifier = Modifier.weight(0.58f)
+        )
+        Icon(
+            trailingIcon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            modifier = Modifier.size(16.dp)
+        )
     }
 }
 
@@ -1920,6 +2133,20 @@ private fun ProductCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (producto.usoPrimarioSecundario.contains("Ambos", ignoreCase = true)) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = MaterialTheme.colorScheme.tertiaryContainer
+                    ) {
+                        Text(
+                            text = stringResource(R.string.product_use_both),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
                 // Dimensiones debajo del nombre para evitar comprimir el texto
                 Spacer(modifier = Modifier.height(6.dp))
                 val dimensionesList = producto.dimensiones.split("/").map { it.trim() }
@@ -2062,9 +2289,7 @@ private fun ProductDetailDialog(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = if (stringResource(R.string.language_label) == "Idioma") "Fabricante: ${producto.fabricante}" 
-                               else if (stringResource(R.string.language_label) == "Language") "Manufacturer: ${producto.fabricante}"
-                               else "Fabricante: ${producto.fabricante}",
+                        text = stringResource(R.string.product_manufacturer, producto.fabricante),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -2274,7 +2499,7 @@ private fun DisclaimerDialog(onAccept: () -> Unit) {
         icon = {
             Icon(
                 imageVector = Icons.Rounded.Warning,
-                contentDescription = "Warning",
+                contentDescription = stringResource(R.string.cd_alert),
                 tint = MaterialTheme.colorScheme.error,
                 modifier = Modifier.size(36.dp)
             )
@@ -2434,11 +2659,11 @@ fun SettingsDialog(
                 // --- COPIAS DE SEGURIDAD ---
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
-                        text = "Copias de Seguridad",
+                        text = stringResource(R.string.settings_backup_title),
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     Text(
-                        text = "Guarda tus pacientes e imágenes localmente en un archivo para no perderlos.",
+                        text = stringResource(R.string.settings_backup_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -2486,7 +2711,7 @@ fun SettingsDialog(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "Desarrollador",
+                        text = stringResource(R.string.settings_developer),
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     Button(
@@ -2540,7 +2765,7 @@ fun SettingsDialog(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     Text(
-                        text = "Política de Privacidad",
+                        text = stringResource(R.string.settings_privacy),
                         style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
                     OutlinedButton(
@@ -2548,7 +2773,7 @@ fun SettingsDialog(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Text("Ver Política de Privacidad")
+                        Text(stringResource(R.string.settings_privacy_view))
                     }
                 }
 
@@ -2818,7 +3043,7 @@ private fun SizeInputCard(
                 ) {
                     Icon(
                         imageVector = androidx.compose.material.icons.Icons.Rounded.CameraAlt,
-                        contentDescription = "Measure with AR",
+                        contentDescription = stringResource(R.string.cd_measure_ar),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer,
                         modifier = Modifier.size(28.dp)
                     )
@@ -3048,13 +3273,13 @@ private fun SafetyAlertsCard(alerts: List<String>) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = androidx.compose.material.icons.Icons.Rounded.Warning,
-                    contentDescription = "Alerta Clínica",
+                    contentDescription = null,
                     tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Alertas de Seguridad Clínica",
+                    text = stringResource(R.string.safety_alerts_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.error
@@ -3198,19 +3423,19 @@ fun DeveloperInfoDialog(onDismiss: () -> Unit) {
                 ) {
                     androidx.compose.foundation.Image(
                         painter = painterResource(id = com.ferlagod.miscuras.R.drawable.perfil_rrss),
-                        contentDescription = "Foto de perfil de ferlagod",
+                        contentDescription = stringResource(R.string.cd_developer_photo),
                         modifier = Modifier.fillMaxSize(),
                         contentScale = androidx.compose.ui.layout.ContentScale.Crop
                     )
                 }
                 Text(
-                    text = "ferlagod (Fernando Lago) | Enfermero y desarrollador de software libre.",
+                    text = stringResource(R.string.developer_name_line),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    text = "Apasionado por la tecnología independiente, la privacidad y la lectura. Desarrollo herramientas nacidas de mis propias aficiones y necesidades profesionales, como BiblioHouse, Mis Curas y Rocinante.",
+                    text = stringResource(R.string.developer_bio),
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center
                 )
@@ -3258,10 +3483,10 @@ private fun ExpertModeView(
         containerColor = Color.Transparent,
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Modo Experto", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.expert_mode_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onToggleExpertMode) {
-                        Icon(imageVector = Icons.Rounded.Close, contentDescription = "Cerrar Modo Experto")
+                        Icon(imageVector = Icons.Rounded.Close, contentDescription = stringResource(R.string.expert_mode_close))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
@@ -3278,8 +3503,7 @@ private fun ExpertModeView(
                         onClick = onFindApositoClick,
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = RoundedCornerShape(16.dp),
-                        enabled = !evaluationState.isLoading &&
-                            wizardState.selectedEtiology.isNotEmpty() && wizardState.selectedLecho.isNotEmpty(),
+                        enabled = !evaluationState.isLoading && wizardState.isComplete,
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
                         if (evaluationState.isLoading) {
@@ -3287,7 +3511,7 @@ private fun ExpertModeView(
                         } else {
                             Icon(imageVector = Icons.Rounded.Search, contentDescription = null, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = "Generar Recomendación", style = MaterialTheme.typography.labelLarge)
+                            Text(text = stringResource(R.string.generate_recommendation), style = MaterialTheme.typography.labelLarge)
                         }
                     }
                 }
@@ -3299,14 +3523,19 @@ private fun ExpertModeView(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
+            if (wizardState.patientAllergies.isNotBlank()) {
+                item(key = "allergy_banner") {
+                    com.ferlagod.miscuras.ui.components.AllergyBanner(wizardState.patientAllergies)
+                }
+            }
             // ETIOLOGY
             item {
                 val optionsEtiologyTrans = WoundViewModel.opcionesEtiologia.map { ClinicalTermMapper.translateClinicalTerm(it, context) }.sorted()
                 val currentEtiologyTrans = ClinicalTermMapper.translateClinicalTerm(wizardState.selectedEtiology, context)
-                ExpertExpandableSection("Etiología", currentEtiologyTrans) {
+                ExpertExpandableSection(stringResource(R.string.etiology_label), currentEtiologyTrans) {
                     ChipGroupCard(label = stringResource(R.string.etiology_label), description = "", options = optionsEtiologyTrans, selectedOption = currentEtiologyTrans, onOptionSelected = {
                         onEtiologyChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesEtiologia))
-                    }, chipType = "etiology")
+                    }, chipType = "etiology", required = true)
                 }
             }
             // SIZE & LOCATION
@@ -3316,7 +3545,7 @@ private fun ExpertModeView(
                     "Sacro" -> context.getString(R.string.location_sacrum)
                     else -> stringResource(R.string.location_none)
                 }
-                ExpertExpandableSection("Dimensiones y Localización", "${wizardState.woundLength}x${wizardState.woundWidth} - $currentLocationTrans") {
+                ExpertExpandableSection(stringResource(R.string.wizard_step_size), "${wizardState.woundLength}x${wizardState.woundWidth} - $currentLocationTrans") {
                     SizeInputCard(
                         lengthValue = wizardState.woundLength,
                         widthValue = wizardState.woundWidth,
@@ -3346,10 +3575,10 @@ private fun ExpertModeView(
             item {
                 val currentLechoTrans = ClinicalTermMapper.translateClinicalTerm(wizardState.selectedLecho, context)
                 val optionsLechoTrans = WoundViewModel.opcionesLecho.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
-                ExpertExpandableSection("Lecho", currentLechoTrans) {
-                    ChipGroupCard(label = "Estado del Lecho", description = "", options = optionsLechoTrans, selectedOption = currentLechoTrans, onOptionSelected = {
+                ExpertExpandableSection(stringResource(R.string.expert_section_bed), currentLechoTrans) {
+                    ChipGroupCard(label = stringResource(R.string.bed_state_label), description = "", options = optionsLechoTrans, selectedOption = currentLechoTrans, onOptionSelected = {
                         onLechoChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesLecho))
-                    }, chipType = "tissue")
+                    }, chipType = "tissue", required = true)
                 }
             }
             // EXUDATE
@@ -3357,16 +3586,16 @@ private fun ExpertModeView(
                 if (wizardState.selectedLecho != "Piel Intacta (Prevención)") {
                     val currentExudadoTrans = ClinicalTermMapper.translateClinicalTerm(wizardState.selectedExudado, context)
                     val optionsExudadoTrans = WoundViewModel.opcionesExudado.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
-                    ExpertExpandableSection("Exudado", currentExudadoTrans) {
-                        ChipGroupCard(label = "Nivel de Exudado", description = "", options = optionsExudadoTrans, selectedOption = currentExudadoTrans, onOptionSelected = {
+                    ExpertExpandableSection(stringResource(R.string.wizard_step_exudate), currentExudadoTrans) {
+                        ChipGroupCard(label = stringResource(R.string.exudate_level_label), description = "", options = optionsExudadoTrans, selectedOption = currentExudadoTrans, onOptionSelected = {
                             onExudadoChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesExudado))
-                        }, chipType = "exudate")
+                        }, chipType = "exudate", required = true)
                         
                         val currentTypeTrans = ClinicalTermMapper.translateClinicalTerm(wizardState.selectedExudateType, context)
                         val optionsTypeTrans = WoundViewModel.opcionesTipoExudado.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
-                        ChipGroupCard(label = "Tipo de Exudado", description = "", options = optionsTypeTrans, selectedOption = currentTypeTrans, onOptionSelected = {
+                        ChipGroupCard(label = stringResource(R.string.exudate_type_label), description = "", options = optionsTypeTrans, selectedOption = currentTypeTrans, onOptionSelected = {
                             onExudateTypeChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesTipoExudado))
-                        }, chipType = "exudate")
+                        }, chipType = "exudate", enabled = wizardState.selectedExudado.isNotEmpty() && wizardState.selectedExudado != "Nulo", required = wizardState.selectedExudado.isNotEmpty() && wizardState.selectedExudado != "Nulo")
                     }
                 }
             }
@@ -3377,22 +3606,22 @@ private fun ExpertModeView(
                     val optionsBordesTrans = WoundViewModel.opcionesBordes.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
                     val currentPeriTrans = ClinicalTermMapper.translateClinicalTerm(wizardState.selectedPerilesional, context)
                     val optionsPeriTrans = WoundViewModel.opcionesPerilesional.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
-                    ExpertExpandableSection("Bordes y Piel Perilesional", "$currentBordesTrans - $currentPeriTrans") {
+                    ExpertExpandableSection(stringResource(R.string.wizard_step_edges), "$currentBordesTrans - $currentPeriTrans") {
                         PainCard(painLevel = wizardState.painLevel, onPainChange = onPainLevelChanged)
-                        ChipGroupCard(label = "Estado de la piel perilesional", description = "", options = optionsPeriTrans, selectedOption = currentPeriTrans, onOptionSelected = {
+                        ChipGroupCard(label = stringResource(R.string.perilesional_label), description = "", options = optionsPeriTrans, selectedOption = currentPeriTrans, onOptionSelected = {
                             onPerilesionalChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesPerilesional))
-                        }, chipType = "perilesional")
-                        ChipGroupCard(label = "Estado de los bordes", description = "", options = optionsBordesTrans, selectedOption = currentBordesTrans, onOptionSelected = {
+                        }, chipType = "perilesional", required = true)
+                        ChipGroupCard(label = stringResource(R.string.edges_label), description = "", options = optionsBordesTrans, selectedOption = currentBordesTrans, onOptionSelected = {
                             onBordesChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesBordes))
-                        }, chipType = "edge")
+                        }, chipType = "edge", required = true)
                     }
                 }
             }
             // INFECTION
             item {
                 if (wizardState.selectedLecho != "Piel Intacta (Prevención)") {
-                    val isInfected = if (wizardState.selectedInfeccion) "Sí" else "No"
-                    ExpertExpandableSection("Infección", isInfected) {
+                    val isInfected = if (wizardState.selectedInfeccion) stringResource(R.string.yes) else stringResource(R.string.no)
+                    ExpertExpandableSection(stringResource(R.string.expert_section_infection), isInfected) {
                         InfectionCard(checked = wizardState.selectedInfeccion, onCheckedChange = onInfeccionChanged, enabled = true)
                         if (wizardState.selectedInfeccion) {
                             val germOptionsTrans = listOf(

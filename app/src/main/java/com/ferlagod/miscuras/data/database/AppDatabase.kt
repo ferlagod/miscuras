@@ -57,7 +57,7 @@ import java.io.InputStreamReader
         WoundEntity::class,
         EvaluationEntity::class
     ],
-    version = 36,
+    version = 37,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -228,12 +228,34 @@ abstract class AppDatabase : RoomDatabase() {
                     }
                 }
 
+                val MIGRATION_36_37 = object : androidx.room.migration.Migration(36, 37) {
+                    override fun migrate(db: SupportSQLiteDatabase) {
+                        db.execSQL("ALTER TABLE evaluaciones ADD COLUMN cureIntervalHours INTEGER")
+                        db.execSQL("ALTER TABLE evaluaciones ADD COLUMN bradenScore INTEGER")
+                        db.execSQL("ALTER TABLE evaluaciones ADD COLUMN resvechScore INTEGER")
+                        // Rellenar el intervalo de las evaluaciones existentes a partir de la pauta guardada
+                        db.execSQL(
+                            """
+                            UPDATE evaluaciones SET cureIntervalHours = CASE
+                                WHEN recommendedTreatment LIKE '%Cada 24 horas%' THEN 24
+                                WHEN recommendedTreatment LIKE '%Cada 24-48 horas%' THEN 48
+                                WHEN recommendedTreatment LIKE '%Cada 48 horas%' THEN 48
+                                WHEN recommendedTreatment LIKE '%Revisión por turno%' THEN 12
+                                WHEN recommendedTreatment LIKE '%Cada 5-7 días%' THEN 168
+                                WHEN recommendedTreatment LIKE '%Cada 3-4 días%' THEN 96
+                                WHEN recommendedTreatment LIKE '%Cada 48-72 horas%' THEN 72
+                                ELSE NULL END
+                            """.trimIndent()
+                        )
+                    }
+                }
+
                 val builder = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     dbName
                 )
-                    .addMigrations(MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31, MIGRATION_31_32, MIGRATION_32_33, MIGRATION_33_34, MIGRATION_34_35, MIGRATION_35_36)
+                    .addMigrations(MIGRATION_25_26, MIGRATION_26_27, MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30, MIGRATION_30_31, MIGRATION_31_32, MIGRATION_32_33, MIGRATION_33_34, MIGRATION_34_35, MIGRATION_35_36, MIGRATION_36_37)
                     // Versiones anteriores a la 25 no tienen ruta de migración: sin esto la app
                     // no podría abrirse nunca. Se recrea la BD (antes de la v25 no había historial clínico estable).
                     .fallbackToDestructiveMigrationFrom(*(1..24).toList().toIntArray())

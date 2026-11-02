@@ -62,7 +62,6 @@ import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
 import coil.compose.AsyncImage
 import java.io.File
 import androidx.compose.ui.res.stringResource
-import com.airbnb.lottie.compose.*
 import kotlinx.coroutines.delay
 
 import android.content.Intent
@@ -107,14 +106,14 @@ fun WoundDetailScreen(
         patientViewModel.loadEvaluationsForWound(woundId)
     }
 
-    LaunchedEffect(evaluations) {
-        if (evaluations.isNotEmpty()) {
-            val areas = evaluations.mapIndexedNotNull { index, eval ->
-                val l = eval.length.replace(",", ".").toFloatOrNull() ?: 0f
-                val w = eval.width.replace(",", ".").toFloatOrNull() ?: 0f
-                if (l > 0f && w > 0f) FloatEntry(x = index.toFloat(), y = l * w) else null
-            }
-            modelProducer.setEntries(areas)
+    // Puntos (fecha, área en cm²) de las evaluaciones con medidas válidas
+    val areaPoints = remember(evaluations) { areaPointsOf(evaluations) }
+
+    LaunchedEffect(areaPoints) {
+        if (areaPoints.isNotEmpty()) {
+            // Eje X en días desde la primera medición: la separación refleja el tiempo real
+            val t0 = areaPoints.first().first
+            modelProducer.setEntries(areaPoints.map { (ts, area) -> FloatEntry(x = daysBetween(t0, ts), y = area) })
         } else {
             modelProducer.setEntries(emptyList<FloatEntry>())
         }
@@ -132,7 +131,7 @@ fun WoundDetailScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = "Volver")
+                        Icon(Icons.AutoMirrored.Rounded.ArrowBack, contentDescription = stringResource(R.string.cd_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -142,7 +141,7 @@ fun WoundDetailScreen(
                 actions = {
                     if (evaluationsWithPhotos.size >= 2) {
                         IconButton(onClick = { showPhotoCompare = true }) {
-                            Icon(Icons.Rounded.Compare, contentDescription = "Comparar fotos")
+                            Icon(Icons.Rounded.Compare, contentDescription = stringResource(R.string.cd_compare_photos))
                         }
                     }
 
@@ -173,9 +172,9 @@ fun WoundDetailScreen(
                                                 putExtra(Intent.EXTRA_STREAM, uri)
                                                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                             }
-                                            context.startActivity(Intent.createChooser(shareIntent, "Compartir informe de evolución"))
+                                            context.startActivity(Intent.createChooser(shareIntent, context.getString(R.string.share_report_chooser)))
                                         } else {
-                                            Toast.makeText(context, "Error al generar informe PDF", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, context.getString(R.string.pdf_error), Toast.LENGTH_SHORT).show()
                                         }
                                     }
                                 }
@@ -184,7 +183,7 @@ fun WoundDetailScreen(
                             if (isGeneratingPdf) {
                                 CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                             } else {
-                                Icon(Icons.Rounded.PictureAsPdf, contentDescription = "Exportar informe PDF")
+                                Icon(Icons.Rounded.PictureAsPdf, contentDescription = stringResource(R.string.cd_export_pdf))
                             }
                         }
                     }
@@ -230,14 +229,11 @@ fun WoundDetailScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(horizontal = 32.dp)
                 ) {
-                    val composition by rememberLottieComposition(
-                        LottieCompositionSpec.Url("https://lottie.host/c4d6ed1a-69da-4f94-adf0-62a774e63b10/WKoRcxUJt0.lottie")
+                    com.ferlagod.miscuras.ui.components.AllergyBanner(
+                        currentPatient?.allergies,
+                        modifier = Modifier.padding(bottom = 24.dp)
                     )
-                    LottieAnimation(
-                        composition = composition,
-                        iterations = LottieConstants.IterateForever,
-                        modifier = Modifier.size(160.dp)
-                    )
+                    com.ferlagod.miscuras.ui.components.EmptyStateIllustration(icon = Icons.Rounded.Timeline)
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = stringResource(R.string.empty_evaluations_title),
@@ -262,10 +258,18 @@ fun WoundDetailScreen(
                     .padding(paddingValues),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
+                if (!currentPatient?.allergies.isNullOrBlank()) {
+                    item(key = "allergy_banner") {
+                        com.ferlagod.miscuras.ui.components.AllergyBanner(
+                            currentPatient?.allergies,
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                        )
+                    }
+                }
                 // Chart Card
                 item {
                     ChartCard(
-                        evaluations = evaluations,
+                        areaPoints = areaPoints,
                         modelProducer = modelProducer
                     )
                 }
@@ -286,7 +290,7 @@ fun WoundDetailScreen(
                 itemsIndexed(reversedEvals, key = { _, e -> e.id }) { index, eval ->
                     var visible by remember { mutableStateOf(false) }
                     LaunchedEffect(eval.id) {
-                        delay(index * 60L)
+                        delay(index.coerceAtMost(8) * 60L) // retraso acotado en listas largas
                         visible = true
                     }
 
@@ -347,8 +351,8 @@ fun WoundDetailScreen(
         AlertDialog(
             onDismissRequest = { evalToDelete = null },
             icon = { Icon(Icons.Rounded.DeleteForever, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("¿Eliminar evaluación?") },
-            text = { Text("Se eliminará esta evaluación clínica y su fotografía asociada permanentemente.") },
+            title = { Text(stringResource(R.string.delete_eval_title)) },
+            text = { Text(stringResource(R.string.delete_eval_text)) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -357,12 +361,12 @@ fun WoundDetailScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Eliminar")
+                    Text(stringResource(R.string.action_delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { evalToDelete = null }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.cancel_button))
                 }
             }
         )
@@ -375,23 +379,36 @@ fun WoundDetailScreen(
 
 @Composable
 private fun ChartCard(
-    evaluations: List<EvaluationEntity>,
+    areaPoints: List<Pair<Long, Float>>,
     modelProducer: ChartEntryModelProducer
 ) {
-    val hasChartData = evaluations.any { 
-        (it.length.replace(",", ".").toFloatOrNull() ?: 0f) > 0f && (it.width.replace(",", ".").toFloatOrNull() ?: 0f) > 0f 
-    }
+    if (areaPoints.isEmpty()) return
 
-    if (!hasChartData) return
+    val t0 = areaPoints.first().first
+    val first = areaPoints.first().second
+    val last = areaPoints.last().second
+    val changePct = if (first > 0f) (last - first) / first * 100f else 0f
+    val fmt = { v: Float -> String.format(Locale.getDefault(), "%.1f", v) }
+    val changeColor = when {
+        areaPoints.size < 2 -> MaterialTheme.colorScheme.onSurfaceVariant
+        changePct < 0f -> MaterialTheme.colorScheme.secondary // reducción = mejoría
+        changePct > 0f -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val dayFormat = remember { SimpleDateFormat("dd/MM", Locale.getDefault()) }
+    val totalDays = daysBetween(t0, areaPoints.last().first)
+    // Espaciado de etiquetas del eje X para no saturarlo (≈5 etiquetas)
+    val labelSpacing = (totalDays / 5f).toInt().coerceAtLeast(1)
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
@@ -407,16 +424,44 @@ private fun ChartCard(
                     stringResource(R.string.size_evolution_chart_title),
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    stringResource(R.string.chart_area_unit),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            val evalChartLabel = stringResource(R.string.eval_chart_label)
+            Spacer(modifier = Modifier.height(8.dp))
+            if (areaPoints.size >= 2) {
+                val sign = if (changePct > 0f) "+" else ""
+                Text(
+                    stringResource(R.string.chart_area_change, fmt(first), fmt(last), "$sign${fmt(changePct)} %"),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = changeColor
+                )
+            } else {
+                Text(
+                    stringResource(R.string.chart_area_single, fmt(first)),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
             Chart(
                 chart = lineChart(),
                 chartModelProducer = modelProducer,
                 startAxis = rememberStartAxis(),
-                bottomAxis = rememberBottomAxis(valueFormatter = { value, _ -> "$evalChartLabel ${value.toInt() + 1}" }),
+                bottomAxis = rememberBottomAxis(
+                    itemPlacer = remember(labelSpacing) {
+                        com.patrykandpatrick.vico.core.axis.AxisItemPlacer.Horizontal.default(spacing = labelSpacing)
+                    },
+                    valueFormatter = { value, _ ->
+                        dayFormat.format(Date(t0 + (value * DAY_MS).toLong()))
+                    }
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp)
@@ -424,6 +469,18 @@ private fun ChartCard(
         }
     }
 }
+
+private const val DAY_MS = 24f * 60f * 60f * 1000f
+
+private fun daysBetween(from: Long, to: Long): Float = (to - from) / DAY_MS
+
+/** (timestamp, área cm²) de las evaluaciones con largo y ancho válidos, en orden cronológico. */
+private fun areaPointsOf(evaluations: List<EvaluationEntity>): List<Pair<Long, Float>> =
+    evaluations.sortedBy { it.timestamp }.mapNotNull { e ->
+        val l = e.length.replace(",", ".").toFloatOrNull() ?: 0f
+        val w = e.width.replace(",", ".").toFloatOrNull() ?: 0f
+        if (l > 0f && w > 0f) e.timestamp to l * w else null
+    }
 
 // ============================================================
 // Timeline Evaluation Item
@@ -543,7 +600,7 @@ private fun TimelineEvaluationItem(
                         ) {
                             Icon(
                                 imageVector = Icons.Rounded.DeleteOutline,
-                                contentDescription = "Eliminar evaluación",
+                                contentDescription = stringResource(R.string.cd_delete_eval),
                                 tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                                 modifier = Modifier.size(16.dp)
                             )
@@ -553,26 +610,46 @@ private fun TimelineEvaluationItem(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Clinical chips row
-                Row(
+                // Clinical chips (FlowRow: no se cortan cuando hay muchos)
+                val chipContext = LocalContext.current
+                val tr = { term: String -> com.ferlagod.miscuras.ui.ClinicalTermMapper.translateClinicalTerm(term, chipContext) }
+                @OptIn(ExperimentalLayoutApi::class)
+                FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     EvalChip(
-                        text = eval.bedState,
+                        text = tr(eval.bedState),
                         color = MaterialTheme.colorScheme.secondaryContainer,
                         textColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
-                    EvalChip(
-                        text = eval.exudateLevel,
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        textColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                    if (eval.exudateLevel.isNotBlank()) {
+                        EvalChip(
+                            text = tr(eval.exudateLevel),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            textColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
                     if (eval.infection) {
                         EvalChip(
-                            text = "⚠ ${eval.infectionGerm}",
+                            text = "⚠ ${tr(eval.infectionGerm)}",
                             color = MaterialTheme.colorScheme.errorContainer,
                             textColor = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                    eval.bradenScore?.let {
+                        EvalChip(
+                            text = "Braden $it",
+                            color = MaterialTheme.colorScheme.tertiaryContainer,
+                            textColor = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                    }
+                    eval.resvechScore?.let {
+                        EvalChip(
+                            text = "RESVECH $it/35",
+                            color = MaterialTheme.colorScheme.tertiaryContainer,
+                            textColor = MaterialTheme.colorScheme.onTertiaryContainer
                         )
                     }
                 }

@@ -376,6 +376,20 @@ class RulesEngine {
      * Determina la frecuencia recomendada para el cambio de apósitos
      * basándose en las directrices clínicas de exudado e infección.
      */
+    /**
+     * Intervalo máximo (horas) hasta la siguiente cura, coherente con [determineCureFrequency].
+     * Se usa el extremo superior del rango para avisar de curas vencidas.
+     */
+    fun determineCureIntervalHours(state: WizardState): Int = when {
+        state.selectedInfeccion && state.selectedExudado == "Alto" -> 24
+        state.selectedInfeccion -> 48
+        state.selectedExudado == "Alto" -> 48
+        state.selectedLecho == "Piel Intacta (Prevención)" -> 12
+        state.selectedLecho == "Epitelización" && state.selectedExudado == "Nulo" -> 168
+        state.selectedExudado == "Nulo" || state.selectedExudado == "Bajo" -> 96
+        else -> 72
+    }
+
     fun determineCureFrequency(state: WizardState): String {
         return if (state.selectedInfeccion && state.selectedExudado == "Alto") {
             "Cada 24 horas (exudado alto e infección activa)."

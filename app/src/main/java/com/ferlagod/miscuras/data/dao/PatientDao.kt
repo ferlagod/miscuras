@@ -51,6 +51,18 @@ interface PatientDao {
     @Query("SELECT * FROM heridas WHERE id = :woundId")
     fun getWoundByIdFlow(woundId: Long): Flow<WoundEntity?>
 
+    /** Última evaluación e intervalo de cura de cada herida activa (para avisos de cura pendiente). */
+    @Query("""
+        SELECT h.id AS woundId, h.patientId AS patientId,
+               e.timestamp AS lastEvaluationAt, e.cureIntervalHours AS cureIntervalHours
+        FROM heridas h
+        LEFT JOIN evaluaciones e ON e.id = (
+            SELECT e2.id FROM evaluaciones e2 WHERE e2.woundId = h.id ORDER BY e2.timestamp DESC LIMIT 1
+        )
+        WHERE h.isDischarged = 0
+    """)
+    fun getActiveWoundCureStatus(): Flow<List<com.ferlagod.miscuras.data.models.WoundCureStatus>>
+
     @Insert
     fun insertEvaluation(evaluation: EvaluationEntity): Long
 

@@ -48,6 +48,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import com.ferlagod.miscuras.data.models.summarize
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
@@ -60,7 +63,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ferlagod.miscuras.ui.WoundViewModel
 import androidx.compose.ui.res.stringResource
-import com.airbnb.lottie.compose.*
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
@@ -105,13 +107,24 @@ fun DashboardScreen(
     var searchQuery by remember { mutableStateOf("") }
     var patientToDelete by remember { mutableStateOf<com.ferlagod.miscuras.data.entities.PatientEntity?>(null) }
 
-    val filteredPatients = remember(patients, searchQuery) {
+    val alreadyAnimated = remember { mutableSetOf<Long>() }
+    val cureStatus by patientViewModel.cureStatus.collectAsState()
+    val now by com.ferlagod.miscuras.ui.components.rememberCurrentTimeMillis()
+    val cureSummaries = remember(cureStatus, now) {
+        cureStatus.groupBy { it.patientId }.mapValues { (_, list) -> list.summarize(now) }
+    }
+
+    val filteredPatients = remember(patients, searchQuery, cureSummaries) {
+        // Pacientes con curas vencidas primero; el resto mantiene su orden
+        val ordered = patients.sortedByDescending { (cureSummaries[it.id]?.overdueWounds ?: 0) > 0 }
         if (searchQuery.isBlank()) {
-            patients
+            ordered
         } else {
-            val q = searchQuery.trim().lowercase()
-            patients.filter {
-                it.anonymizedName.lowercase().contains(q) || it.roomNumber.lowercase().contains(q)
+            // Búsqueda sin distinguir mayúsculas ni tildes ("Gomez" encuentra "Gómez")
+            val norm = com.ferlagod.miscuras.domain.rules.RulesEngine::normalize
+            val q = norm(searchQuery.trim())
+            ordered.filter {
+                norm(it.anonymizedName).contains(q) || norm(it.roomNumber).contains(q)
             }
         }
     }
@@ -155,14 +168,16 @@ fun DashboardScreen(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
                 title = { 
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
                             painter = painterResource(id = R.drawable.logo_symbol),
-                            contentDescription = "Logo Mis Curas",
+                            contentDescription = stringResource(R.string.cd_logo),
                             modifier = Modifier
                                 .size(40.dp)
                                 .clip(CircleShape)
@@ -172,30 +187,6 @@ fun DashboardScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onNavigateToCatalog) {
-                        Icon(
-                            imageVector = Icons.Rounded.MedicalServices,
-                            contentDescription = "Catálogo SAS"
-                        )
-                    }
-                    IconButton(onClick = onNavigateToResvech) {
-                        Icon(
-                            imageVector = Icons.Rounded.BarChart,
-                            contentDescription = "Escala RESVECH 2.0"
-                        )
-                    }
-                    IconButton(onClick = onNavigateToBraden) {
-                        Icon(
-                            imageVector = Icons.Rounded.Warning,
-                            contentDescription = "Calculadora Braden"
-                        )
-                    }
-                    IconButton(onClick = onNavigateToGlossary) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.MenuBook,
-                            contentDescription = "Glosario / Biblioteca"
-                        )
-                    }
                     IconButton(onClick = { showSettings = true }) {
                         Icon(
                             imageVector = Icons.Rounded.Settings,
@@ -254,7 +245,7 @@ fun DashboardScreen(
                 onClick = onQuickEvaluationClick,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 24.dp)
+                    .padding(bottom = 16.dp)
                     .shadow(
                         elevation = 12.dp,
                         shape = RoundedCornerShape(24.dp),
@@ -316,6 +307,19 @@ fun DashboardScreen(
                 }
             }
 
+            // === Herramientas clínicas con nombre (antes, iconos sin texto en la barra) ===
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = 20.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                ToolShortcut(Icons.Rounded.MedicalServices, stringResource(R.string.tool_catalog), onNavigateToCatalog, Modifier.weight(1f))
+                ToolShortcut(Icons.Rounded.Bed, stringResource(R.string.tool_braden), onNavigateToBraden, Modifier.weight(1f))
+                ToolShortcut(Icons.Rounded.BarChart, stringResource(R.string.tool_resvech), onNavigateToResvech, Modifier.weight(1f))
+                ToolShortcut(Icons.AutoMirrored.Rounded.MenuBook, stringResource(R.string.tool_glossary), onNavigateToGlossary, Modifier.weight(1f))
+            }
+
             // === Section Header + Search ===
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -350,12 +354,12 @@ fun DashboardScreen(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Buscar paciente por nombre o habitación...") },
+                    placeholder = { Text(stringResource(R.string.search_patient_hint)) },
                     leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null) },
                     trailingIcon = {
                         if (searchQuery.isNotEmpty()) {
                             IconButton(onClick = { searchQuery = "" }) {
-                                Icon(Icons.Rounded.Clear, contentDescription = "Limpiar")
+                                Icon(Icons.Rounded.Clear, contentDescription = stringResource(R.string.cd_clear))
                             }
                         }
                     },
@@ -435,10 +439,15 @@ fun DashboardScreen(
                     contentPadding = PaddingValues(bottom = 80.dp)
                 ) {
                     itemsIndexed(filteredPatients, key = { _, p -> p.id }) { index, patient ->
-                        var visible by remember { mutableStateOf(false) }
+                        // Animación de entrada solo la primera vez y con retraso acotado:
+                        // antes cada fila esperaba índice × 40 ms y se re-animaba al hacer scroll.
+                        var visible by remember { mutableStateOf(patient.id in alreadyAnimated) }
                         LaunchedEffect(patient.id) {
-                            delay(index * 40L)
-                            visible = true
+                            if (!visible) {
+                                delay(index.coerceAtMost(8) * 40L)
+                                visible = true
+                                alreadyAnimated.add(patient.id)
+                            }
                         }
 
                         AnimatedVisibility(
@@ -456,6 +465,8 @@ fun DashboardScreen(
                                 name = patient.anonymizedName,
                                 room = patient.roomNumber,
                                 photoUri = patient.photoUri,
+                                cureSummary = cureSummaries[patient.id],
+                                now = now,
                                 onClick = { onPatientClick(patient.id) },
                                 onDeleteClick = { patientToDelete = patient }
                             )
@@ -471,8 +482,8 @@ fun DashboardScreen(
         AlertDialog(
             onDismissRequest = { patientToDelete = null },
             icon = { Icon(Icons.Rounded.DeleteForever, contentDescription = null, tint = MaterialTheme.colorScheme.error) },
-            title = { Text("¿Eliminar paciente?") },
-            text = { Text("Se eliminará al paciente \"${patientToDelete?.anonymizedName}\" junto con todas sus heridas, evaluaciones y fotografías clínicas asociadas. Esta acción no se puede deshacer.") },
+            title = { Text(stringResource(R.string.delete_patient_title)) },
+            text = { Text(stringResource(R.string.delete_patient_text, patientToDelete?.anonymizedName.orEmpty())) },
             confirmButton = {
                 Button(
                     onClick = {
@@ -481,12 +492,12 @@ fun DashboardScreen(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
-                    Text("Eliminar")
+                    Text(stringResource(R.string.action_delete))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { patientToDelete = null }) {
-                    Text("Cancelar")
+                    Text(stringResource(R.string.cancel_button))
                 }
             }
         )
@@ -559,6 +570,8 @@ private fun PatientCard(
     name: String,
     room: String,
     photoUri: String? = null,
+    cureSummary: com.ferlagod.miscuras.data.models.PatientCureSummary? = null,
+    now: Long = System.currentTimeMillis(),
     onClick: () -> Unit,
     onDeleteClick: (() -> Unit)? = null
 ) {
@@ -646,13 +659,17 @@ private fun PatientCard(
                         )
                     }
                 }
+                if (cureSummary != null && cureSummary.activeWounds > 0) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    PatientCureInfo(cureSummary, now)
+                }
             }
 
             if (onDeleteClick != null) {
                 IconButton(onClick = onDeleteClick) {
                     Icon(
                         imageVector = Icons.Rounded.DeleteOutline,
-                        contentDescription = "Eliminar paciente",
+                        contentDescription = stringResource(R.string.cd_delete_patient),
                         tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
                         modifier = Modifier.size(20.dp)
                     )
@@ -665,6 +682,84 @@ private fun PatientCard(
                     modifier = Modifier.size(20.dp)
                 )
             }
+        }
+    }
+}
+
+/** Heridas activas, última cura y aviso de cura vencida/próxima. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun PatientCureInfo(summary: com.ferlagod.miscuras.data.models.PatientCureSummary, now: Long) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        com.ferlagod.miscuras.ui.components.StatusPill(
+            text = pluralStringResource(R.plurals.active_wounds_count, summary.activeWounds, summary.activeWounds),
+            container = MaterialTheme.colorScheme.secondaryContainer,
+            content = MaterialTheme.colorScheme.onSecondaryContainer,
+            icon = Icons.Rounded.Healing
+        )
+        when {
+            summary.overdueWounds > 0 -> com.ferlagod.miscuras.ui.components.StatusPill(
+                text = pluralStringResource(R.plurals.overdue_cures_count, summary.overdueWounds, summary.overdueWounds),
+                container = MaterialTheme.colorScheme.errorContainer,
+                content = MaterialTheme.colorScheme.onErrorContainer,
+                icon = Icons.Rounded.Alarm
+            )
+            summary.nextCureDueAt != null -> com.ferlagod.miscuras.ui.components.StatusPill(
+                text = stringResource(R.string.next_cure_format, com.ferlagod.miscuras.ui.components.relativeTime(summary.nextCureDueAt, now)),
+                container = MaterialTheme.colorScheme.tertiaryContainer,
+                content = MaterialTheme.colorScheme.onTertiaryContainer,
+                icon = Icons.Rounded.Schedule
+            )
+        }
+        if (summary.woundsWithoutEvaluation > 0) {
+            com.ferlagod.miscuras.ui.components.StatusPill(
+                text = pluralStringResource(R.plurals.unevaluated_wounds_count, summary.woundsWithoutEvaluation, summary.woundsWithoutEvaluation),
+                container = MaterialTheme.colorScheme.surfaceVariant,
+                content = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+    summary.lastEvaluationAt?.let {
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = stringResource(R.string.last_cure_format, com.ferlagod.miscuras.ui.components.relativeTime(it, now)),
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+/** Acceso con nombre a una herramienta clínica. */
+@Composable
+private fun ToolShortcut(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        onClick = onClick,
+        shape = MaterialTheme.shapes.medium,
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        modifier = modifier
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.padding(vertical = 12.dp, horizontal = 4.dp)
+        ) {
+            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
         }
     }
 }

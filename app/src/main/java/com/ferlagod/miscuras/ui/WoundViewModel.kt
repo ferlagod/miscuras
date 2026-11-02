@@ -53,8 +53,9 @@ data class WizardState(
     val currentWizardStep: WizardStep = WizardStep.ETIOLOGY,
     val selectedEtiology: String = "",
     val selectedLecho: String = "",
-    val selectedExudado: String = "Nulo",
-    val selectedExudateType: String = "Seroso",
+    // Los valores clínicos empiezan sin seleccionar: deben valorarse explícitamente
+    val selectedExudado: String = "",
+    val selectedExudateType: String = "",
     val selectedInfeccion: Boolean = false,
     val woundLength: String = "",
     val woundWidth: String = "",
@@ -63,20 +64,38 @@ data class WizardState(
     val cavitationDetails: String = "",
     val specialLocation: String = "Ninguno",
     val infectionGerm: String = "Desconocido",
-    val selectedBordes: String = "Sanos/Íntegros",
-    val selectedPerilesional: String = "Sana",
+    val selectedBordes: String = "",
+    val selectedPerilesional: String = "",
     val painLevel: Float = 0f,
     val photoPath: String? = null,
     // Datos del paciente relevantes para la seguridad (vacíos en evaluación rápida)
     val patientAllergies: String = "",
     val patientHistory: String = ""
-)
+) {
+    val isPielIntacta: Boolean get() = selectedLecho == "Piel Intacta (Prevención)"
+
+    /** Indica si el paso tiene todos los datos obligatorios. */
+    fun isStepComplete(step: WizardStep): Boolean = when (step) {
+        WizardStep.ETIOLOGY -> selectedEtiology.isNotEmpty() && selectedLecho.isNotEmpty()
+        WizardStep.SIZE_AND_LOCATION -> true
+        WizardStep.EXUDATE -> selectedExudado.isNotEmpty() && (selectedExudado == "Nulo" || selectedExudateType.isNotEmpty())
+        WizardStep.EDGES -> selectedBordes.isNotEmpty() && selectedPerilesional.isNotEmpty()
+        WizardStep.INFECTION -> true
+    }
+
+    /** Evaluación lista para buscar recomendación. */
+    val isComplete: Boolean
+        get() = if (isPielIntacta) isStepComplete(WizardStep.ETIOLOGY)
+                else WizardStep.entries.all { isStepComplete(it) }
+}
 
 /**
  * Representa el estado actual de una evaluación de herida.
  */
 data class EvaluationState(
     val bradenScore: Int? = null,
+    val resvechScore: Int? = null,
+    val cureIntervalHours: Int? = null,
     val familiaRecomendada: String? = null,
     val productos: List<ApositoEntity> = emptyList(),
     val selectedTreatmentProducts: Set<String> = emptySet(),
@@ -97,6 +116,7 @@ data class ConfigState(
     val showSplash: Boolean = true,
     val showArMeasure: Boolean = false,
     val showBraden: Boolean = false,
+    val showResvech: Boolean = false,
     val showGlossary: Boolean = false,
     val currentLanguage: String = "es",
     val currentTheme: String = "system",
@@ -179,6 +199,7 @@ class WoundViewModel(
         
         val nextStep = values[nextOrdinal]
         val wizard = _wizardState.value
+        if (!wizard.isStepComplete(current)) return
         
         // Branching logic
         if (current == WizardStep.ETIOLOGY && wizard.selectedLecho == "Piel Intacta (Prevención)") {
@@ -227,7 +248,11 @@ class WoundViewModel(
     fun onLechoChanged(lecho: String) {
         _wizardState.update { 
             if (lecho == "Piel Intacta (Prevención)") {
-                it.copy(selectedLecho = lecho, selectedExudado = "Nulo", selectedExudateType = "Seroso", selectedInfeccion = false)
+                it.copy(
+                    selectedLecho = lecho, selectedExudado = "Nulo", selectedExudateType = "",
+                    selectedInfeccion = false, infectionGerm = "Desconocido",
+                    selectedBordes = "Sanos/Íntegros", selectedPerilesional = "Sana"
+                )
             } else {
                 it.copy(selectedLecho = lecho)
             }
@@ -239,7 +264,15 @@ class WoundViewModel(
      * @param exudado El nuevo nivel de exudado.
      */
     fun onExudadoChanged(exudado: String) {
-        _wizardState.update { it.copy(selectedExudado = exudado) }
+        // Sin exudado no hay tipo de exudado que valorar
+        _wizardState.update { it.copy(selectedExudado = exudado, selectedExudateType = if (exudado == "Nulo") "" else it.selectedExudateType) }
+    }
+
+    /** Vuelve al asistente en un paso concreto (para corregir un dato desde el resumen). */
+    fun goToStep(step: WizardStep) {
+        _evaluationState.update { it.copy(showResults = false) }
+        _configState.update { it.copy(isExpertMode = false) }
+        _wizardState.update { it.copy(currentWizardStep = step) }
     }
 
     fun onExudateTypeChanged(type: String) {
@@ -341,6 +374,18 @@ class WoundViewModel(
         _evaluationState.update { it.copy(bradenScore = score) }
     }
 
+    fun onResvechScoreUpdated(score: Int) {
+        _evaluationState.update { it.copy(resvechScore = score) }
+    }
+
+    fun showResvech() {
+        _configState.update { it.copy(showResvech = true) }
+    }
+
+    fun hideResvech() {
+        _configState.update { it.copy(showResvech = false) }
+    }
+
     /**
      * Genera un resumen clínico estructurado basado en los criterios TIME
      */
@@ -377,10 +422,10 @@ class WoundViewModel(
             ${context.getString(R.string.etiology_label)}: ${wizard.selectedEtiology}
             ${context.getString(R.string.rep_tissue)}${wizard.selectedLecho}
             ${context.getString(R.string.rep_infection)}$infText
-            ${context.getString(R.string.rep_moisture)}${wizard.selectedExudado} (${wizard.selectedExudateType})
+            ${context.getString(R.string.rep_moisture)}${wizard.selectedExudado}${if (wizard.selectedExudateType.isNotBlank()) " (${wizard.selectedExudateType})" else ""}
             ${String.format(context.getString(R.string.rep_edges_format), wizard.selectedBordes, wizard.selectedPerilesional)}
             ${String.format(context.getString(R.string.rep_pain_format), wizard.painLevel.toInt())}
-            ${String.format(context.getString(R.string.rep_size_format), tamaño)}${if (wizard.hasCavitation) "\n            - Cavitaciones: ${if (wizard.cavitationDetails.isNotEmpty()) wizard.cavitationDetails else "Sí"}" else ""}
+            ${String.format(context.getString(R.string.rep_size_format), tamaño)}${if (wizard.hasCavitation) "\n            ${context.getString(R.string.rep_cavitation_format, if (wizard.cavitationDetails.isNotEmpty()) wizard.cavitationDetails else context.getString(R.string.yes))}" else ""}
             ${String.format(context.getString(R.string.rep_location_format), wizard.specialLocation)}$bradenText
 
             ${context.getString(R.string.rep_plan_title)}
@@ -395,6 +440,7 @@ class WoundViewModel(
      * actuales almacenados en el estado de la UI.
      */
     fun buscarAposito() {
+        if (!_wizardState.value.isComplete) return
         _evaluationState.update { it.copy(isLoading = true, noMatchFound = false) }
         aiJob?.cancel()
 
@@ -410,6 +456,7 @@ class WoundViewModel(
                         selectedTreatmentProducts = it.selectedTreatmentProducts.intersect(nombresDisponibles),
                         familiaRecomendada = result.familiaRecomendada,
                         cureFrequency = result.cureFrequency,
+                        cureIntervalHours = result.cureIntervalHours,
                         productos = result.productos,
                         safetyAlerts = result.safetyAlerts,
                         showResults = true,
@@ -580,7 +627,10 @@ class WoundViewModel(
                 recommendedTreatment = "${eval.familiaRecomendada ?: ""}\n\nPauta recomendada: ${eval.cureFrequency ?: ""}",
                 aiExplanation = eval.aiResponse ?: "",
                 photoPath = wizard.photoPath,
-                selectedProducts = eval.selectedTreatmentProducts.joinToString(",")
+                selectedProducts = eval.selectedTreatmentProducts.joinToString(","),
+                cureIntervalHours = eval.cureIntervalHours,
+                bradenScore = eval.bradenScore,
+                resvechScore = eval.resvechScore
             )
             patientDao.insertEvaluation(evaluation)
             _evaluationState.update { it.copy(isSaved = true) }

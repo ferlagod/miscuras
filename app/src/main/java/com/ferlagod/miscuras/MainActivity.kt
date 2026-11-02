@@ -169,7 +169,9 @@ class MainActivity : AppCompatActivity() {
                             WoundScreen(
                                 viewModel = viewModel,
                                 woundIdForSave = if (woundId != -1L) woundId else null,
-                                onBackToDashboard = { navController.popBackStack("dashboard", false) }
+                                onBackToDashboard = { navController.popBackStack("dashboard", false) },
+                                // Salir del asistente vuelve a la pantalla de origen (dashboard o detalle de herida)
+                                onExit = { navController.popBackStack() }
                             )
                         }
                     }
