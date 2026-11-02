@@ -59,7 +59,9 @@ private data class ResvechCategory(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ResvechScreen(
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    /** Si se indica, la escala se ha abierto desde una evaluación y su puntuación se puede guardar en ella. */
+    onScoreCalculated: ((Int) -> Unit)? = null
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
@@ -205,6 +207,29 @@ fun ResvechScreen(
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
+        },
+        bottomBar = {
+            if (onScoreCalculated != null) {
+                Surface(shadowElevation = 8.dp, color = MaterialTheme.colorScheme.surface) {
+                    Button(
+                        onClick = {
+                            onScoreCalculated(totalScore)
+                            onBackClick()
+                        },
+                        enabled = isComplete,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp)
+                            .height(52.dp),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text(
+                            if (isComplete) stringResource(R.string.resvech_use_in_evaluation, totalScore)
+                            else stringResource(R.string.resvech_incomplete, answeredItems, categories.size)
+                        )
+                    }
+                }
+            }
         }
     ) { paddingValues ->
         LazyColumn(

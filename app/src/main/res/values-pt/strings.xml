@@ -509,4 +509,8 @@
 
     <string name="wound_not_evaluated">Sem avaliação</string>
     <string name="cure_overdue_format">Penso em atraso (%1$s)</string>
+
+    <string name="summary_tap_to_edit">Toque num dado para o corrigir</string>
+    <string name="summary_scale_not_done">Não avaliada · Adicionar</string>
+    <string name="resvech_use_in_evaluation">Usar na avaliação (%1$d / 35)</string>
 </resources>

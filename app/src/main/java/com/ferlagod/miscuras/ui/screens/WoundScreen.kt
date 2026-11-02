@@ -106,7 +106,7 @@ import kotlinx.coroutines.delay
 // ============================================================
 
 private enum class ScreenState {
-    Splash, Selection, Results, Glossary, ArMeasure, Braden
+    Splash, Selection, Results, Glossary, ArMeasure, Braden, Resvech
 }
 
 /**
@@ -173,10 +173,16 @@ fun WoundScreen(
     val currentScreenState = when {
         configState.showSplash -> ScreenState.Splash
         configState.showBraden -> ScreenState.Braden
+        configState.showResvech -> ScreenState.Resvech
         configState.showGlossary -> ScreenState.Glossary
         configState.showArMeasure -> ScreenState.ArMeasure
         evaluationState.showResults -> ScreenState.Results
         else -> ScreenState.Selection
+    }
+
+    // Atrás desde una escala abierta dentro de la evaluación vuelve a la evaluación
+    BackHandler(enabled = currentScreenState == ScreenState.Braden || currentScreenState == ScreenState.Resvech) {
+        if (currentScreenState == ScreenState.Braden) viewModel.hideBraden() else viewModel.hideResvech()
     }
 
     BackHandler(
@@ -323,7 +329,10 @@ fun WoundScreen(
                     onCopyProductSummary = { productoNombre -> viewModel.generarResumenEvolutivo(productoNombre, context) },
                     onToggleProductSelection = { codigoCn -> viewModel.toggleProductSelection(codigoCn) },
                     onPhotoPathChanged = { viewModel.setPhotoPath(it) },
-                    context = context
+                    context = context,
+                    onEditStep = { step -> viewModel.goToStep(step) },
+                    onOpenBraden = { viewModel.showBraden() },
+                    onOpenResvech = { viewModel.showResvech() }
                 )
             }
             ScreenState.Glossary -> {
@@ -337,6 +346,12 @@ fun WoundScreen(
                     onBackClick = { viewModel.hideBraden() },
                     onScoreCalculated = { score -> viewModel.onBradenScoreUpdated(score) },
                     )
+            }
+            ScreenState.Resvech -> {
+                com.ferlagod.miscuras.ui.screens.ResvechScreen(
+                    onBackClick = { viewModel.hideResvech() },
+                    onScoreCalculated = { score -> viewModel.onResvechScoreUpdated(score) }
+                )
             }
             ScreenState.ArMeasure -> {
                 com.ferlagod.miscuras.ui.screens.ARMeasureScreen(
@@ -1255,7 +1270,10 @@ private fun ResultsContent(
     onCopyProductSummary: (String) -> String,
     onToggleProductSelection: (String) -> Unit,
     onPhotoPathChanged: (String?) -> Unit,
-    context: android.content.Context
+    context: android.content.Context,
+    onEditStep: (com.ferlagod.miscuras.ui.WizardStep) -> Unit = {},
+    onOpenBraden: () -> Unit = {},
+    onOpenResvech: () -> Unit = {}
 ) {
     var selectedProduct by remember { mutableStateOf<ApositoEntity?>(null) }
 
@@ -1410,10 +1428,11 @@ private fun ResultsContent(
                 // Resumen de la evaluación
                 item {
                     EvaluationSummaryCard(
-                        lecho = wizardState.selectedLecho,
-                        exudado = wizardState.selectedExudado,
-                        infeccion = wizardState.selectedInfeccion,
-                        lang = configState.currentLanguage
+                        wizardState = wizardState,
+                        evaluationState = evaluationState,
+                        onEditStep = onEditStep,
+                        onOpenBraden = onOpenBraden,
+                        onOpenResvech = onOpenResvech
                     )
                 }
 
@@ -1792,42 +1811,130 @@ private fun ResultsContent(
 // COMPONENTE — Resumen de la evaluación
 // ============================================================
 
+/**
+ * Resumen completo de la evaluación antes de guardar. Cada fila lleva al paso del asistente
+ * donde se introdujo el dato para corregirlo; las escalas se abren directamente.
+ */
 @Composable
 private fun EvaluationSummaryCard(
-    lecho: String,
-    exudado: String,
-    infeccion: Boolean,
-    lang: String
+    wizardState: WizardState,
+    evaluationState: EvaluationState,
+    onEditStep: (com.ferlagod.miscuras.ui.WizardStep) -> Unit,
+    onOpenBraden: () -> Unit,
+    onOpenResvech: () -> Unit
 ) {
     val context = LocalContext.current
+    val t = { term: String -> if (term.isBlank()) "—" else ClinicalTermMapper.translateClinicalTerm(term, context) }
+    val step = com.ferlagod.miscuras.ui.WizardStep.entries
+    val size = if (wizardState.woundLength.isNotBlank() && wizardState.woundWidth.isNotBlank()) {
+        buildString {
+            append("${wizardState.woundLength} × ${wizardState.woundWidth}")
+            if (wizardState.woundDepth.isNotBlank()) append(" × ${wizardState.woundDepth}")
+            append(" cm")
+        }
+    } else stringResource(R.string.rep_unspecified)
+    val location = if (wizardState.specialLocation != "Ninguno") " · ${t(wizardState.specialLocation)}" else ""
+    val exudate = t(wizardState.selectedExudado) + if (wizardState.selectedExudateType.isNotBlank()) " (${t(wizardState.selectedExudateType)})" else ""
+    val infection = if (wizardState.selectedInfeccion) {
+        stringResource(R.string.yes) + if (wizardState.infectionGerm != "Desconocido") " · ${t(wizardState.infectionGerm)}" else ""
+    } else stringResource(R.string.no)
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        ),
+        shape = MaterialTheme.shapes.large,
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = stringResource(R.string.evaluation_done),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+        Column(modifier = Modifier.padding(vertical = 8.dp)) {
             Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                SummaryChip(label = ClinicalTermMapper.translateClinicalTerm(lecho, context))
-                SummaryChip(label = ClinicalTermMapper.translateClinicalTerm(exudado, context))
-                if (infeccion) {
-                    SummaryChip(
-                        label = stringResource(R.string.infection_chip),
-                        isError = true
-                    )
-                }
+                Text(
+                    text = stringResource(R.string.evaluation_done),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    text = stringResource(R.string.summary_tap_to_edit),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
+            if (!wizardState.isPielIntacta) {
+                SummaryRow(stringResource(R.string.etiology_label), t(wizardState.selectedEtiology)) { onEditStep(step[0]) }
+            }
+            SummaryRow(stringResource(R.string.bed_state_label), t(wizardState.selectedLecho), accent = true) { onEditStep(step[0]) }
+            if (!wizardState.isPielIntacta) {
+                SummaryRow(stringResource(R.string.wizard_step_size), size + location) { onEditStep(step[1]) }
+                SummaryRow(stringResource(R.string.wizard_step_exudate), exudate) { onEditStep(step[2]) }
+                SummaryRow(stringResource(R.string.edges_label), t(wizardState.selectedBordes)) { onEditStep(step[3]) }
+                SummaryRow(stringResource(R.string.perilesional_label), t(wizardState.selectedPerilesional)) { onEditStep(step[3]) }
+                SummaryRow(stringResource(R.string.expert_section_infection), infection, isError = wizardState.selectedInfeccion) { onEditStep(step[4]) }
+                SummaryRow(stringResource(R.string.pain_title), "${wizardState.painLevel.toInt()}/10") { onEditStep(step[4]) }
+            }
+            HorizontalDivider(
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
+            SummaryRow(
+                stringResource(R.string.tool_braden),
+                evaluationState.bradenScore?.let { "$it / 23" } ?: stringResource(R.string.summary_scale_not_done),
+                trailingIcon = if (evaluationState.bradenScore == null) Icons.Rounded.Add else Icons.Rounded.Edit,
+                onClick = onOpenBraden
+            )
+            SummaryRow(
+                stringResource(R.string.tool_resvech),
+                evaluationState.resvechScore?.let { "$it / 35" } ?: stringResource(R.string.summary_scale_not_done),
+                trailingIcon = if (evaluationState.resvechScore == null) Icons.Rounded.Add else Icons.Rounded.Edit,
+                onClick = onOpenResvech
+            )
         }
+    }
+}
+
+@Composable
+private fun SummaryRow(
+    label: String,
+    value: String,
+    accent: Boolean = false,
+    isError: Boolean = false,
+    trailingIcon: androidx.compose.ui.graphics.vector.ImageVector = Icons.Rounded.Edit,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(0.42f)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = if (accent || isError) FontWeight.Bold else FontWeight.Medium,
+            color = when {
+                isError -> MaterialTheme.colorScheme.error
+                accent -> MaterialTheme.colorScheme.primary
+                else -> MaterialTheme.colorScheme.onSurface
+            },
+            modifier = Modifier.weight(0.58f)
+        )
+        Icon(
+            trailingIcon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            modifier = Modifier.size(16.dp)
+        )
     }
 }
 

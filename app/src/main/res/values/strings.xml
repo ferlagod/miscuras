@@ -509,4 +509,8 @@
 
     <string name="wound_not_evaluated">Sin evaluar</string>
     <string name="cure_overdue_format">Cura vencida %1$s</string>
+
+    <string name="summary_tap_to_edit">Toca un dato para corregirlo</string>
+    <string name="summary_scale_not_done">Sin valorar · Añadir</string>
+    <string name="resvech_use_in_evaluation">Usar en la evaluación (%1$d / 35)</string>
 </resources>

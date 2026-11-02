@@ -211,6 +211,17 @@ class PdfReportService(private val context: Context) {
                 textPaint.isFakeBoldText = false
                 canvas.drawText("${latestEval.painLevel.toInt()}/10", 300f, evalY, textPaint)
 
+                val scales = listOfNotNull(
+                    latestEval.bradenScore?.let { "Braden: $it/23" },
+                    latestEval.resvechScore?.let { "RESVECH: $it/35" }
+                )
+                if (scales.isNotEmpty()) {
+                    textPaint.isFakeBoldText = true
+                    canvas.drawText("Escalas: ", 390f, evalY, textPaint)
+                    textPaint.isFakeBoldText = false
+                    canvas.drawText(scales.joinToString(" · "), 435f, evalY, textPaint)
+                }
+
                 evalY += 22f
                 paint.color = dividerColor
                 paint.strokeWidth = 0.5f

@@ -509,4 +509,8 @@
 
     <string name="wound_not_evaluated">Not assessed</string>
     <string name="cure_overdue_format">Dressing overdue (%1$s)</string>
+
+    <string name="summary_tap_to_edit">Tap a value to edit it</string>
+    <string name="summary_scale_not_done">Not assessed · Add</string>
+    <string name="resvech_use_in_evaluation">Use in evaluation (%1$d / 35)</string>
 </resources>

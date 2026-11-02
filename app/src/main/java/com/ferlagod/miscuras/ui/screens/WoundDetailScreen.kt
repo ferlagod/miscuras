@@ -610,26 +610,46 @@ private fun TimelineEvaluationItem(
 
                 Spacer(modifier = Modifier.height(10.dp))
 
-                // Clinical chips row
-                Row(
+                // Clinical chips (FlowRow: no se cortan cuando hay muchos)
+                val chipContext = LocalContext.current
+                val tr = { term: String -> com.ferlagod.miscuras.ui.ClinicalTermMapper.translateClinicalTerm(term, chipContext) }
+                @OptIn(ExperimentalLayoutApi::class)
+                FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     EvalChip(
-                        text = eval.bedState,
+                        text = tr(eval.bedState),
                         color = MaterialTheme.colorScheme.secondaryContainer,
                         textColor = MaterialTheme.colorScheme.onSecondaryContainer
                     )
-                    EvalChip(
-                        text = eval.exudateLevel,
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        textColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                    if (eval.exudateLevel.isNotBlank()) {
+                        EvalChip(
+                            text = tr(eval.exudateLevel),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            textColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
                     if (eval.infection) {
                         EvalChip(
-                            text = "⚠ ${eval.infectionGerm}",
+                            text = "⚠ ${tr(eval.infectionGerm)}",
                             color = MaterialTheme.colorScheme.errorContainer,
                             textColor = MaterialTheme.colorScheme.onErrorContainer
+                        )
+                    }
+                    eval.bradenScore?.let {
+                        EvalChip(
+                            text = "Braden $it",
+                            color = MaterialTheme.colorScheme.tertiaryContainer,
+                            textColor = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                    }
+                    eval.resvechScore?.let {
+                        EvalChip(
+                            text = "RESVECH $it/35",
+                            color = MaterialTheme.colorScheme.tertiaryContainer,
+                            textColor = MaterialTheme.colorScheme.onTertiaryContainer
                         )
                     }
                 }
