@@ -662,7 +662,7 @@ private fun WoundAnimatedItem(
 ) {
     var visible by remember { mutableStateOf(false) }
     LaunchedEffect(wound.id) {
-        delay(index * 60L)
+        delay(index.coerceAtMost(8) * 60L)
         visible = true
     }
 

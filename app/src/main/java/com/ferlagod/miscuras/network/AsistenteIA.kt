@@ -96,7 +96,7 @@ object AsistenteIA {
             Datos clínicos de la evaluación:
             - Etiología: $etiologia
             - Lecho de la herida: $lecho
-            - Exudado: Nivel $exudado, Tipo $tipoExudado
+            - Exudado: Nivel $exudado, Tipo ${tipoExudado.ifBlank { "No aplica" }}
             - Bordes y Piel: Bordes $bordes, Piel perilesional $pielPerilesional
             - Infección: $infText
             - Sensibilidad/Dolor (S): $dolor/10
@@ -115,7 +115,7 @@ object AsistenteIA {
         fun construirFallback(): String {
             val infPart = if (infeccion) "y reducir la carga bacteriana provocada por $germen" else "evitando complicaciones"
             val dolorPart = if (dolor >= 4) " y manejando el dolor local ($dolor/10) mediante técnicas atraumáticas" else ""
-            return "Objetivo TIMERS: Preparar el lecho de la herida ($lecho) en una lesión de etiología $etiologia (Zona: $zonaEspecial), gestionar el exudado $tipoExudado ($exudado), cuidar los bordes ($bordes) y proteger la piel perilesional ($pielPerilesional)$dolorPart.\n\n" +
+            return "Objetivo TIMERS: Preparar el lecho de la herida ($lecho) en una lesión de etiología $etiologia (Zona: $zonaEspecial), gestionar el exudado${if (tipoExudado.isNotBlank()) " $tipoExudado" else ""} ($exudado), cuidar los bordes ($bordes) y proteger la piel perilesional ($pielPerilesional)$dolorPart.\n\n" +
                    "Justificación: El uso de $recomendacionBD está indicado para mantener un ambiente húmedo óptimo $infPart.\n\n" +
                    "Consejo Clínico: Evaluar regularmente el estado de la piel perilesional y aplicar barrera protectora si es necesario."
         }

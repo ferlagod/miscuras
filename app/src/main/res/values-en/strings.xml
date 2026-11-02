@@ -322,4 +322,17 @@
     <string name="backup_password_mismatch">Passwords do not match</string>
 
     <string name="wizard_required_badge">Required</string>
+
+    <string name="allergy_banner_title">Patient allergies</string>
+    <string name="wizard_step_format">Step %1$d of %2$d · %3$s</string>
+    <string name="wizard_step_etiology">Aetiology and tissue</string>
+    <string name="wizard_step_size">Size and location</string>
+    <string name="wizard_step_exudate">Exudate</string>
+    <string name="wizard_step_edges">Edges and skin</string>
+    <string name="wizard_step_infection">Infection and pain</string>
+    <string name="wizard_exit">Exit evaluation</string>
+    <string name="wizard_back">Previous step</string>
+    <string name="wizard_incomplete_hint">Complete the required fields to continue</string>
+
+    <string name="product_use_both">Primary or secondary use</string>
 </resources>

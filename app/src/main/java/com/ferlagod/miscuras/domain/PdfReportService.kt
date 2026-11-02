@@ -179,7 +179,7 @@ class PdfReportService(private val context: Context) {
                 textPaint.isFakeBoldText = true
                 canvas.drawText("Exudado (M): ", 390f, evalY, textPaint)
                 textPaint.isFakeBoldText = false
-                canvas.drawText("${latestEval.exudateLevel} (${latestEval.exudateType})", 465f, evalY, textPaint)
+                canvas.drawText(latestEval.exudateLevel + (if (latestEval.exudateType.isNotBlank()) " (${latestEval.exudateType})" else ""), 465f, evalY, textPaint)
 
                 evalY += 18f
                 textPaint.isFakeBoldText = true

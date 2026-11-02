@@ -120,7 +120,8 @@ private enum class ScreenState {
 fun WoundScreen(
     viewModel: WoundViewModel,
     woundIdForSave: Long? = null,
-    onBackToDashboard: () -> Unit = {}
+    onBackToDashboard: () -> Unit = {},
+    onExit: () -> Unit = onBackToDashboard
 ) {
     val wizardState by viewModel.wizardState.collectAsStateWithLifecycle()
     val evaluationState by viewModel.evaluationState.collectAsStateWithLifecycle()
@@ -302,7 +303,8 @@ fun WoundScreen(
                         onGlossaryClick = { viewModel.showGlossary() },
                         onArMeasureClick = { viewModel.showArMeasure() },
                         onBradenClick = { viewModel.showBraden() },
-                        onToggleExpertMode = { viewModel.toggleExpertMode() }
+                        onToggleExpertMode = { viewModel.toggleExpertMode() },
+                        onExit = onExit
                     )
                 }
             }
@@ -489,7 +491,8 @@ private fun SelectionContent(
     onGlossaryClick: () -> Unit,
     onArMeasureClick: () -> Unit,
     onBradenClick: () -> Unit,
-    onToggleExpertMode: () -> Unit
+    onToggleExpertMode: () -> Unit,
+    onExit: () -> Unit = {}
 ) {
     val coroutineScope = rememberCoroutineScope()
     // Gestor de permisos de cámara
@@ -520,11 +523,26 @@ private fun SelectionContent(
                                 modifier = Modifier.size(36.dp).clip(CircleShape)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = stringResource(R.string.selection_header_title),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
+                            Column {
+                                Text(
+                                    text = stringResource(R.string.selection_header_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                val stepNames = listOf(
+                                    stringResource(R.string.wizard_step_etiology),
+                                    stringResource(R.string.wizard_step_size),
+                                    stringResource(R.string.wizard_step_exudate),
+                                    stringResource(R.string.wizard_step_edges),
+                                    stringResource(R.string.wizard_step_infection)
+                                )
+                                val stepIndex = wizardState.currentWizardStep.ordinal
+                                Text(
+                                    text = stringResource(R.string.wizard_step_format, stepIndex + 1, stepNames.size, stepNames[stepIndex]),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     },
                     navigationIcon = {
@@ -532,7 +550,14 @@ private fun SelectionContent(
                             IconButton(onClick = onPreviousStep) {
                                 Icon(
                                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                    contentDescription = "Atrás"
+                                    contentDescription = stringResource(R.string.wizard_back)
+                                )
+                            }
+                        } else {
+                            IconButton(onClick = onExit) {
+                                Icon(
+                                    imageVector = Icons.Rounded.Close,
+                                    contentDescription = stringResource(R.string.wizard_exit)
                                 )
                             }
                         }
@@ -586,7 +611,6 @@ private fun SelectionContent(
                 com.ferlagod.miscuras.ui.WizardStep.EDGES -> true
                 else -> false
             }
-            val isEtiologyStepComplete = wizardState.selectedEtiology.isNotEmpty() && wizardState.selectedLecho.isNotEmpty()
 
             if (!configState.isExpertMode && (showSearchButton || showNextButton)) {
                 Surface(
@@ -594,15 +618,25 @@ private fun SelectionContent(
                     shadowElevation = 8.dp,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Box(modifier = Modifier.padding(16.dp)) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        val stepReady = if (showSearchButton) wizardState.isComplete else wizardState.isStepComplete(wizardState.currentWizardStep)
+                        if (!stepReady) {
+                            Text(
+                                text = stringResource(R.string.wizard_incomplete_hint),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                            )
+                        }
                         Button(
                             onClick = if (showSearchButton) onFindApositoClick else onNextStep,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(56.dp),
                             shape = RoundedCornerShape(16.dp),
-                            enabled = !evaluationState.isLoading && 
-                                (wizardState.currentWizardStep != com.ferlagod.miscuras.ui.WizardStep.ETIOLOGY || isEtiologyStepComplete),
+                            enabled = !evaluationState.isLoading &&
+                                (if (showSearchButton) wizardState.isComplete else wizardState.isStepComplete(wizardState.currentWizardStep)),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary
                             )
@@ -663,6 +697,11 @@ private fun SelectionContent(
                 verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
                 contentPadding = PaddingValues(vertical = 32.dp)
             ) {
+                if (wizardState.patientAllergies.isNotBlank()) {
+                    item(key = "allergy_banner") {
+                        com.ferlagod.miscuras.ui.components.AllergyBanner(wizardState.patientAllergies)
+                    }
+                }
                 when (step) {
                     com.ferlagod.miscuras.ui.WizardStep.ETIOLOGY -> {
                         item {
@@ -679,14 +718,14 @@ private fun SelectionContent(
                         Text(
                             text = stringResource(R.string.welcome_title),
                             style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer,
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
                             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = stringResource(R.string.welcome_desc),
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                            color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                     }
                 }
@@ -699,7 +738,8 @@ private fun SelectionContent(
                     onOptionSelected = { 
                         onEtiologyChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesEtiologia))
                     },
-                    chipType = "etiology"
+                    chipType = "etiology",
+                    required = true
                 )
             }
                         item {
@@ -713,7 +753,8 @@ private fun SelectionContent(
                     onOptionSelected = { 
                         onLechoChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesLecho)) 
                     },
-                    chipType = "tissue"
+                    chipType = "tissue",
+                    required = true
                 )
             }
                     }
@@ -773,17 +814,11 @@ private fun SelectionContent(
                     selectedOption = currentExudadoTrans,
                     options = optionsExudadoTrans,
                     onOptionSelected = { 
-                        val dbTerm = ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesExudado)
-                        onExudadoChanged(dbTerm) 
-                        if (dbTerm == "Nulo") {
-                            coroutineScope.launch {
-                                kotlinx.coroutines.delay(800)
-                                onNextStep()
-                            }
-                        }
+                        // Sin avance automático: el usuario confirma con "Siguiente"
+                        onExudadoChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesExudado))
                     },
-                    
-                    chipType = "exudate"
+                    chipType = "exudate",
+                    required = true
                 )
             }
                         item {
@@ -797,8 +832,9 @@ private fun SelectionContent(
                         onOptionSelected = { 
                             onExudateTypeChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesTipoExudado)) 
                         },
-                        enabled = wizardState.selectedExudado != "Nulo",
-                        chipType = "exudate"
+                        enabled = wizardState.selectedExudado.isNotEmpty() && wizardState.selectedExudado != "Nulo",
+                        chipType = "exudate",
+                        required = wizardState.selectedExudado.isNotEmpty() && wizardState.selectedExudado != "Nulo"
                     )
                 }
                     }
@@ -814,7 +850,8 @@ private fun SelectionContent(
                     onOptionSelected = { 
                         onBordesChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesBordes)) 
                     },
-                    chipType = "edge"
+                    chipType = "edge",
+                    required = true
                 )
             }
                         item {
@@ -829,7 +866,8 @@ private fun SelectionContent(
                         onPerilesionalChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesPerilesional)) 
                     },
                     
-                    chipType = "perilesional"
+                    chipType = "perilesional",
+                    required = true
                 )
             }
                     }
@@ -1280,7 +1318,8 @@ private fun ResultsContent(
         .groupBy { it.familiaGenerica } 
     }
     val productosSecundariosAgrupados = remember(evaluationState.productos) { 
-        evaluationState.productos.filter { it.usoPrimarioSecundario.contains("Secundari", ignoreCase = true) || it.usoPrimarioSecundario.contains("Ambos", ignoreCase = true) }
+        // Los de uso mixto ("Ambos") ya aparecen en primarios con su indicación: no se duplican
+        evaluationState.productos.filter { it.usoPrimarioSecundario.contains("Secundari", ignoreCase = true) && !it.usoPrimarioSecundario.contains("Ambos", ignoreCase = true) }
         .groupBy { it.familiaGenerica } 
     }
     
@@ -1305,7 +1344,8 @@ private fun ResultsContent(
         ))
     }
 
-    var expandedFamiliesPrimary by remember(familiasPrimariasOrdenadas) { mutableStateOf(emptySet<String>()) }
+    // La primera familia (la de mayor prioridad) se muestra desplegada
+    var expandedFamiliesPrimary by remember(familiasPrimariasOrdenadas) { mutableStateOf(familiasPrimariasOrdenadas.take(1).toSet()) }
     var expandedFamiliesSecondary by remember(familiasSecundariasOrdenadas) { mutableStateOf(emptySet<String>()) }
 
     val clipboardManager = androidx.compose.ui.platform.LocalClipboardManager.current
@@ -1366,34 +1406,23 @@ private fun ResultsContent(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(top = 8.dp, bottom = 32.dp)
             ) {
-                // Imagen del lecho
+                // Resumen de la evaluación
                 item {
-                    val lechoImageResId = when(wizardState.selectedLecho) {
-                        "Necrosis" -> R.drawable.img_necrosis
-                        "Esfacelo" -> R.drawable.img_esfacelo
-                        "Granulación" -> R.drawable.img_granulacion
-                        "Epitelización" -> R.drawable.img_epitelial
-                        else -> null
-                    }
-                    if (lechoImageResId != null) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(bottom = 8.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Image(
-                                painter = painterResource(id = lechoImageResId),
-                                contentDescription = wizardState.selectedLecho,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clip(RoundedCornerShape(16.dp)),
-                                contentScale = ContentScale.FillWidth
-                            )
-                        }
+                    EvaluationSummaryCard(
+                        lecho = wizardState.selectedLecho,
+                        exudado = wizardState.selectedExudado,
+                        infeccion = wizardState.selectedInfeccion,
+                        lang = configState.currentLanguage
+                    )
+                }
+
+                // Alergias del paciente
+                if (wizardState.patientAllergies.isNotBlank()) {
+                    item {
+                        com.ferlagod.miscuras.ui.components.AllergyBanner(wizardState.patientAllergies)
                     }
                 }
-                
+
                 // Alertas de Seguridad
                 if (evaluationState.safetyAlerts.isNotEmpty()) {
                     item {
@@ -1435,24 +1464,6 @@ private fun ResultsContent(
                             }
                         }
                     }
-                }
-
-                // AI Response
-                item {
-                    AiResponseCard(
-                        isLoading = evaluationState.isAiLoading,
-                        response = evaluationState.aiResponse,
-                        )
-                }
-
-                // Resumen de la evaluación
-                item {
-                    EvaluationSummaryCard(
-                        lecho = wizardState.selectedLecho,
-                        exudado = wizardState.selectedExudado,
-                        infeccion = wizardState.selectedInfeccion,
-                        lang = configState.currentLanguage
-                    )
                 }
 
                 // Familia recomendada
@@ -1544,7 +1555,7 @@ private fun ResultsContent(
                     }
                 }
 
-                item {
+                if (familiasSecundariasOrdenadas.isNotEmpty()) item {
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = stringResource(R.string.secondary_dressing_category),
@@ -1615,6 +1626,43 @@ private fun ResultsContent(
                     }
                 }
 
+                // AI Response
+                item {
+                    AiResponseCard(
+                        isLoading = evaluationState.isAiLoading,
+                        response = evaluationState.aiResponse,
+                        )
+                }
+
+                // Imagen del lecho
+                item {
+                    val lechoImageResId = when(wizardState.selectedLecho) {
+                        "Necrosis" -> R.drawable.img_necrosis
+                        "Esfacelo" -> R.drawable.img_esfacelo
+                        "Granulación" -> R.drawable.img_granulacion
+                        "Epitelización" -> R.drawable.img_epitelial
+                        else -> null
+                    }
+                    if (lechoImageResId != null) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = lechoImageResId),
+                                contentDescription = wizardState.selectedLecho,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(140.dp)
+                                    .clip(RoundedCornerShape(16.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                        }
+                    }
+                }
+                
                 // Sección de Foto (Opcional)
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
@@ -1969,6 +2017,20 @@ private fun ProductCard(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+                if (producto.usoPrimarioSecundario.contains("Ambos", ignoreCase = true)) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Surface(
+                        shape = RoundedCornerShape(6.dp),
+                        color = MaterialTheme.colorScheme.tertiaryContainer
+                    ) {
+                        Text(
+                            text = stringResource(R.string.product_use_both),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                        )
+                    }
+                }
                 // Dimensiones debajo del nombre para evitar comprimir el texto
                 Spacer(modifier = Modifier.height(6.dp))
                 val dimensionesList = producto.dimensiones.split("/").map { it.trim() }
@@ -3327,8 +3389,7 @@ private fun ExpertModeView(
                         onClick = onFindApositoClick,
                         modifier = Modifier.fillMaxWidth().height(56.dp),
                         shape = RoundedCornerShape(16.dp),
-                        enabled = !evaluationState.isLoading &&
-                            wizardState.selectedEtiology.isNotEmpty() && wizardState.selectedLecho.isNotEmpty(),
+                        enabled = !evaluationState.isLoading && wizardState.isComplete,
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
                         if (evaluationState.isLoading) {
@@ -3348,6 +3409,11 @@ private fun ExpertModeView(
             verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(vertical = 16.dp)
         ) {
+            if (wizardState.patientAllergies.isNotBlank()) {
+                item(key = "allergy_banner") {
+                    com.ferlagod.miscuras.ui.components.AllergyBanner(wizardState.patientAllergies)
+                }
+            }
             // ETIOLOGY
             item {
                 val optionsEtiologyTrans = WoundViewModel.opcionesEtiologia.map { ClinicalTermMapper.translateClinicalTerm(it, context) }.sorted()
@@ -3355,7 +3421,7 @@ private fun ExpertModeView(
                 ExpertExpandableSection("Etiología", currentEtiologyTrans) {
                     ChipGroupCard(label = stringResource(R.string.etiology_label), description = "", options = optionsEtiologyTrans, selectedOption = currentEtiologyTrans, onOptionSelected = {
                         onEtiologyChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesEtiologia))
-                    }, chipType = "etiology")
+                    }, chipType = "etiology", required = true)
                 }
             }
             // SIZE & LOCATION
@@ -3398,7 +3464,7 @@ private fun ExpertModeView(
                 ExpertExpandableSection("Lecho", currentLechoTrans) {
                     ChipGroupCard(label = "Estado del Lecho", description = "", options = optionsLechoTrans, selectedOption = currentLechoTrans, onOptionSelected = {
                         onLechoChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesLecho))
-                    }, chipType = "tissue")
+                    }, chipType = "tissue", required = true)
                 }
             }
             // EXUDATE
@@ -3409,13 +3475,13 @@ private fun ExpertModeView(
                     ExpertExpandableSection("Exudado", currentExudadoTrans) {
                         ChipGroupCard(label = "Nivel de Exudado", description = "", options = optionsExudadoTrans, selectedOption = currentExudadoTrans, onOptionSelected = {
                             onExudadoChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesExudado))
-                        }, chipType = "exudate")
+                        }, chipType = "exudate", required = true)
                         
                         val currentTypeTrans = ClinicalTermMapper.translateClinicalTerm(wizardState.selectedExudateType, context)
                         val optionsTypeTrans = WoundViewModel.opcionesTipoExudado.map { ClinicalTermMapper.translateClinicalTerm(it, context) }
                         ChipGroupCard(label = "Tipo de Exudado", description = "", options = optionsTypeTrans, selectedOption = currentTypeTrans, onOptionSelected = {
                             onExudateTypeChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesTipoExudado))
-                        }, chipType = "exudate")
+                        }, chipType = "exudate", enabled = wizardState.selectedExudado.isNotEmpty() && wizardState.selectedExudado != "Nulo", required = wizardState.selectedExudado.isNotEmpty() && wizardState.selectedExudado != "Nulo")
                     }
                 }
             }
@@ -3430,10 +3496,10 @@ private fun ExpertModeView(
                         PainCard(painLevel = wizardState.painLevel, onPainChange = onPainLevelChanged)
                         ChipGroupCard(label = "Estado de la piel perilesional", description = "", options = optionsPeriTrans, selectedOption = currentPeriTrans, onOptionSelected = {
                             onPerilesionalChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesPerilesional))
-                        }, chipType = "perilesional")
+                        }, chipType = "perilesional", required = true)
                         ChipGroupCard(label = "Estado de los bordes", description = "", options = optionsBordesTrans, selectedOption = currentBordesTrans, onOptionSelected = {
                             onBordesChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesBordes))
-                        }, chipType = "edge")
+                        }, chipType = "edge", required = true)
                     }
                 }
             }

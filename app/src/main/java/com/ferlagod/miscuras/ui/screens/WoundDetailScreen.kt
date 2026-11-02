@@ -229,6 +229,10 @@ fun WoundDetailScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(horizontal = 32.dp)
                 ) {
+                    com.ferlagod.miscuras.ui.components.AllergyBanner(
+                        currentPatient?.allergies,
+                        modifier = Modifier.padding(bottom = 24.dp)
+                    )
                     com.ferlagod.miscuras.ui.components.EmptyStateIllustration(icon = Icons.Rounded.Timeline)
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
@@ -254,6 +258,14 @@ fun WoundDetailScreen(
                     .padding(paddingValues),
                 contentPadding = PaddingValues(bottom = 80.dp)
             ) {
+                if (!currentPatient?.allergies.isNullOrBlank()) {
+                    item(key = "allergy_banner") {
+                        com.ferlagod.miscuras.ui.components.AllergyBanner(
+                            currentPatient?.allergies,
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+                        )
+                    }
+                }
                 // Chart Card
                 item {
                     ChartCard(
@@ -278,7 +290,7 @@ fun WoundDetailScreen(
                 itemsIndexed(reversedEvals, key = { _, e -> e.id }) { index, eval ->
                     var visible by remember { mutableStateOf(false) }
                     LaunchedEffect(eval.id) {
-                        delay(index * 60L)
+                        delay(index.coerceAtMost(8) * 60L) // retraso acotado en listas largas
                         visible = true
                     }
 
