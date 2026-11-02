@@ -111,9 +111,11 @@ fun DashboardScreen(
         if (searchQuery.isBlank()) {
             patients
         } else {
-            val q = searchQuery.trim().lowercase()
+            // Búsqueda sin distinguir mayúsculas ni tildes ("Gomez" encuentra "Gómez")
+            val norm = com.ferlagod.miscuras.domain.rules.RulesEngine::normalize
+            val q = norm(searchQuery.trim())
             patients.filter {
-                it.anonymizedName.lowercase().contains(q) || it.roomNumber.lowercase().contains(q)
+                norm(it.anonymizedName).contains(q) || norm(it.roomNumber).contains(q)
             }
         }
     }

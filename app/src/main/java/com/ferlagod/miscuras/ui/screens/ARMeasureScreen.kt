@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.Undo
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -64,6 +65,37 @@ fun ARMeasureScreen(
     
     var magnifierCenter by remember { mutableStateOf(Offset.Unspecified) }
     var showMagnifier by remember { mutableStateOf(false) }
+
+    fun recalculate() {
+        lengthCm = if (points.size >= 2) calculateDistanceCm(points[0], points[1]) else 0f
+        widthCm = if (points.size >= 4) calculateDistanceCm(points[2], points[3]) else 0f
+    }
+
+    fun addAnchor(anchor: Anchor) {
+        points.add(anchor.pose)
+        anchors.add(anchor)
+        recalculate()
+    }
+
+    /** Deshace el último punto y libera su anclaje en ARCore. */
+    fun undoLast() {
+        if (anchors.isEmpty()) return
+        anchors.removeAt(anchors.lastIndex).detach()
+        points.removeAt(points.lastIndex)
+        recalculate()
+    }
+
+    fun resetAll() {
+        // Liberar los anclajes: ARCore los sigue rastreando (y consumiendo recursos) hasta hacer detach()
+        anchors.forEach { it.detach() }
+        anchors.clear()
+        points.clear()
+        recalculate()
+    }
+
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        onDispose { anchors.forEach { runCatching { it.detach() } } }
+    }
 
     val instructionText = when (points.size) {
         0 -> stringResource(R.string.ar_instruction_start_length)
@@ -111,15 +143,7 @@ fun ARMeasureScreen(
                             if (points.size < 4 && frame != null) {
                                 val hitResult = frame?.hitTest(offset.x, offset.y)
                                 if (hitResult != null && hitResult.isNotEmpty()) {
-                                    val anchor = hitResult.first().createAnchor()
-                                    points.add(anchor.pose)
-                                    anchors.add(anchor)
-
-                                    if (points.size == 2) {
-                                        lengthCm = calculateDistanceCm(points[0], points[1])
-                                    } else if (points.size == 4) {
-                                        widthCm = calculateDistanceCm(points[2], points[3])
-                                    }
+                                    addAnchor(hitResult.first().createAnchor())
                                 }
                             }
                         }
@@ -140,15 +164,7 @@ fun ARMeasureScreen(
                             if (points.size < 4 && frame != null && magnifierCenter.isSpecified) {
                                 val hitResult = frame?.hitTest(magnifierCenter.x, magnifierCenter.y)
                                 if (hitResult != null && hitResult.isNotEmpty()) {
-                                    val anchor = hitResult.first().createAnchor()
-                                    points.add(anchor.pose)
-                                    anchors.add(anchor)
-            
-                                    if (points.size == 2) {
-                                        lengthCm = calculateDistanceCm(points[0], points[1])
-                                    } else if (points.size == 4) {
-                                        widthCm = calculateDistanceCm(points[2], points[3])
-                                    }
+                                    addAnchor(hitResult.first().createAnchor())
                                 }
                             }
                             magnifierCenter = Offset.Unspecified
@@ -204,15 +220,20 @@ fun ARMeasureScreen(
                 )
             }
             
-            // Botón de reiniciar
+            // Botones de deshacer y reiniciar
             if (points.isNotEmpty()) {
+                FilledTonalButton(
+                    onClick = { undoLast() },
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(16.dp)
+                ) {
+                    Icon(Icons.AutoMirrored.Rounded.Undo, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(stringResource(R.string.ar_undo_button))
+                }
                 Button(
-                    onClick = {
-                        points.clear()
-                        anchors.clear()
-                        lengthCm = 0f
-                        widthCm = 0f
-                    },
+                    onClick = { resetAll() },
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(16.dp),

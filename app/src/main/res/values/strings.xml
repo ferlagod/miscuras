@@ -335,4 +335,10 @@
     <string name="wizard_incomplete_hint">Completa los campos obligatorios para continuar</string>
 
     <string name="product_use_both">Uso primario o secundario</string>
+
+    <string name="chart_area_unit">Área (cm²)</string>
+    <string name="chart_area_change">%1$s cm² → %2$s cm² (%3$s)</string>
+    <string name="chart_area_single">Área inicial: %1$s cm². Se necesitan al menos dos mediciones para ver la evolución.</string>
+
+    <string name="ar_undo_button">Deshacer</string>
 </resources>

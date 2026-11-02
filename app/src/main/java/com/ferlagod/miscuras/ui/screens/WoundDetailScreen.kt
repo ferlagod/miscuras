@@ -106,14 +106,14 @@ fun WoundDetailScreen(
         patientViewModel.loadEvaluationsForWound(woundId)
     }
 
-    LaunchedEffect(evaluations) {
-        if (evaluations.isNotEmpty()) {
-            val areas = evaluations.mapIndexedNotNull { index, eval ->
-                val l = eval.length.replace(",", ".").toFloatOrNull() ?: 0f
-                val w = eval.width.replace(",", ".").toFloatOrNull() ?: 0f
-                if (l > 0f && w > 0f) FloatEntry(x = index.toFloat(), y = l * w) else null
-            }
-            modelProducer.setEntries(areas)
+    // Puntos (fecha, área en cm²) de las evaluaciones con medidas válidas
+    val areaPoints = remember(evaluations) { areaPointsOf(evaluations) }
+
+    LaunchedEffect(areaPoints) {
+        if (areaPoints.isNotEmpty()) {
+            // Eje X en días desde la primera medición: la separación refleja el tiempo real
+            val t0 = areaPoints.first().first
+            modelProducer.setEntries(areaPoints.map { (ts, area) -> FloatEntry(x = daysBetween(t0, ts), y = area) })
         } else {
             modelProducer.setEntries(emptyList<FloatEntry>())
         }
@@ -269,7 +269,7 @@ fun WoundDetailScreen(
                 // Chart Card
                 item {
                     ChartCard(
-                        evaluations = evaluations,
+                        areaPoints = areaPoints,
                         modelProducer = modelProducer
                     )
                 }
@@ -379,23 +379,36 @@ fun WoundDetailScreen(
 
 @Composable
 private fun ChartCard(
-    evaluations: List<EvaluationEntity>,
+    areaPoints: List<Pair<Long, Float>>,
     modelProducer: ChartEntryModelProducer
 ) {
-    val hasChartData = evaluations.any { 
-        (it.length.replace(",", ".").toFloatOrNull() ?: 0f) > 0f && (it.width.replace(",", ".").toFloatOrNull() ?: 0f) > 0f 
-    }
+    if (areaPoints.isEmpty()) return
 
-    if (!hasChartData) return
+    val t0 = areaPoints.first().first
+    val first = areaPoints.first().second
+    val last = areaPoints.last().second
+    val changePct = if (first > 0f) (last - first) / first * 100f else 0f
+    val fmt = { v: Float -> String.format(Locale.getDefault(), "%.1f", v) }
+    val changeColor = when {
+        areaPoints.size < 2 -> MaterialTheme.colorScheme.onSurfaceVariant
+        changePct < 0f -> MaterialTheme.colorScheme.secondary // reducción = mejoría
+        changePct > 0f -> MaterialTheme.colorScheme.error
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+    val dayFormat = remember { SimpleDateFormat("dd/MM", Locale.getDefault()) }
+    val totalDays = daysBetween(t0, areaPoints.last().first)
+    // Espaciado de etiquetas del eje X para no saturarlo (≈5 etiquetas)
+    val labelSpacing = (totalDays / 5f).toInt().coerceAtLeast(1)
 
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(20.dp),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
@@ -411,16 +424,44 @@ private fun ChartCard(
                     stringResource(R.string.size_evolution_chart_title),
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    stringResource(R.string.chart_area_unit),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
-            Spacer(modifier = Modifier.height(16.dp))
-            val evalChartLabel = stringResource(R.string.eval_chart_label)
+            Spacer(modifier = Modifier.height(8.dp))
+            if (areaPoints.size >= 2) {
+                val sign = if (changePct > 0f) "+" else ""
+                Text(
+                    stringResource(R.string.chart_area_change, fmt(first), fmt(last), "$sign${fmt(changePct)} %"),
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = changeColor
+                )
+            } else {
+                Text(
+                    stringResource(R.string.chart_area_single, fmt(first)),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
             Chart(
                 chart = lineChart(),
                 chartModelProducer = modelProducer,
                 startAxis = rememberStartAxis(),
-                bottomAxis = rememberBottomAxis(valueFormatter = { value, _ -> "$evalChartLabel ${value.toInt() + 1}" }),
+                bottomAxis = rememberBottomAxis(
+                    itemPlacer = remember(labelSpacing) {
+                        com.patrykandpatrick.vico.core.axis.AxisItemPlacer.Horizontal.default(spacing = labelSpacing)
+                    },
+                    valueFormatter = { value, _ ->
+                        dayFormat.format(Date(t0 + (value * DAY_MS).toLong()))
+                    }
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp)
@@ -428,6 +469,18 @@ private fun ChartCard(
         }
     }
 }
+
+private const val DAY_MS = 24f * 60f * 60f * 1000f
+
+private fun daysBetween(from: Long, to: Long): Float = (to - from) / DAY_MS
+
+/** (timestamp, área cm²) de las evaluaciones con largo y ancho válidos, en orden cronológico. */
+private fun areaPointsOf(evaluations: List<EvaluationEntity>): List<Pair<Long, Float>> =
+    evaluations.sortedBy { it.timestamp }.mapNotNull { e ->
+        val l = e.length.replace(",", ".").toFloatOrNull() ?: 0f
+        val w = e.width.replace(",", ".").toFloatOrNull() ?: 0f
+        if (l > 0f && w > 0f) e.timestamp to l * w else null
+    }
 
 // ============================================================
 // Timeline Evaluation Item
