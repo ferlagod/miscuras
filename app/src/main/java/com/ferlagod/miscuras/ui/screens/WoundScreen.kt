@@ -829,7 +829,7 @@ private fun SelectionContent(
                         onPerilesionalChanged(ClinicalTermMapper.mapToDbTerm(it, context, WoundViewModel.opcionesPerilesional)) 
                     },
                     
-                    chipType = "edge"
+                    chipType = "perilesional"
                 )
             }
                     }
@@ -902,6 +902,23 @@ private fun SelectionContent(
 // COMPONENTE — Tarjeta con Dropdown selector
 // ============================================================
 
+/** Colores semánticos de cada categoría de chip: (fondo seleccionado, color de acento). */
+@Composable
+private fun chipCategoryColors(chipType: String): Pair<Color, Color> {
+    val dark = MaterialTheme.colorScheme.surface.luminance() < 0.5f
+    return when (chipType) {
+        "tissue" -> if (dark) com.ferlagod.miscuras.ui.theme.ChipTissueDark to com.ferlagod.miscuras.ui.theme.ChipTissueSelectedDark
+                    else com.ferlagod.miscuras.ui.theme.ChipTissue to com.ferlagod.miscuras.ui.theme.ChipTissueSelected
+        "exudate" -> if (dark) com.ferlagod.miscuras.ui.theme.ChipExudateDark to com.ferlagod.miscuras.ui.theme.ChipExudateSelectedDark
+                     else com.ferlagod.miscuras.ui.theme.ChipExudate to com.ferlagod.miscuras.ui.theme.ChipExudateSelected
+        "edge", "perilesional" -> if (dark) com.ferlagod.miscuras.ui.theme.ChipEdgeDark to com.ferlagod.miscuras.ui.theme.ChipEdgeSelectedDark
+                                  else com.ferlagod.miscuras.ui.theme.ChipEdge to Color(0xFF9A6700) // ámbar oscuro: contraste AA sobre fondo claro
+        "infection" -> if (dark) com.ferlagod.miscuras.ui.theme.ChipInfectionDark to com.ferlagod.miscuras.ui.theme.ChipInfectionSelectedDark
+                       else com.ferlagod.miscuras.ui.theme.ChipInfection to com.ferlagod.miscuras.ui.theme.ChipInfectionSelected
+        else -> MaterialTheme.colorScheme.primaryContainer to MaterialTheme.colorScheme.primary
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun ChipGroupCard(
@@ -911,64 +928,96 @@ private fun ChipGroupCard(
     options: List<String>,
     onOptionSelected: (String) -> Unit,
     enabled: Boolean = true,
-    chipType: String = "default" // "tissue", "exudate", "edge", "infection"
+    chipType: String = "default", // "tissue", "exudate", "edge", "perilesional", "infection", "etiology"
+    required: Boolean = false
 ) {
+    val (selectedBg, accent) = chipCategoryColors(chipType)
+    val missing = required && enabled && selectedOption.isBlank()
+
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(28.dp),
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.cardColors(
             containerColor = if (enabled) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        border = androidx.compose.foundation.BorderStroke(
+            1.dp,
+            if (missing) MaterialTheme.colorScheme.primary.copy(alpha = 0.35f) else MaterialTheme.colorScheme.outlineVariant
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = com.ferlagod.miscuras.ui.theme.Dimens.ElevationNone)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.titleMedium,
-                color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-            )
-            Text(
-                text = description,
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
-            )
-            Spacer(modifier = Modifier.height(14.dp))
+        Column(modifier = Modifier.padding(com.ferlagod.miscuras.ui.theme.Dimens.CardPadding)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .size(width = 4.dp, height = 18.dp)
+                        .clip(RoundedCornerShape(2.dp))
+                        .background(if (enabled) accent else accent.copy(alpha = 0.4f))
+                )
+                Spacer(modifier = Modifier.width(com.ferlagod.miscuras.ui.theme.Dimens.SpacingSm))
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                    modifier = Modifier.weight(1f)
+                )
+                if (missing) {
+                    Text(
+                        text = stringResource(R.string.wizard_required_badge),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+            if (description.isNotBlank()) {
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (enabled) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                    modifier = Modifier.padding(start = 12.dp, top = 2.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(com.ferlagod.miscuras.ui.theme.Dimens.SpacingMd))
 
             FlowRow(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(com.ferlagod.miscuras.ui.theme.Dimens.SpacingSm),
+                verticalArrangement = Arrangement.spacedBy(com.ferlagod.miscuras.ui.theme.Dimens.SpacingSm)
             ) {
                 options.forEach { option ->
                     val isSelected = option == selectedOption
-                    
+
                     val interactionSource = androidx.compose.runtime.remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
                     val isPressed by interactionSource.collectIsPressedAsState()
                     val scale by androidx.compose.animation.core.animateFloatAsState(
-                        targetValue = if (isPressed) 0.95f else 1f, 
+                        targetValue = if (isPressed) 0.95f else 1f,
                         label = "scale"
                     )
-                    
-                    val textColor = if (isSelected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
-                    
+
                     FilterChip(
                         selected = isSelected,
                         onClick = { if (enabled) onOptionSelected(option) },
                         interactionSource = interactionSource,
-                        label = { 
+                        label = {
                             Text(
-                                text = option, 
+                                text = option,
                                 style = MaterialTheme.typography.labelLarge,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                color = textColor
-                            ) 
+                                color = if (isSelected) accent else MaterialTheme.colorScheme.onSurface
+                            )
                         },
+                        leadingIcon = if (isSelected) {
+                            { Icon(Icons.Rounded.Check, contentDescription = null, tint = accent, modifier = Modifier.size(18.dp)) }
+                        } else null,
                         colors = FilterChipDefaults.filterChipColors(
                             containerColor = MaterialTheme.colorScheme.surface,
-                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedContainerColor = selectedBg,
                             disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                         ),
-                        border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)),
+                        border = androidx.compose.foundation.BorderStroke(
+                            if (isSelected) 1.5.dp else 1.dp,
+                            if (isSelected) accent else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                        ),
                         shape = CircleShape,
                         enabled = enabled,
                         modifier = Modifier.defaultMinSize(minWidth = 48.dp, minHeight = 48.dp).scale(scale)

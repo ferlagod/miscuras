@@ -127,6 +127,4 @@ dependencies {
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
 
-    // Lottie para animaciones premium
-    implementation("com.airbnb.android:lottie-compose:6.6.6")
 }

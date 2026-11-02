@@ -320,4 +320,6 @@
     <string name="backup_password_confirm_hint">Repeat password</string>
     <string name="backup_password_too_short">At least 8 characters</string>
     <string name="backup_password_mismatch">Passwords do not match</string>
+
+    <string name="wizard_required_badge">Required</string>
 </resources>

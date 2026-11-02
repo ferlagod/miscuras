@@ -48,6 +48,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontWeight
@@ -60,7 +61,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.ferlagod.miscuras.ui.WoundViewModel
 import androidx.compose.ui.res.stringResource
-import com.airbnb.lottie.compose.*
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 
@@ -104,6 +104,8 @@ fun DashboardScreen(
     var showAddSheet by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var patientToDelete by remember { mutableStateOf<com.ferlagod.miscuras.data.entities.PatientEntity?>(null) }
+
+    val alreadyAnimated = remember { mutableSetOf<Long>() }
 
     val filteredPatients = remember(patients, searchQuery) {
         if (searchQuery.isBlank()) {
@@ -155,7 +157,9 @@ fun DashboardScreen(
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
             LargeTopAppBar(
                 title = { 
@@ -435,10 +439,15 @@ fun DashboardScreen(
                     contentPadding = PaddingValues(bottom = 80.dp)
                 ) {
                     itemsIndexed(filteredPatients, key = { _, p -> p.id }) { index, patient ->
-                        var visible by remember { mutableStateOf(false) }
+                        // Animación de entrada solo la primera vez y con retraso acotado:
+                        // antes cada fila esperaba índice × 40 ms y se re-animaba al hacer scroll.
+                        var visible by remember { mutableStateOf(patient.id in alreadyAnimated) }
                         LaunchedEffect(patient.id) {
-                            delay(index * 40L)
-                            visible = true
+                            if (!visible) {
+                                delay(index.coerceAtMost(8) * 40L)
+                                visible = true
+                                alreadyAnimated.add(patient.id)
+                            }
                         }
 
                         AnimatedVisibility(

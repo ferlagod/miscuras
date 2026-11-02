@@ -71,18 +71,29 @@ fun CatalogScreen(
     var searchQuery by remember { mutableStateOf("") }
     var selectedFamilyFilter by remember { mutableStateOf<String?>(null) }
 
-    val productsFlow = remember(searchQuery) {
-        if (searchQuery.isBlank()) {
-            repository.getAllProductsFlow().flowOn(Dispatchers.IO)
-        } else {
-            repository.searchProductsFlow(searchQuery.trim()).flowOn(Dispatchers.IO)
-        }
+    // Un único flujo con el catálogo completo; la búsqueda se hace en memoria (≈100 productos).
+    // Antes cada pulsación creaba un flujo nuevo que empezaba vacío y la lista parpadeaba.
+    val allProducts by androidx.compose.runtime.produceState<List<ApositoEntity>?>(initialValue = null, repository) {
+        repository.getAllProductsFlow().flowOn(Dispatchers.IO).collect { value = it }
+    }
+    val isLoading = allProducts == null
+
+    // Las familias salen del catálogo completo para que los chips no cambien al buscar
+    val families = remember(allProducts) {
+        allProducts.orEmpty().map { it.familiaGenerica }.distinct().sorted()
     }
 
-    val products by productsFlow.collectAsState(initial = emptyList())
-
-    val families = remember(products) {
-        products.map { it.familiaGenerica }.distinct().sorted()
+    val products = remember(allProducts, searchQuery) {
+        val q = com.ferlagod.miscuras.domain.rules.RulesEngine.normalize(searchQuery.trim())
+        val qDigits = q.filter { it.isDigit() }
+        if (q.isBlank()) allProducts.orEmpty()
+        else allProducts.orEmpty().filter { p ->
+            val n = com.ferlagod.miscuras.domain.rules.RulesEngine::normalize
+            n(p.nombreComercial).contains(q) || n(p.familiaGenerica).contains(q) ||
+                n(p.fabricante).contains(q) ||
+                // CN sin depender del formato (con o sin punto del dígito de control)
+                (qDigits.length >= 3 && p.codigoCn.filter { it.isDigit() }.contains(qDigits))
+        }
     }
 
     val filteredProducts = remember(products, selectedFamilyFilter) {
@@ -175,7 +186,11 @@ fun CatalogScreen(
             Spacer(modifier = Modifier.height(4.dp))
 
             // Products List
-            if (filteredProducts.isEmpty()) {
+            if (isLoading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            } else if (filteredProducts.isEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxSize()

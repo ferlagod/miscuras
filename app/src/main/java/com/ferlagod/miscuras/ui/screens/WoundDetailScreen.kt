@@ -62,7 +62,6 @@ import com.patrykandpatrick.vico.core.entry.ChartEntryModelProducer
 import coil.compose.AsyncImage
 import java.io.File
 import androidx.compose.ui.res.stringResource
-import com.airbnb.lottie.compose.*
 import kotlinx.coroutines.delay
 
 import android.content.Intent
@@ -230,14 +229,7 @@ fun WoundDetailScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(horizontal = 32.dp)
                 ) {
-                    val composition by rememberLottieComposition(
-                        LottieCompositionSpec.Url("https://lottie.host/c4d6ed1a-69da-4f94-adf0-62a774e63b10/WKoRcxUJt0.lottie")
-                    )
-                    LottieAnimation(
-                        composition = composition,
-                        iterations = LottieConstants.IterateForever,
-                        modifier = Modifier.size(160.dp)
-                    )
+                    com.ferlagod.miscuras.ui.components.EmptyStateIllustration(icon = Icons.Rounded.Timeline)
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = stringResource(R.string.empty_evaluations_title),
