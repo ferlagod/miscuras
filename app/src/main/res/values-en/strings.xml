@@ -513,4 +513,10 @@
     <string name="summary_tap_to_edit">Tap a value to edit it</string>
     <string name="summary_scale_not_done">Not assessed · Add</string>
     <string name="resvech_use_in_evaluation">Use in evaluation (%1$d / 35)</string>
+
+    <string name="photo_compare_side_by_side">Side by side</string>
+    <string name="photo_compare_overlay">Overlay</string>
+    <string name="photo_compare_hint">Pinch to zoom · Double-tap to reset</string>
+    <string name="photo_compare_before_format">Before: %1$s</string>
+    <string name="photo_compare_after_format">After: %1$s</string>
 </resources>

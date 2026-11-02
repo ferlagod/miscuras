@@ -38,6 +38,7 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -733,22 +734,27 @@ private fun EditPatientBottomSheet(
     var medicalHistory by remember { mutableStateOf(patient.medicalHistory ?: "") }
     
     val context = androidx.compose.ui.platform.LocalContext.current
+    val photoScope = rememberCoroutineScope()
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         if (uri != null) {
-            try {
-                val inputStream = context.contentResolver.openInputStream(uri)
-                val fileName = "patient_photo_${System.currentTimeMillis()}.jpg"
-                val file = java.io.File(context.filesDir, fileName)
-                val outputStream = java.io.FileOutputStream(file)
-                inputStream?.copyTo(outputStream)
-                inputStream?.close()
-                outputStream.close()
-                photoUri = file.absolutePath
-            } catch (e: Exception) {
-                e.printStackTrace()
-                photoUri = uri.toString()
+            photoScope.launch {
+                try {
+                    val file = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        val target = java.io.File(context.filesDir, "patient_photo_${System.currentTimeMillis()}.jpg")
+                        context.contentResolver.openInputStream(uri)?.use { input ->
+                            java.io.FileOutputStream(target).use { output -> input.copyTo(output) }
+                        }
+                        target
+                    }
+                    // Foto de perfil: basta con 1024 px
+                    com.ferlagod.miscuras.domain.ImageCompressor.compressInPlace(file, maxSide = 1024)
+                    photoUri = file.absolutePath
+                } catch (e: Exception) {
+                    // No se guarda la URI temporal del selector: deja de ser accesible al cerrar la app
+                    e.printStackTrace()
+                }
             }
         }
     }

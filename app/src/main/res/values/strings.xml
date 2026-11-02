@@ -513,4 +513,10 @@
     <string name="summary_tap_to_edit">Toca un dato para corregirlo</string>
     <string name="summary_scale_not_done">Sin valorar · Añadir</string>
     <string name="resvech_use_in_evaluation">Usar en la evaluación (%1$d / 35)</string>
+
+    <string name="photo_compare_side_by_side">Lado a lado</string>
+    <string name="photo_compare_overlay">Superpuesto</string>
+    <string name="photo_compare_hint">Pellizca para ampliar · Doble toque para restablecer</string>
+    <string name="photo_compare_before_format">Antes: %1$s</string>
+    <string name="photo_compare_after_format">Después: %1$s</string>
 </resources>

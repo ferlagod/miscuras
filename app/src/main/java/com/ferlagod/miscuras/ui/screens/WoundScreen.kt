@@ -1278,6 +1278,7 @@ private fun ResultsContent(
     var selectedProduct by remember { mutableStateOf<ApositoEntity?>(null) }
 
     // Helpers para fotos
+    val photoScope = rememberCoroutineScope()
     var currentPhotoUri by remember { mutableStateOf<Uri?>(null) }
     var currentPhotoFile by remember { mutableStateOf<File?>(null) }
 
@@ -1285,7 +1286,11 @@ private fun ResultsContent(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success && currentPhotoFile != null) {
-            onPhotoPathChanged(currentPhotoFile!!.absolutePath)
+            val captured = currentPhotoFile!!
+            photoScope.launch {
+                com.ferlagod.miscuras.domain.ImageCompressor.compressInPlace(captured)
+                onPhotoPathChanged(captured.absolutePath)
+            }
         } else {
             // Captura cancelada: algunas apps de cámara dejan un archivo vacío
             currentPhotoFile?.let { f -> if (f.exists()) f.delete() }
@@ -1312,21 +1317,24 @@ private fun ResultsContent(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         if (uri != null) {
-            // Copiar la imagen a nuestro almacenamiento interno
-            try {
-                val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
-                val photoFile = File(context.filesDir, "photos")
-                if (!photoFile.exists()) photoFile.mkdirs()
-                val newFile = File(photoFile, "IMG_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.jpg")
-                val outputStream = FileOutputStream(newFile)
-                inputStream?.copyTo(outputStream)
-                inputStream?.close()
-                outputStream.close()
-                
-                // Propagamos al ViewModel
-                onPhotoPathChanged(newFile.absolutePath)
-            } catch (e: Exception) {
-                e.printStackTrace()
+            // Copiar la imagen al almacenamiento interno y comprimirla, fuera del hilo principal
+            photoScope.launch {
+                try {
+                    val newFile = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                        val photoFile = File(context.filesDir, "photos")
+                        if (!photoFile.exists()) photoFile.mkdirs()
+                        val target = File(photoFile, "IMG_${SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())}.jpg")
+                        context.contentResolver.openInputStream(uri)?.use { input ->
+                            FileOutputStream(target).use { output -> input.copyTo(output) }
+                        }
+                        target
+                    }
+                    com.ferlagod.miscuras.domain.ImageCompressor.compressInPlace(newFile)
+                    // Propagamos al ViewModel
+                    onPhotoPathChanged(newFile.absolutePath)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
             }
         }
     }
