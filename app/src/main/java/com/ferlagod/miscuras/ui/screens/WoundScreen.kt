@@ -1279,23 +1279,25 @@ private fun ResultsContent(
 
     // Helpers para fotos
     val photoScope = rememberCoroutineScope()
-    var currentPhotoUri by remember { mutableStateOf<Uri?>(null) }
-    var currentPhotoFile by remember { mutableStateOf<File?>(null) }
+    // Guardado con rememberSaveable: la app de cámara puede provocar la recreación de la actividad
+    // (giro de pantalla o cierre del proceso) y sin la ruta la foto tomada se perdería.
+    var currentPhotoPath by rememberSaveable { mutableStateOf<String?>(null) }
 
     val takePictureLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
-        if (success && currentPhotoFile != null) {
-            val captured = currentPhotoFile!!
+        val pending = currentPhotoPath?.let { File(it) }
+        if (success && pending != null) {
+            val captured = pending
             photoScope.launch {
                 com.ferlagod.miscuras.domain.ImageCompressor.compressInPlace(captured)
                 onPhotoPathChanged(captured.absolutePath)
             }
         } else {
             // Captura cancelada: algunas apps de cámara dejan un archivo vacío
-            currentPhotoFile?.let { f -> if (f.exists()) f.delete() }
+            pending?.let { f -> if (f.exists()) f.delete() }
         }
-        currentPhotoFile = null
+        currentPhotoPath = null
     }
 
     val cameraPermissionLauncher = rememberLauncherForActivityResult(
@@ -1305,7 +1307,7 @@ private fun ResultsContent(
             val photoFile = File(context.filesDir, "photos")
             if (!photoFile.exists()) photoFile.mkdirs()
             val newFile = File(photoFile, "IMG_CAM_${java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US).format(java.util.Date())}.jpg")
-            currentPhotoFile = newFile
+            currentPhotoPath = newFile.absolutePath
             val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", newFile)
             takePictureLauncher.launch(uri)
         } else {
@@ -1740,7 +1742,7 @@ private fun ResultsContent(
                                                 val photoFile = File(context.filesDir, "photos")
                                                 if (!photoFile.exists()) photoFile.mkdirs()
                                                 val newFile = File(photoFile, "IMG_CAM_${java.text.SimpleDateFormat("yyyyMMdd_HHmmss", java.util.Locale.US).format(java.util.Date())}.jpg")
-                                                currentPhotoFile = newFile
+                                                currentPhotoPath = newFile.absolutePath
                                                 val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", newFile)
                                                 takePictureLauncher.launch(uri)
                                             } else {

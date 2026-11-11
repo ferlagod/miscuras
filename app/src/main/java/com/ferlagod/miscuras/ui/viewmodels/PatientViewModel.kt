@@ -119,7 +119,14 @@ class PatientViewModel(private val patientDao: PatientDao) : ViewModel() {
 
     fun updatePatientDetails(patient: PatientEntity) {
         viewModelScope.launch(Dispatchers.IO) {
+            val previousPhoto = patientDao.getPatientById(patient.id)?.photoUri
             patientDao.updatePatient(patient)
+            // Foto sustituida: borrar la anterior para no dejar imágenes clínicas huérfanas
+            if (previousPhoto != null && previousPhoto != patient.photoUri) {
+                try {
+                    java.io.File(previousPhoto.removePrefix("file://").removePrefix("file:")).delete()
+                } catch (e: Exception) { e.printStackTrace() }
+            }
         }
     }
 

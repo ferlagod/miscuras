@@ -735,6 +735,13 @@ private fun EditPatientBottomSheet(
     
     val context = androidx.compose.ui.platform.LocalContext.current
     val photoScope = rememberCoroutineScope()
+    // Borra una foto elegida en esta ficha que no llegó a guardarse (no la foto ya guardada del paciente)
+    fun discardUnsavedPhoto(path: String?) {
+        if (path == null || path == patient.photoUri) return
+        photoScope.launch(kotlinx.coroutines.Dispatchers.IO) {
+            try { java.io.File(path.removePrefix("file://").removePrefix("file:")).delete() } catch (e: Exception) { e.printStackTrace() }
+        }
+    }
     val photoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
@@ -750,6 +757,7 @@ private fun EditPatientBottomSheet(
                     }
                     // Foto de perfil: basta con 1024 px
                     com.ferlagod.miscuras.domain.ImageCompressor.compressInPlace(file, maxSide = 1024)
+                    discardUnsavedPhoto(photoUri)
                     photoUri = file.absolutePath
                 } catch (e: Exception) {
                     // No se guarda la URI temporal del selector: deja de ser accesible al cerrar la app
@@ -760,7 +768,10 @@ private fun EditPatientBottomSheet(
     }
 
     ModalBottomSheet(
-        onDismissRequest = onDismiss,
+        onDismissRequest = {
+            discardUnsavedPhoto(photoUri)
+            onDismiss()
+        },
         sheetState = sheetState,
         shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
         containerColor = MaterialTheme.colorScheme.surface
