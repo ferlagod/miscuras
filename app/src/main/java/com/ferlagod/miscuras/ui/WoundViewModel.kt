@@ -479,12 +479,17 @@ class WoundViewModel(
                     it.copy(
                         familiaRecomendada = null,
                         cureFrequency = null,
+                        // Sin recomendación no hay pauta: no arrastrar el intervalo ni la
+                        // explicación de una búsqueda anterior a la evaluación que se guarde
+                        cureIntervalHours = null,
                         productos = emptyList(),
                         selectedTreatmentProducts = emptySet(),
                         safetyAlerts = result.safetyAlerts,
                         showResults = true,
                         isLoading = false,
-                        noMatchFound = true
+                        noMatchFound = true,
+                        aiResponse = null,
+                        isAiLoading = false
                     )
                 }
             }
