@@ -151,6 +151,7 @@ class WoundViewModel(
     val configState: StateFlow<ConfigState> = _configState.asStateFlow()
 
     private var aiJob: kotlinx.coroutines.Job? = null
+    private var saveJob: kotlinx.coroutines.Job? = null
 
     /** Foto tomada en la evaluación en curso que aún no pertenece a ninguna evaluación guardada. */
     private var pendingPhotoPath: String? = null
@@ -607,12 +608,13 @@ class WoundViewModel(
     }
 
     fun saveEvaluation(woundId: Long) {
+        // Evitar evaluaciones duplicadas por pulsar varias veces "Guardar" antes de salir de la pantalla
+        if (saveJob?.isActive == true || _evaluationState.value.isSaved) return
         val wizard = _wizardState.value
         val eval = _evaluationState.value
-        val config = _configState.value
         // La foto pasa a pertenecer a la evaluación guardada: ya no se debe borrar como huérfana
         pendingPhotoPath = null
-        viewModelScope.launch(Dispatchers.IO) {
+        saveJob = viewModelScope.launch(Dispatchers.IO) {
             val evaluation = EvaluationEntity(
                 woundId = woundId,
                 length = wizard.woundLength,
