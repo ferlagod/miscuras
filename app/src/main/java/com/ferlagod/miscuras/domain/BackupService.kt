@@ -281,9 +281,13 @@ class BackupService(private val context: Context, private val database: AppDatab
         emit(BackupState.Loading)
         val tempIn = File(context.cacheDir, "restore_in_${System.currentTimeMillis()}")
         val tempZip = File(context.cacheDir, "restore_zip_${System.currentTimeMillis()}.zip")
+        // Las fotos se extraen primero aquí y solo se mueven a su sitio si la BD se restaura bien:
+        // así una restauración fallida no deja fotos sueltas ni sobrescribe las actuales.
+        val stagingDir = File(context.cacheDir, "restore_images_${System.currentTimeMillis()}")
         try {
             var backup: MisCurasBackup? = null
             val newImagesDir = context.filesDir
+            stagingDir.mkdirs()
 
             context.contentResolver.openInputStream(inputUri)?.use { input ->
                 tempIn.outputStream().use { input.copyTo(it) }
@@ -309,7 +313,7 @@ class BackupService(private val context: Context, private val database: AppDatab
                         } else if (entry.name.startsWith("images/")) {
                             val fileName = File(entry.name).name
                             if (fileName.isNotBlank()) {
-                                val destFile = File(newImagesDir, fileName)
+                                val destFile = File(stagingDir, fileName)
                                 destFile.outputStream().use { zipIn.copyTo(it) }
                             }
                         }
@@ -332,7 +336,7 @@ class BackupService(private val context: Context, private val database: AppDatab
                     }
                     val fileName = File(clean).name
                     val localFile = File(newImagesDir, fileName)
-                    patient.copy(photoUri = if (localFile.exists()) localFile.absolutePath else patient.photoUri)
+                    patient.copy(photoUri = if (File(stagingDir, fileName).exists()) localFile.absolutePath else patient.photoUri)
                 } else {
                     patient
                 }
@@ -347,7 +351,7 @@ class BackupService(private val context: Context, private val database: AppDatab
                     }
                     val fileName = File(clean).name
                     val localFile = File(newImagesDir, fileName)
-                    eval.copy(photoPath = if (localFile.exists()) localFile.absolutePath else eval.photoPath)
+                    eval.copy(photoPath = if (File(stagingDir, fileName).exists()) localFile.absolutePath else eval.photoPath)
                 } else {
                     eval
                 }
@@ -380,6 +384,15 @@ class BackupService(private val context: Context, private val database: AppDatab
                 }
             }
 
+            // BD restaurada: mover las fotos de la copia a su ubicación definitiva
+            stagingDir.listFiles()?.forEach { staged ->
+                val target = File(newImagesDir, staged.name)
+                if (!staged.renameTo(target)) {
+                    staged.copyTo(target, overwrite = true)
+                    staged.delete()
+                }
+            }
+
             val newPhotoPaths = (updatedEvaluations.mapNotNull { it.photoPath } + updatedPatients.mapNotNull { it.photoUri })
                 .map { it.removePrefix("file://").removePrefix("file:") }
                 .toSet()
@@ -394,6 +407,7 @@ class BackupService(private val context: Context, private val database: AppDatab
         } finally {
             tempIn.delete()
             tempZip.delete()
+            stagingDir.deleteRecursively()
         }
     }.flowOn(Dispatchers.IO)
 }
